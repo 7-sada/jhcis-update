@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="pyramid_population_17" pageWidth="617" pageHeight="842" columnWidth="577" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ec6ff319-8099-468e-830c-e0ead15aeba4">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT q1.ag, q1.male, q2.female
+FROM
+(SELECT
+CASE
+WHEN getAgeYearNum(birth,CURDATE())<5 THEN '1'
+WHEN getAgeYearNum(birth,CURDATE())>4 AND getAgeYearNum(birth,CURDATE())<10 THEN '2'
+WHEN getAgeYearNum(birth,CURDATE())>9 AND getAgeYearNum(birth,CURDATE())<15 THEN '3'
+ELSE '4'
+END ag
+,(COUNT(*)*(-1)) male
+FROM person p LEFT JOIN persondeath d ON p.pcucodeperson=d.pcucodeperson AND p.pid=d.pid
+JOIN house h ON p.pcucodeperson=h.pcucode AND p.hcode = h.hcode
+WHERE d.pid IS NULL AND left(h.villcode,2)<>'00' and sex='1'
+GROUP BY CASE
+WHEN getAgeYearNum(birth,CURDATE())<5 THEN '1'
+WHEN getAgeYearNum(birth,CURDATE())>4 AND getAgeYearNum(birth,CURDATE())<10 THEN '2'
+WHEN getAgeYearNum(birth,CURDATE())>9 AND getAgeYearNum(birth,CURDATE())<15 THEN '3'
+ELSE '4'
+END) q1
+JOIN
+(SELECT
+CASE
+WHEN getAgeYearNum(birth,CURDATE())<5 THEN '1'
+WHEN getAgeYearNum(birth,CURDATE())>4 AND getAgeYearNum(birth,CURDATE())<10 THEN '2'
+WHEN getAgeYearNum(birth,CURDATE())>9 AND getAgeYearNum(birth,CURDATE())<15 THEN '3'
+ELSE '4'
+END ag
+,COUNT(*) female
+FROM person p LEFT JOIN persondeath d ON p.pcucodeperson=d.pcucodeperson AND p.pid=d.pid
+JOIN house h ON p.pcucodeperson=h.pcucode AND p.hcode = h.hcode
+WHERE d.pid IS NULL AND left(h.villcode,2)<>'00' and sex='2'
+GROUP BY CASE
+WHEN getAgeYearNum(birth,CURDATE())<5 THEN '1'
+WHEN getAgeYearNum(birth,CURDATE())>4 AND getAgeYearNum(birth,CURDATE())<10 THEN '2'
+WHEN getAgeYearNum(birth,CURDATE())>9 AND getAgeYearNum(birth,CURDATE())<15 THEN '3'
+ELSE '4'
+END) q2 ON q1.ag = q2.ag]]>
+	</queryString>
+	<field name="ag" class="java.lang.String"/>
+	<field name="male" class="java.lang.Long"/>
+	<field name="female" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="41" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band height="21" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="19" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="254" splitType="Stretch">
+			<stackedBarChart>
+				<chart>
+					<reportElement uuid="50ed92c6-1d7a-498d-aae3-b2a3872f0bc8" x="0" y="0" width="577" height="254"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["Male.."]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{ag}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{male}]]></valueExpression>
+					</categorySeries>
+					<categorySeries>
+						<seriesExpression><![CDATA["female"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{ag}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{female}]]></valueExpression>
+						<labelExpression><![CDATA["xxx"]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot>
+					<plot orientation="Horizontal"/>
+					<itemLabel/>
+					<categoryAxisFormat>
+						<axisFormat/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</barPlot>
+			</stackedBarChart>
+		</band>
+	</summary>
+</jasperReport>

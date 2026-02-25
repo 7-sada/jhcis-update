@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPD_dmht" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f6c8e0e0-060a-4742-bb68-a57ea5a892f2">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data1" uuid="6d859310-e9da-4c05-b4a9-b340721cc7c1">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<parameter name="showDate1" class="java.lang.String"/>
+		<parameter name="showDate2" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[SELECT p.pid,fname,lname,v.visitdate,DATE_FORMAT(v.visitdate,'%Y-%m-%d') as vd,
+group_concat(d.diagcode) as diagcode,getageymd(p.birth,v.visitdate) as age_m
+FROM visitdiag d
+JOIN visit v ON (v.pcucode=d.pcucode and v.visitno=d.visitno)
+JOIN person p ON (v.pcucodeperson=p.pcucodeperson AND v.pid=p.pid)
+WHERE (UCase(left(d.diagcode,3)) BETWEEN 'E10' AND 'E14' OR LCase(left(d.diagcode,3)) BETWEEN 'i10' AND 'i15')
+AND v.visitdate BETWEEN $P{sdate} AND $P{edate}
+group by p.pid,v.visitdate
+order by v.visitdate]]>
+		</queryString>
+		<field name="pid" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="visitdate" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="vd" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="diagcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="age_m" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+	</subDataset>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select 1]]>
+	</queryString>
+	<field name="1" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="116" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="43" uuid="5f77fd93-833a-425d-b76b-c63a9f1cb8cb"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Angsana New" size="24" isBold="true"/>
+				</textElement>
+				<text><![CDATA[รายงานรายชื่อผู้ป่วยโรคเบาหวาน ความดัน]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="52" width="555" height="20" uuid="42aa5df7-f784-446b-97c5-ef592582e51a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Angsana New" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ระหว่างวันที่: "+$P{showDate1}+" ถึงวันที่: "+$P{showDate2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<summary>
+		<band height="133" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="555" height="133" uuid="e3f84489-5433-4a84-87fe-34f11c4ad0a0"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data1" uuid="e9bee8a9-f8ac-490f-b953-89db16474c19">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="90" uuid="08cd6566-4df2-44a3-8a8c-cccd6f1c8ca3">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="26510f4f-259d-4874-bb5b-9378825d0624"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<text><![CDATA[หมายเลข HN]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="20" uuid="18afd46f-084e-4f42-b190-d312d6c5ff27"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{pid}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="92814d05-be56-4b64-b890-11daf9946348">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="6b5a74ae-d764-4fd8-a741-80feefa14182"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<text><![CDATA[ชื่อ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="20" uuid="20c59871-ce29-4461-a7f1-eab33fee4382"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{fname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="57b6de53-9895-4c2c-9ffa-abea0c5df5f2">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="448574b1-f7a7-4d45-99ff-17a223ef4e8a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<text><![CDATA[นามสกุล]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="20" uuid="bee5f03e-4b37-439e-8f2a-b3b2a6eecab3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{lname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="d8f46348-ecf5-419c-b807-50954f408b1d">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="3807d104-9a15-4d11-abe7-3489f696d995"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="false"/>
+								</textElement>
+								<text><![CDATA[อายุ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="20" uuid="a4100799-a8f3-45d2-93ea-d42dd21d9770"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{age_m}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="3570d052-5b29-4298-a138-8175816dc990">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="1f8adbfc-8a63-47b1-861f-79f3cc1c6a75"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<text><![CDATA[วันที่มารับบริการ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField pattern="dd MMMMM yyyy">
+								<reportElement x="0" y="0" width="90" height="20" uuid="c3ecce25-0c46-49f3-9268-ec06c8f6b3aa"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{visitdate}.valueOf($F{vd})]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="9271bd9b-4e22-497f-b32a-687b7d657550">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="a68ed43f-517c-4b25-8845-702639c7b50e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<text><![CDATA[ชื่อโรค]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="20" uuid="d918bbdf-c14f-47cd-9daf-2bdf8134bf24"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{diagcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

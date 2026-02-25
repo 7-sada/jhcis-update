@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rpt_listVaccine" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryWithPageHeaderAndFooter="true" uuid="a75d764e-bf9d-4082-b2b4-a8ab8419ae77">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="Crosstab Data Text" hAlign="Center"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select ve.dateepi,IF(ve.dateepi IS NULL,'ไม่ระบุ',concat(convert(DAY(ve.dateepi) using utf8),' ',
+   CASE WHEN MONTH(ve.dateepi)=1 THEN '01'
+   WHEN MONTH(ve.dateepi)=2 THEN '02' WHEN MONTH(ve.dateepi)=3 THEN '03'
+   WHEN MONTH(ve.dateepi)=4 THEN '04' WHEN MONTH(ve.dateepi)=5 THEN '05'
+   WHEN MONTH(ve.dateepi)=6 THEN '06' WHEN MONTH(ve.dateepi)=7 THEN '07'
+   WHEN MONTH(ve.dateepi)=8 THEN '08' WHEN MONTH(ve.dateepi)=9 THEN '09'
+   WHEN MONTH(ve.dateepi)=10 THEN '10' WHEN MONTH(ve.dateepi)=11 THEN '11'
+   WHEN MONTH(ve.dateepi)=12 THEN '12' END,' ',right(year(dateepi)+543,2))) as epidate,
+   ve.pid,concat(ct.titlename,p.fname," ",p.lname) as fullname,
+   replace(replace(replace(getageymd(p.birth,ve.dateepi),"ปี","/"),"เดือน","/"),"วัน","") as age1,
+   date_add(ve.dateepi,interval 543 year) as dateepi1,
+ve.vaccinecode,"Y" as aa,ch.hosname,cd.distname,cp.provname
+from visitepi ve
+join visit v on (ve.dateepi = v.visitdate and ve.visitno = v.visitno and ve.pcucode = v.pcucode)
+join person p on (ve.pid = p.pid and ve.pcucodeperson = ve.pcucodeperson)
+left join  ctitle ct on (p.prename = ct.titlecode)
+left join chospital ch on (v.pcucode = ch.hoscode)
+left join cdistrict cd on (ch.distcode = cd.distcode and cd.provcode = ch.provcode)
+left join cprovince cp on (ch.provcode = cp.provcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and (getageyearnum(p.birth,ve.dateepi) <= 45)
+order by ve.dateepi]]>
+	</queryString>
+	<field name="dateepi" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="epidate" class="java.lang.String"/>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fullname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="age1" class="java.lang.String"/>
+	<field name="dateepi1" class="java.sql.Date"/>
+	<field name="vaccinecode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="aa" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="distname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="provname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="146" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-8" x="189" y="0" width="469" height="32" uuid="c9d648d7-9497-4e7f-839e-0c77073bfc82"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ทะเบียนผู้รับบริการอนามัยเด็กและสร้างเสริมภูมิคุ้มกันโรค]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="32" width="417" height="25" uuid="ca3ff752-35a6-4e40-94fe-aa63032a5393"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน่วยงาน : "+$F{hosname} +"  อ. "+ $F{distname}+ "   จ. " + $F{provname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-12" x="417" y="32" width="123" height="25" uuid="bb215b2d-24cd-46e2-8b19-c59494794a4f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันที่ตัดยอดทะเบียนระหว่างวันที่ :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-17" x="0" y="57" width="466" height="25" forecolor="#CC0000" uuid="5ad03a77-8c6d-4bbe-a5c7-9521a0f24bf5"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ : รหัส วัคซีน ต้องใช้รหัสตามมาตรฐานของโปรแกรม (กำหนดค่าเริ่มต้น หัวข้อ รหัสยา)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="11" y="96" width="791" height="15" forecolor="#000099" uuid="5681e8b9-715b-49e8-b862-e8319eab3540"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[ แต่ทั้งนี้อาจไม่พบกรณีที่ว่านี้มากนัก  เนื่องจากโดยทั่วไป หากผู้รับบริการ 1 คน ได้รับวัคซีนมากกว่า 1 ตัวในช่วงใดๆ ก็มักจะได้รับฯ ในวันเดียวกัน เสมอ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="11" y="82" width="791" height="15" forecolor="#CC0000" uuid="e879ebc5-5a6f-4262-9dd9-98613ed4e67a"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[ ในกรณีดังกล่าว วันที่รับบริการวัคซีน ของ ดช. ดำ จะแสดงเป็นวันที่ 2 กพ 58 เท่านั้น (1 Row) แต่จะแสดงการรับวัคซีนทั้ง 2 รายการ ทั้งนี้เพราะ 1 ผู้รับบริการ จะแสดงเพียง 1 Row ในรายงานนี้]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="11" y="111" width="775" height="29" forecolor="#CC0000" uuid="797e0fb7-dd5f-46a7-8e77-f2dbbc99e899"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[ 2. รายงานนี้ จะแสดงรายชื่อผู้ได้รับบริการวัคซีน เฉพาะที่ได้รับวัคซีนฯ เมื่ออายุไม่เกิน 45 ปีบริบูรณ์ เท่านั้น (ผู้ที่ได้รับฯ ขณะที่ ณ วันที่รับฯ อายุเกิน 45 ปีบริบูรณ์ไปแล้ว จะไม่ปรากฏในรายงานนี้ (แต่ยังคงอยู่ในฐานข้อมูล))]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="540" y="32" width="216" height="25" uuid="d489bec3-5c23-49a4-8b2d-fb833584cb17"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{showDate1}+" ถึงวันที่ "+$P{showDate2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="24" splitType="Stretch">
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" mode="Transparent" x="617" y="0" width="106" height="21" forecolor="#000000" backcolor="#FFFFFF" uuid="a65948a5-17b8-4fab-b0c0-11625753549b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="480" y="0" width="137" height="21" forecolor="#000000" uuid="21afe7d7-2ec7-4083-a2cf-ead56d3837d9"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า: " + $V{PAGE_NUMBER} + " / "]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="160" splitType="Stretch">
+			<crosstab>
+				<reportElement x="0" y="0" width="802" height="160" uuid="d6da344f-da5b-44be-af00-2cc83aef67ed"/>
+				<crosstabHeaderCell>
+					<cellContents>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="50" y="0" width="83" height="30" backcolor="#F0F8FF" uuid="88617701-02d9-4931-8ab5-06b80efb8a4f"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="8" isBold="true"/>
+							</textElement>
+							<text><![CDATA[ชื่อ-สกุล]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="0" y="0" width="50" height="30" backcolor="#F0F8FF" uuid="5eb0b430-7193-4161-8bbc-8da09e3a7a3a"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="8" isBold="true"/>
+							</textElement>
+							<text><![CDATA[วันที่บริการ]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="133" y="0" width="42" height="30" backcolor="#F0F8FF" uuid="cde2e766-c02d-4af3-af42-23397f025516"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="8" isBold="true" isPdfEmbedded="true"/>
+							</textElement>
+							<text><![CDATA[อายู
+(ป/ด/ว)]]></text>
+						</staticText>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="epidate" width="50">
+					<bucket class="java.util.Date">
+						<bucketExpression><![CDATA[$F{dateepi1}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" pattern="d/M/yyyy" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="6d96a4d7-595e-4a43-8060-c42789b6c0c3"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.0"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{epidate}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="fullname" width="83">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{fullname}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="83" height="25" uuid="d0577d19-d669-4e9d-ad3a-f30248b4dbd3"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{fullname}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="age1" width="42">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{age1}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="42" height="25" uuid="73342176-3311-4459-b59e-a6cdd504a465"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{age1}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="vaccinecode" height="30">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{vaccinecode}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="28" height="30" uuid="5d676d5d-0e18-47f2-a011-f054e165c0f7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{vaccinecode}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents/>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="aaMeasure" class="java.lang.String">
+					<measureExpression><![CDATA[$F{aa}]]></measureExpression>
+				</measure>
+				<crosstabCell width="28" height="25">
+					<cellContents>
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="28" height="25" uuid="ae97aa78-298e-443b-ace5-20af44921f3b"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="epidate">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="5b9cec32-f517-4dc7-9275-b42bfe182bcf"/>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="50" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="5dcb2d38-b698-4085-841a-56973d4ec714"/>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="epidate" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="196df511-3579-49ef-b847-44a8e6c26625"/>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="fullname">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="04233531-8832-46a6-9eb4-a5fe1c3c1074"/>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="fullname" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="350cb312-d5e8-4636-8905-53585e988602"/>
+							<textFieldExpression><![CDATA[$V{aaMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="age1">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="age1" columnTotalGroup="vaccinecode">
+					<cellContents/>
+				</crosstabCell>
+			</crosstab>
+		</band>
+	</summary>
+</jasperReport>

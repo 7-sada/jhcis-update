@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="14_rpt_DMHT_CVDRisk1" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryWithPageHeaderAndFooter="true" uuid="945a8ead-b57f-4a7c-ba06-a12bd9c4666e">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="164"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data3" uuid="81284df9-7c22-480e-87d5-726050ee630b">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[SELECT  PF.pcucodeperson, PF.pid,p.idcard,ct.titlename,p.fname,p.lname,
+date_add(pf.lastvisitdate, interval 543 year) as lastvisitdate,
+group_concat(distinct pc.chroniccode) as dm,group_concat(distinct pc1.chroniccode) as ht,
+round(pf.fullscore,2) as fullscore,PF.PFullScore,
+CASE
+ WHEN PF.PFullScore < 10 THEN 'ต่ำ'
+ WHEN PF.PFullScore BETWEEN 10 AND 19.99  THEN 'ปานกลาง'
+ WHEN PF.PFullScore BETWEEN 20 AND 29.99  THEN 'สูง'
+ WHEN PF.PFullScore BETWEEN 30 AND 39.99  THEN 'สูงมาก'
+ WHEN PF.PFullScore >= 40  THEN 'สูงอันตราย'
+ ELSE 'UNKNOWN' END AS color
+ FROM
+ (
+ SELECT SS.*,
+ ((0.08183 * IF(SS.age_year IS NULL , 0 , SS.age_year ) ) + (0.39499 * IF( SS.sexM1F0 IS NULL , 0 , SS.sexM1F0 ) ) + (0.02084 * IF( SS.sbp IS NULL , 0 , SS.sbp ) ) + (0.69974 * IF( SS.dmY1N0 IS NULL , 0 , SS.dmY1N0 ) ) + ( 0.00212 * IF( SS.choles IS NULL , 0 , SS.choles) ) + ( 0.41916 * IF( SS.ciga IS NULL , 0 , SS.ciga) )) AS FullScore,
+ ROUND(((1 - ( POWER( 0.978296 , EXP(((0.08183 * IF(SS.age_year IS NULL , 0 , SS.age_year ) ) + (0.39499 * IF( SS.sexM1F0 IS NULL , 0 , SS.sexM1F0 ) ) + (0.02084 * IF( SS.sbp IS NULL , 0 , SS.sbp ) ) + (0.69974 * IF( SS.dmY1N0 IS NULL , 0 , SS.dmY1N0 ) ) + ( 0.00212 * IF( SS.choles IS NULL , 0 , SS.choles) ) + ( 0.41916 * IF( SS.ciga IS NULL , 0 , SS.ciga) ) ) - 7.04423) ) ) ) * 100) , 2 ) AS PFullScore
+ from
+ (SELECT p.pcucodeperson,p.pid ,IF(getAgeYearNum(birth,CURDATE())>70,70,getAgeYearNum(birth,CURDATE())) AS age_year
+ ,IF(sex='1',1,0) AS sexM1F0
+ ,IF(C.pid IS NULL,0,1) AS ciga,IF(pc.chroniccode IS NOT NULL,1,0) AS dmY1N0,B.sbp,B.lastvisitdate
+ ,D.labresultdigit AS choles
+  FROM (SELECT pcucodeperson, pid, sex, birth FROM person p
+  ) p
+  LEFT JOIN
+ (SELECT DISTINCT pcucodeperson,pid,chroniccode FROM personchronic
+   WHERE UCASE(left(chroniccode,3)) BETWEEN 'E10' AND 'E14'
+    ) pc
+ ON p.pcucodeperson=pc.pcucodeperson AND p.pid=pc.pid
+ join
+ (
+ SELECT pcucodeperson ,pid,max(mvd) as lastvisitdate,visitno,substring_index(pressure,'/',1) as sbp
+from  (SELECT pcucodeperson,pid,v.visitdate mvd,v.pressure,v.visitno
+ from visit v
+ WHERE v.visitdate between $P{sdate} and $P{edate}
+ order by pid,v.visitdate DESC) as insel
+ GROUP BY pid ORDER BY pid
+) B ON p.pcucodeperson= B.pcucodeperson AND p.pid=B.pid
+ LEFT JOIN (
+ SELECT a.*
+ FROM f43specialpp f
+ JOIN
+ (
+ SELECT s.pcucodeperson,s.pid,MAX(dateserv) dateserv
+ FROM f43specialpp s JOIN person p ON s.pcucodeperson=p.pcucodeperson AND s.pid=p.pid
+ WHERE getAgeYearNum(birth,CURDATE())>15 AND ucase(left(ppspecial,4)) IN ('1B50','1B53','1B54','1B55','1B56')
+   GROUP BY pcucodeperson,pid
+ ) a
+ ON f.pcucodeperson=a.pcucodeperson AND f.pid=a.pid AND f.dateserv=a.dateserv
+ WHERE ucase(left(ppspecial,4)) IN ('1B50','1B53','1B54','1B55','1B56')
+ GROUP BY f.pcucodeperson,f.pid
+ ORDER BY f.pid,f.ppspecial ASC
+) C ON p.pcucodeperson= C.pcucodeperson AND p.pid=C.pid
+ LEFT JOIN
+(SELECT pcucodeperson ,pid ,max(datecheck) as lastvisitLColes,labresultdigit
+ from
+ (SELECT p.pcucodeperson,p.pid,vlsb.labresultdigit,vlsb.datecheck   from person p   join visitlabchcyhembmsse vlsb on p.pcucodeperson = vlsb.pcucodeperson and p.pid = vlsb.pid
+  WHERE ucase(labcode) = 'CH07'
+  ORDER BY datecheck DESC) as insel  GROUP BY pid ORDER BY pid
+) D ON p.pcucodeperson= D.pcucodeperson AND p.pid=D.pid
+ WHERE D.labresultdigit IS NOT NULL
+ AND getAgeYearNum(birth,CURDATE()) >= 35) AS SS ) AS PF
+ left join person p on (pf.pid = p.pid and pf.pcucodeperson = p.pcucodeperson)
+ left join personchronic pc on (pf.pid = pc.pid and pf.pcucodeperson = pc.pcucodeperson)
+ left join personchronic pc1 on (pf.pid = pc1.pid and pf.pcucodeperson = pc1.pcucodeperson)
+ left join persondeath pd on (p.pid = pd.pid and p.pcucodeperson = pd.pcucodeperson)
+ left join ctitle ct on (p.prename = ct.titlecode)
+ where ucase(left(pc.chroniccode,3)) between 'E10' and 'E14'
+ and UCASE(left(pc1.chroniccode,3)) BETWEEN 'I10' AND 'I15'
+ and pd.pid is null
+ group by pf.pid
+ order by pf.pid]]>
+		</queryString>
+		<field name="pcucodeperson" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="pid" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="idcard" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="titlename" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lastvisitdate" class="java.sql.Date"/>
+		<field name="dm" class="java.lang.String"/>
+		<field name="ht" class="java.lang.String"/>
+		<field name="fullscore" class="java.lang.Double"/>
+		<field name="PFullScore" class="java.lang.Double"/>
+		<field name="color" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="office" class="java.lang.String"/>
+	<parameter name="pdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-12-22"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select current_date as cDate]]>
+	</queryString>
+	<field name="cDate" class="java.sql.Date"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="83">
+			<staticText>
+				<reportElement x="0" y="18" width="802" height="28" uuid="8316bc5c-8b62-4834-8c23-35e9abeb7b56"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12" isBold="true" pdfFontName="Tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[รายงานผู้ป่วยเบาหวานและความดันโลหิตสูง ที่ได้รับการประเมินความเสี่ยงต่อโรคหัวใจและหลอดเลือด (สูตร 1 ใช้ค่า โคเรสเตอรอล)]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="46" width="802" height="20" uuid="74b01532-11e9-477f-911a-e2e2a2bc80de"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ระหว่างวันที่ "+$P{showDate1}+" ถึงวันที่ "+ $P{showDate2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="802" height="19" uuid="e180cb1c-6fd2-44a3-a7c3-1079b9a4c9f5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA["   "+$P{office}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy">
+				<reportElement x="696" y="66" width="104" height="17" uuid="6a6c9494-daa3-48d5-a6cc-a2db660cc04e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cDate}.valueOf( $P{pdate} )]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-10" x="625" y="66" width="71" height="17" uuid="515aa9bb-0534-46f3-a0c3-e711af62d413"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันที่สั่งพิมพ์ :]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="21">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="681" y="0" width="80" height="20" uuid="85c9d919-b56c-4a42-91dc-3289f42b1ea4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}+" /"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report">
+				<reportElement x="761" y="0" width="40" height="20" uuid="e671696a-8541-46eb-b9f6-fb078c6b8a30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="175" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="802" height="175" uuid="be22eb26-c532-486e-ab84-af4e73da6692"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data3" uuid="e8060154-63bf-43ba-9fde-c01ef2bb549d">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="40" uuid="696c92dd-6b7f-4d8f-87b5-c978d4a5bba1">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="40" height="62" uuid="b05fddaf-d69b-4497-95bf-0c89b39f43e7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ลำดับที่]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="40" height="21" uuid="0b980081-3d97-4f83-a3dd-501bf9a8cb75"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="5ef59fc2-9554-4e8e-b4b2-4d1a1f0baeed">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="40" height="62" uuid="97d49588-7d9b-4e73-8742-528a7b0df21f"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[HN]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="40" height="21" uuid="7249235c-de52-4339-880d-64acab1b002a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{pid}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="b2e01dcc-37f7-4fa2-9d8e-a827e512410a">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="80" height="62" uuid="509f6e3f-6991-4fbc-9a57-c7c76fbf4093"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ID Card]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="80" height="21" uuid="d1d3d79d-b3a5-48b0-b40c-e269cf5dbdcb"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{idcard}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="150" uuid="f9daac30-9d99-435e-be7b-602f7ba88623">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="150" height="62" uuid="e1ab6de2-089e-4cbb-ad22-73a304001d88"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อ-สกุล]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="150" height="21" uuid="bcc728f2-e70e-43a2-9d45-4590a776628e"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[" "+$F{titlename}+" "+$F{fname}+" "+$F{lname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="f9d6012c-e0e1-499c-86ff-8e55d0af4e26">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="62" uuid="d538ea63-6db3-428e-bc58-973562148948"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[รหัสกลุ่มโรค
+เบาหวาน
+(DM E10-E14)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="21" uuid="5cea2cfe-4710-43f2-ac23-c0be538ee47e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{dm}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="c73146e6-003a-481d-8f75-c1c56abe22b5">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="62" uuid="4614d8a1-1c24-48e1-8d34-fe5c54318de4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[รหัสกลุ่มโรค
+ความดัน
+(HT I10-I15)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="21" uuid="c97a1956-327e-4637-a789-0bf42b196ef4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{ht}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="af3f6ad2-d5a2-4fba-ae42-06663d1b89e0">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="62" uuid="360a6735-2c46-4f14-b8e9-08d04b35bd56"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[Date_service]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="21" uuid="5bff8a5c-fb71-4602-a8e6-2d7b0c7d4765"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{lastvisitdate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="b44457eb-ed67-4d51-afc0-f7590c083341">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="62" uuid="fcdb68ee-6af6-4f32-93a8-daa49649ecd4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ค่า Full Score]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="21" uuid="613f7f0c-b655-483c-941d-533f4746bd56"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{fullscore}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="d4c3b3f8-172e-40e3-8a34-ed190bee4243">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="62" uuid="74d0fbb6-f244-4c1f-9370-c14a9f7a660e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ค่า PFullScore ( %)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="21" uuid="085354fc-f008-4adb-bd19-feeac8d89461"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{PFullScore}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="95015ed6-83a6-4b1a-b1f8-04310c54527e">
+						<jr:columnHeader style="table_CH" height="62" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="62" uuid="67f6b84e-a854-4dca-970e-f5a4974f4d9e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[การแปลผล
+ความเสี่ยง]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="21" uuid="7f5b970c-c83f-4df0-9a06-802c069688ff"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{color}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

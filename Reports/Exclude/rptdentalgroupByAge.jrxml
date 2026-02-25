@@ -1,0 +1,928 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptdentalgroupByAge" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a98ae65f-dd66-4225-b8e6-d1c1ea8ad7bd">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 3">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 3_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 3_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 3_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 4">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 4_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 4_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 4_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 5">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 5_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 5_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 5_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data1" uuid="dd045da1-39f9-4638-9e83-abf523425703">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select pp1.*,'0-2 ปี' as agegroup
+from(
+select m1.drugcode,p1.numhumanuc,p1.numtimesuc,p1.moneyuc,p1.ageuc,
+p2.numhumanofc,p2.numtimesofc,p2.moneyofc,p2.ageofc,
+p3.numhumanss,p3.numtimesss,p3.moneyss,p3.agess,
+p4.numhumanpaid,p4.numtimespaid,p4.moneypaid,p4.agepaid
+from
+(select d.drugcode
+from cdrug d
+where d.drugtype = '02' and d.drugtypesub in ('1','2') and d.drugflag = '1') as m1
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageuc,v.pid,
+count(distinct(v.pid)) as numhumanUC,count(vd.drugcode) as numTimesUC,sum(vd.unit*vd.realprice) as moneyUC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('3','4')
+and getageyearnum(p.birth,v.visitdate) < 2
+group by d.drugcode) p1 on (m1.drugcode = p1.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageofc,v.pid,
+count(distinct(v.pid)) as numhumanOFC,count(vd.drugcode) as numTimesOFC,sum(vd.unit*vd.realprice) as moneyOFC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('1','7')
+and getageyearnum(p.birth,v.visitdate) < 2
+group by d.drugcode) p2
+on (m1.drugcode = p2.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agess,v.pid,
+count(distinct(v.pid)) as numhumanSS,count(vd.drugcode) as numTimesSS,sum(vd.unit*vd.realprice) as moneySS,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('2')
+and getageyearnum(p.birth,v.visitdate) < 2
+group by d.drugcode) p3
+on (m1.drugcode = p3.drugcode )
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agepaid,v.pid,
+count(distinct(v.pid)) as numhumanpaid,count(vd.drugcode) as numTimespaid,sum(vd.unit*vd.realprice) as moneypaid,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('5','6','8','9')
+and getageyearnum(p.birth,v.visitdate) < 2
+group by d.drugcode) p4 on (m1.drugcode = p4.drugcode)) as pp1
+where pp1.numhumanuc is not null or pp1.numhumanofc is not null or pp1.numhumanss is not null or pp1.numhumanpaid is not null
+union all
+select pp2.*,'2-4 ปี' as agegroup
+from(
+select m1.drugcode,p1.numhumanuc,p1.numtimesuc,p1.moneyuc,p1.ageuc,
+p2.numhumanofc,p2.numtimesofc,p2.moneyofc,p2.ageofc,
+p3.numhumanss,p3.numtimesss,p3.moneyss,p3.agess,
+p4.numhumanpaid,p4.numtimespaid,p4.moneypaid,p4.agepaid
+from
+(select d.drugcode
+from cdrug d
+where d.drugtype = '02' and d.drugtypesub in ('1','2') and d.drugflag = '1') as m1
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageuc,v.pid,
+count(distinct(v.pid)) as numhumanUC,count(vd.drugcode) as numTimesUC,sum(vd.unit*vd.realprice) as moneyUC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('3','4')
+and getageyearnum(p.birth,v.visitdate) between 2 and 4
+group by d.drugcode) p1 on (m1.drugcode = p1.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageofc,v.pid,
+count(distinct(v.pid)) as numhumanOFC,count(vd.drugcode) as numTimesOFC,sum(vd.unit*vd.realprice) as moneyOFC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('1','7')
+and getageyearnum(p.birth,v.visitdate) between 2 and 4
+group by d.drugcode) p2
+on (m1.drugcode = p2.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agess,v.pid,
+count(distinct(v.pid)) as numhumanSS,count(vd.drugcode) as numTimesSS,sum(vd.unit*vd.realprice) as moneySS,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('2')
+and getageyearnum(p.birth,v.visitdate) between 2 and 4
+group by d.drugcode) p3
+on (m1.drugcode = p3.drugcode )
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agepaid,v.pid,
+count(distinct(v.pid)) as numhumanpaid,count(vd.drugcode) as numTimespaid,sum(vd.unit*vd.realprice) as moneypaid,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('5','6','8','9')
+and getageyearnum(p.birth,v.visitdate) between 2 and 4
+group by d.drugcode) p4 on (m1.drugcode = p4.drugcode)) as pp2
+where pp2.numhumanuc is not null or pp2.numhumanofc is not null or pp2.numhumanss is not null or pp2.numhumanpaid is not null
+union all
+select pp2.*,'4-12 ปี' as agegroup
+from(
+select m1.drugcode,p1.numhumanuc,p1.numtimesuc,p1.moneyuc,p1.ageuc,
+p2.numhumanofc,p2.numtimesofc,p2.moneyofc,p2.ageofc,
+p3.numhumanss,p3.numtimesss,p3.moneyss,p3.agess,
+p4.numhumanpaid,p4.numtimespaid,p4.moneypaid,p4.agepaid
+from
+(select d.drugcode
+from cdrug d
+where d.drugtype = '02' and d.drugtypesub in ('1','2') and d.drugflag = '1') as m1
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageuc,v.pid,
+count(distinct(v.pid)) as numhumanUC,count(vd.drugcode) as numTimesUC,sum(vd.unit*vd.realprice) as moneyUC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('3','4')
+and getageyearnum(p.birth,v.visitdate) between 4 and 12
+group by d.drugcode) p1 on (m1.drugcode = p1.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageofc,v.pid,
+count(distinct(v.pid)) as numhumanOFC,count(vd.drugcode) as numTimesOFC,sum(vd.unit*vd.realprice) as moneyOFC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('1','7')
+and getageyearnum(p.birth,v.visitdate) between 4 and 12
+group by d.drugcode) p2
+on (m1.drugcode = p2.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agess,v.pid,
+count(distinct(v.pid)) as numhumanSS,count(vd.drugcode) as numTimesSS,sum(vd.unit*vd.realprice) as moneySS,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('2')
+and getageyearnum(p.birth,v.visitdate) between 4 and 12
+group by d.drugcode) p3
+on (m1.drugcode = p3.drugcode )
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agepaid,v.pid,
+count(distinct(v.pid)) as numhumanpaid,count(vd.drugcode) as numTimespaid,sum(vd.unit*vd.realprice) as moneypaid,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('5','6','8','9')
+and getageyearnum(p.birth,v.visitdate) between 4 and 12
+group by d.drugcode) p4 on (m1.drugcode = p4.drugcode)) as pp2
+where pp2.numhumanuc is not null or pp2.numhumanofc is not null or pp2.numhumanss is not null or pp2.numhumanpaid is not null
+union all
+select pp2.*,'12-60 ปี' as agegroup
+from(
+select m1.drugcode,p1.numhumanuc,p1.numtimesuc,p1.moneyuc,p1.ageuc,
+p2.numhumanofc,p2.numtimesofc,p2.moneyofc,p2.ageofc,
+p3.numhumanss,p3.numtimesss,p3.moneyss,p3.agess,
+p4.numhumanpaid,p4.numtimespaid,p4.moneypaid,p4.agepaid
+from
+(select d.drugcode
+from cdrug d
+where d.drugtype = '02' and d.drugtypesub in ('1','2') and d.drugflag = '1') as m1
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageuc,v.pid,
+count(distinct(v.pid)) as numhumanUC,count(vd.drugcode) as numTimesUC,sum(vd.unit*vd.realprice) as moneyUC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('3','4')
+and getageyearnum(p.birth,v.visitdate) between 12 and 60
+group by d.drugcode) p1 on (m1.drugcode = p1.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageofc,v.pid,
+count(distinct(v.pid)) as numhumanOFC,count(vd.drugcode) as numTimesOFC,sum(vd.unit*vd.realprice) as moneyOFC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('1','7')
+and getageyearnum(p.birth,v.visitdate) between 12 and 60
+group by d.drugcode) p2
+on (m1.drugcode = p2.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agess,v.pid,
+count(distinct(v.pid)) as numhumanSS,count(vd.drugcode) as numTimesSS,sum(vd.unit*vd.realprice) as moneySS,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('2')
+and getageyearnum(p.birth,v.visitdate) between 12 and 60
+group by d.drugcode) p3
+on (m1.drugcode = p3.drugcode )
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agepaid,v.pid,
+count(distinct(v.pid)) as numhumanpaid,count(vd.drugcode) as numTimespaid,sum(vd.unit*vd.realprice) as moneypaid,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('5','6','8','9')
+and getageyearnum(p.birth,v.visitdate) between 12 and 60
+group by d.drugcode) p4 on (m1.drugcode = p4.drugcode)) as pp2
+where pp2.numhumanuc is not null or pp2.numhumanofc is not null or pp2.numhumanss is not null or pp2.numhumanpaid is not null
+union all
+select pp2.*,'>=60 ปี' as agegroup
+from(
+select m1.drugcode,p1.numhumanuc,p1.numtimesuc,p1.moneyuc,p1.ageuc,
+p2.numhumanofc,p2.numtimesofc,p2.moneyofc,p2.ageofc,
+p3.numhumanss,p3.numtimesss,p3.moneyss,p3.agess,
+p4.numhumanpaid,p4.numtimespaid,p4.moneypaid,p4.agepaid
+from
+(select d.drugcode
+from cdrug d
+where d.drugtype = '02' and d.drugtypesub in ('1','2') and d.drugflag = '1') as m1
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageuc,v.pid,
+count(distinct(v.pid)) as numhumanUC,count(vd.drugcode) as numTimesUC,sum(vd.unit*vd.realprice) as moneyUC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('3','4')
+and getageyearnum(p.birth,v.visitdate) >=60
+group by d.drugcode) p1 on (m1.drugcode = p1.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as ageofc,v.pid,
+count(distinct(v.pid)) as numhumanOFC,count(vd.drugcode) as numTimesOFC,sum(vd.unit*vd.realprice) as moneyOFC,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('1','7')
+and getageyearnum(p.birth,v.visitdate) >=60
+group by d.drugcode) p2
+on (m1.drugcode = p2.drugcode)
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agess,v.pid,
+count(distinct(v.pid)) as numhumanSS,count(vd.drugcode) as numTimesSS,sum(vd.unit*vd.realprice) as moneySS,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('2')
+and getageyearnum(p.birth,v.visitdate) >=60
+group by d.drugcode) p3
+on (m1.drugcode = p3.drugcode )
+left join
+(select vd.drugcode,getageyearnum(p.birth,v.visitdate) as agepaid,v.pid,
+count(distinct(v.pid)) as numhumanpaid,count(vd.drugcode) as numTimespaid,sum(vd.unit*vd.realprice) as moneypaid,v.visitdate
+from visitdrug vd
+left join visit v on (vd.visitno = v.visitno and vd.pcucode = v.pcucode)
+left join cdrug d on (vd.drugcode = d.drugcode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join cright r on (v.rightcode = r.rightcode)
+left join crightgroup rg on (r.rightgroup = rg.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and d.drugtype = '02' and d.drugtypesub in ('1','2')
+and rg.rightgroupcode in ('5','6','8','9')
+and getageyearnum(p.birth,v.visitdate) >=60
+group by d.drugcode) p4 on (m1.drugcode = p4.drugcode)) as pp2
+where pp2.numhumanuc is not null or pp2.numhumanofc is not null or pp2.numhumanss is not null or pp2.numhumanpaid is not null]]>
+		</queryString>
+		<field name="drugcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="numhumanuc" class="java.lang.Long"/>
+		<field name="numtimesuc" class="java.lang.Long"/>
+		<field name="moneyuc" class="java.math.BigDecimal"/>
+		<field name="ageuc" class="java.lang.Integer"/>
+		<field name="numhumanofc" class="java.lang.Long"/>
+		<field name="numtimesofc" class="java.lang.Long"/>
+		<field name="moneyofc" class="java.math.BigDecimal"/>
+		<field name="ageofc" class="java.lang.Integer"/>
+		<field name="numhumanss" class="java.lang.Long"/>
+		<field name="numtimesss" class="java.lang.Long"/>
+		<field name="moneyss" class="java.math.BigDecimal"/>
+		<field name="agess" class="java.lang.Integer"/>
+		<field name="numhumanpaid" class="java.lang.Long"/>
+		<field name="numtimespaid" class="java.lang.Long"/>
+		<field name="moneypaid" class="java.math.BigDecimal"/>
+		<field name="agepaid" class="java.lang.Integer"/>
+		<field name="agegroup" class="java.lang.String"/>
+		<group name="agegroup">
+			<groupExpression><![CDATA[$F{agegroup}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="office" class="java.lang.String"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dum]]>
+	</queryString>
+	<field name="dum" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="76" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="27" width="555" height="23" uuid="fcd12d3e-0cca-449b-9d28-cdb52b5701af"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[รายงานทันตกรรม(แบ่งตามกลุ่มอายุและรายได้)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="0" width="555" height="27" uuid="b62c6f6e-3b02-4521-a75d-507ce157ca8e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{office}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="52" width="555" height="20" uuid="21839b03-27c5-4cd8-a2f3-ca79a1822449"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ระหว่างวันที่ "+$P{showDate1}+ " ถึงวันที่ "+ $P{showDate2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="36" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="423" y="11" width="80" height="20" uuid="5b8c348d-fa8b-480a-92e4-20372ad1e9c2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}+" /"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report" isBlankWhenNull="true">
+				<reportElement x="503" y="11" width="40" height="20" uuid="757ed3cf-20fd-453e-8274-0e5bfd5335e2"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="221" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table 5" style="table 5" x="0" y="0" width="555" height="221" uuid="fa85a460-898b-4462-a16a-b781ea74a362"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data1" uuid="1aa92ce1-ab4b-489d-8c71-7ddea39c9260">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="70" uuid="cc449555-13ea-467f-86dc-b2346eaaffd0">
+						<jr:groupHeader groupName="agegroup">
+							<jr:cell style="table 5_TH" height="30" rowSpan="1">
+								<textField>
+									<reportElement x="0" y="0" width="70" height="30" uuid="48cad5ec-c8bd-42f8-9e33-5e81df33f9ce"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{agegroup}]]></textFieldExpression>
+								</textField>
+							</jr:cell>
+						</jr:groupHeader>
+						<jr:columnHeader style="table 5_CH" height="60" rowSpan="2">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="58" uuid="b89c6c1a-baab-44d7-bbe2-98eebf9bc550"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[รหัสหัตถการ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="23" uuid="7fe63b0f-30e5-4ae5-a113-fe8ebe847ad8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{drugcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:columnGroup width="119" uuid="4f7c864a-bee3-42ca-ae25-6e18371133f3">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="119" height="30" uuid="58693ef5-fbe0-46d9-9b5c-ea776e85767d"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[UC]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:column width="30" uuid="421e8383-aa92-49ad-8c18-379c43f60374">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="2217c865-c91e-4232-a181-23c9351c5f34"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="960bdd4c-c503-4c58-9b3f-1ca3d4418874"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numhumanuc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="29" uuid="53384a25-69ac-4354-a774-e24b48cabe01">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="29" height="28" uuid="a69ebbdf-9057-424f-a5e2-326cace878db"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ครั้ง]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="29" height="23" uuid="1e868892-cbac-4fd5-a256-ae82eda620e9"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numtimesuc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="60" uuid="937d5454-bed7-4e8f-b540-eace7080d250">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="60" height="28" uuid="45eea6cc-afe4-4d55-a094-8b8eb5f0eece"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[บาท]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="60" height="23" uuid="6bb789fd-9497-4fcc-8670-2a670d110f02"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{moneyuc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+					<jr:columnGroup width="120" uuid="ca5447c9-c563-45f9-aa46-4da494dc6109">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="120" height="30" uuid="7c4f9ed1-9eeb-4d32-b54c-f677df899ca9"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[เบิกได้(OFC,LGO)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:column width="30" uuid="cf76f841-921e-4906-b11e-ba64fb051f00">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="8342f0b0-2066-420c-825c-4324b6a4b12e"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="a09f6e41-f441-4b1c-a4c5-4d56a76c83d4"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numhumanofc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="30" uuid="315a75e6-cb8a-45db-b558-b0bdf8abaced">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="f2713886-e134-4e97-ba71-b0d5e6faba41"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ครั้ง]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="78674c55-e149-4ce3-80a2-17a84f0676b5"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numtimesofc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="60" uuid="5a1b3b80-0272-4bba-818d-1b17fe1e0a39">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="60" height="28" uuid="cce052cd-9cb3-4934-9f6f-1a62bc70d80a"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[บาท]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="60" height="23" uuid="67987e3d-4b02-4a56-b964-f4e7080fabed"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{moneyofc}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+					<jr:columnGroup width="120" uuid="166836b1-6504-4ff5-a77d-c8721ed8819d">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="120" height="30" uuid="19d5f0a6-c8c7-406d-b703-1c98ced15d9a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ประกันสังคม]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:column width="30" uuid="b4b9350f-06d1-4fde-9b00-1541942c1b6a">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="3c27d04a-95de-402c-9573-5253c07310c6"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="ba309462-ce2c-4ada-bce2-e65d9ebe41b5"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numhumanss}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="30" uuid="00495ee7-8550-49eb-925e-9ca318ee4c0a">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="265653c4-c6e0-4c4d-af23-f13a8998d216"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ครั้ง]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="439c9df0-2165-4e71-9b52-8c8068c19263"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numtimesss}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="60" uuid="adc3c940-c70b-47a1-bf15-248dc5054bb9">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="60" height="28" uuid="a0fcc018-0de1-44af-9f05-3fed35d054fd"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[บาท]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="60" height="23" uuid="395c5734-8e6a-432c-b63f-acff0400235a"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{moneyss}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+					<jr:columnGroup width="120" uuid="5027b584-4c35-4d40-87dc-32a75bb0fb53">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="120" height="30" uuid="78d46e2e-cd75-452e-b284-d2ff07fb802d"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[จ่ายเอง(RigthGroup 5,6,8,9)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:column width="30" uuid="b143a374-f84a-45ab-ac82-ce73743bc751">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="89fc871a-b2df-4043-8baa-d7f33b69ca34"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="7d888442-c776-4d0a-928f-1e1feddc4a57"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numhumanpaid}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="30" uuid="091018cb-e120-4903-b375-7add42d4fd64">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="30" height="28" uuid="b0dbe456-6a23-4332-a8a7-0782e012fd26"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ครั้ง]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="30" height="23" uuid="6a1ccc91-aa33-4ecc-b5ba-09c57198cd37"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{numtimespaid}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="60" uuid="c9ee8e26-0189-4a26-8253-2f2eddfc5d11">
+							<jr:groupHeader groupName="agegroup">
+								<jr:cell style="table 5_TH" height="30" rowSpan="1"/>
+							</jr:groupHeader>
+							<jr:columnHeader style="table 5_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="60" height="28" uuid="9f6ae406-2d9b-4fca-9930-a4a516170619"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[บาท]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 5_TD" height="23" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="60" height="23" uuid="5545ad58-775d-465a-b43c-bd5a35e784e7"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{moneypaid}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

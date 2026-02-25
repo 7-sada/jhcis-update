@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="15_rpt_HT_LipidProfile" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="bc700164-3c8c-41c3-b7c4-aa4b03fc4725">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="30"/>
+	<property name="ireport.y" value="0"/>
+	<style name="Crosstab Data Text" hAlign="Center"/>
+	<queryString>
+		<![CDATA[select a.pid,a.pcucodeperson,p.idcard,concat(ct.titlename," ",p.fname," ",p.lname) as fullname,
+date_add(a.datecheck, interval 543 year) as datecheck,a.seq,a.labcode,v.labresultdigit
+,group_concat(distinct(pc.chroniccode)) as chroniccode
+from
+(select vl.pid,vl.pcucodeperson,vl.datecheck,max(seqonday) as seq,labcode
+from visitlabchcyhembmsse vl
+where vl.datecheck between '2019-01-01' and '2019-01-31'
+and (lcase(labcode) in ('ch07','ch25','ch14','ch17'))
+group by vl.datecheck,vl.pid,vl.labcode) as a
+join visitlabchcyhembmsse v on (a.pid = v.pid and a.datecheck = v.datecheck and a.pcucodeperson
+and a.seq = v.seqonday and a.labcode = v.labcode)
+left join personchronic pc on (a.pid = pc.pid and a.pcucodeperson = pc.pcucodeperson)
+left join person p on (a.pid = p.pid and a.pcucodeperson = p.pcucodeperson)
+left join persondeath pd on (p.pid = pd.pid and p.pcucodeperson = pd.pcucodeperson)
+left join ctitle ct on (p.prename = ct.titlecode)
+where (lcase(left(pc.chroniccode,3)) between 'i10' and 'i15')
+and pd.pid is null
+group by a.pid,a.datecheck,a.labcode
+order by a.datecheck,a.pid]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pcucodeperson" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fullname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="datecheck" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="seq" class="java.lang.Integer"/>
+	<field name="labcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="labresultdigit" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="chroniccode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="172" splitType="Stretch">
+			<crosstab>
+				<reportElement x="0" y="0" width="802" height="172" uuid="4bcfbb1b-b581-4f2d-9a55-1000d17e4f33"/>
+				<crosstabHeaderCell>
+					<cellContents>
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="30" uuid="54be79b9-d3b7-4d0a-afde-8cd2615dc3d6"/>
+							<text><![CDATA[HN]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="351" y="0" width="70" height="30" uuid="24e90399-facf-4c6d-bf2a-5ecf3119b468"/>
+							<text><![CDATA[Date_Service]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="50" y="0" width="100" height="30" uuid="0d19f090-f402-4bc4-a5a8-e74644b3fa70"/>
+							<text><![CDATA[ID_Card]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="150" y="0" width="140" height="30" uuid="996e63b1-8ad4-411d-ab88-d92c0fc8af4e"/>
+							<text><![CDATA[ชื่อ-สกุล]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="290" y="0" width="61" height="30" uuid="1f57b666-6da3-4fbd-82c5-ca73b27eadd3"/>
+							<text><![CDATA[รหัสกลุ่มดวามดัน
+(HT I10-I15)]]></text>
+						</staticText>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="pid" width="50">
+					<bucket class="java.lang.Integer">
+						<bucketExpression><![CDATA[$F{pid}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="77382964-a15f-4d48-9471-93c16d7110be"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{pid}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="idcard" width="100">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{idcard}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Opaque">
+							<textField>
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="100" height="25" uuid="755c58ea-7ccb-4a0c-aa03-be06925104c4"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{idcard}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="fullname" width="140">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{fullname}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Opaque">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="140" height="25" uuid="56da68dc-1c3e-47e4-ae9a-ea2e40cdbeac"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[" " +$V{fullname}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="chroniccode" width="61">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{chroniccode}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="61" height="25" uuid="0659a708-1ba5-43e1-be5c-98a7c07e96dd"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{chroniccode}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="datecheck" width="70">
+					<bucket class="java.sql.Date">
+						<bucketExpression><![CDATA[$F{datecheck}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="70" height="25" uuid="001cb862-3c79-4832-84a0-00fd130c24a9"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{datecheck}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="labcode" height="30">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{labcode}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="30" uuid="7e4d2096-28ae-4437-8e07-ce3ee1b4fb2f"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{labcode}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents/>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="labresultdigitMeasure" class="java.lang.Double">
+					<measureExpression><![CDATA[$F{labresultdigit}]]></measureExpression>
+				</measure>
+				<crosstabCell width="50" height="25">
+					<cellContents>
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="f3d0a938-6c68-4008-be1f-7b734774b560"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="TH SarabunPSK" size="14"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="pid">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="5455c7f5-3e94-4535-a976-1cf4f19ca8a8"/>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="50" columnTotalGroup="labcode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="0d2f5944-e2f6-4e8a-81ac-57b632afdc99"/>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="pid" columnTotalGroup="labcode">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="a394bef5-c381-43db-986c-c3dfad552b3e"/>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="datecheck">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="758b870f-2704-44bd-b19a-98c7b3d2b392"/>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="datecheck" columnTotalGroup="labcode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="ba985ea1-289c-4b42-b761-c89ed6cae9f2"/>
+							<textFieldExpression><![CDATA[$V{labresultdigitMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="fullname">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="fullname" columnTotalGroup="labcode">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="idcard">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="idcard" columnTotalGroup="labcode">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="chroniccode">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="chroniccode" columnTotalGroup="labcode">
+					<cellContents/>
+				</crosstabCell>
+			</crosstab>
+		</band>
+	</summary>
+</jasperReport>

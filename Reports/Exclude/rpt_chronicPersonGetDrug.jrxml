@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rpt_chronicPersonGetDrug" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryWithPageHeaderAndFooter="true" uuid="1e896532-2235-4363-9387-1d02ae87e508">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data" uuid="15cbfad4-e027-4549-bb75-709c16721a69">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select p1.pid as HN,
+CONCAT_WS('-',substring(p.idcard,1,1),substring(p.idcard,2,4),substring(p.idcard,6,5),substring(p.idcard,11,2),substring(p.idcard,13,1))AS 'idcard',
+concat(ct.titlename,p.fname,' ',p.lname)as 'name',
+CONVERT(concat(DAY(p.birth),' ',(case when (month (p.birth) = 1) then 'ม.ค.'
+      when (month (p.birth) = 2) then 'ก.พ.'
+      when (month (p.birth) = 3) then 'มี.ค.'
+      when (month (p.birth) = 4) then 'เม.ย.'
+      when (month (p.birth) = 5) then 'พ.ค.'
+      when (month (p.birth) = 6) then 'มิ.ย.'
+      when (month (p.birth) = 7) then 'ก.ค.'
+      when (month (p.birth) = 8) then 'ส.ค.'
+      when (month (p.birth) = 9) then 'ก.ย.'
+      when (month (p.birth) = 10) then 'ต.ค.'
+      when (month (p.birth) = 11) then 'พ.ย.'
+      when (month (p.birth) = 12) then 'ธ.ค.'
+end),' ',year (p.birth) + 543)USING utf8) 'birth',
+getAgeymd(p.birth,v.visitdate) AS 'age',
+p.mumoi,
+p.rightcode,
+cr.rightname,
+p1.chroniccode,
+CONVERT(concat(DAY(v.visitdate),' ',(case when (month (v.visitdate) = 1) then 'ม.ค.'
+      when (month (v.visitdate) = 2) then 'ก.พ.'
+      when (month (v.visitdate) = 3) then 'มี.ค.'
+      when (month (v.visitdate) = 4) then 'เม.ย.'
+      when (month (v.visitdate) = 5) then 'พ.ค.'
+      when (month (v.visitdate) = 6) then 'มิ.ย.'
+      when (month (v.visitdate) = 7) then 'ก.ค.'
+      when (month (v.visitdate) = 8) then 'ส.ค.'
+      when (month (v.visitdate) = 9) then 'ก.ย.'
+      when (month (v.visitdate) = 10) then 'ต.ค.'
+      when (month (v.visitdate) = 11) then 'พ.ย.'
+      when (month (v.visitdate) = 12) then 'ธ.ค.'
+end),' ',year (v.visitdate) + 543)USING utf8) 'servicedate',
+GROUP_CONCAT(vd.drugcode) as drugcode
+from
+(select pc.pid,GROUP_CONCAT(pc.chroniccode) as chroniccode,pc.pcucodeperson
+from personchronic pc
+where (lcase(left(pc.chroniccode,3)) between 'e10' and 'e14') or (pc.chroniccode = 'I10')
+group by pc.pid ) as p1
+left join person p on (p1.pid = p.pid and p1.pcucodeperson = p.pcucodeperson)
+left join persondeath pd on (p1.pid = pd.pid and p1.pcucodeperson = pd.pcucodeperson)
+left join ctitle ct on (p.prename = ct.titlecode )
+left join cright cr on (p.rightcode = cr.rightcode)
+left join visit v on (v.pid = p1.pid and v.pcucodeperson = p1.pcucodeperson)
+left join visitdrug vd on (v.visitno = vd.visitno and vd.pcucode = v.pcucode)
+left join cdrug cd on (cd.drugcode = vd.drugcode)
+where p.typelive in ('0','1','3')
+and pd.pid is null
+and v.visitdate between $P{sdate} and $P{edate}
+and v.flagservice in ('02','03')
+and cd.drugtype in ('01','10')
+group by v.visitno
+order by v.visitdate,p.mumoi]]>
+		</queryString>
+		<field name="HN" class="java.lang.Integer"/>
+		<field name="idcard" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="name" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="birth" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="age" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="mumoi" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="rightcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="rightname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="chroniccode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="servicedate" class="java.lang.String"/>
+		<field name="drugcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+	</subDataset>
+	<parameter name="office" class="java.lang.String"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dnum]]>
+	</queryString>
+	<field name="dnum" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<columnHeader>
+		<band height="95" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="802" height="34" uuid="3fc7bfd6-7589-450e-8752-f810056fb62b"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["   "+$P{office}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="34" width="802" height="32" uuid="b7bffc1e-0e5e-4cbe-bf82-f56b8dcbb541"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[รายงานการได้รับยาของผู้ป่วยโรคเบาหวานหรือความดันสูง]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="-13" y="66" width="802" height="26" uuid="55ba1aa0-8235-4f96-bd0b-98eb32b716bc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ระหว่างวันที่ "+$P{showDate1}+" ถึงวันที่ "+$P{showDate2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<pageFooter>
+		<band height="17" splitType="Stretch">
+			<textField>
+				<reportElement x="669" y="0" width="80" height="17" uuid="61a9ce1a-960d-4fd7-8cd0-e33d0e6b33dc"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}+" /"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="749" y="0" width="40" height="17" uuid="451c879c-d66a-478b-9ff1-d21c05e10e7e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="223" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="802" height="223" uuid="1831c601-a760-4720-a6f3-0b2d8ff0b318"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data" uuid="7bb5499c-4b03-4e3c-b1f7-41f9f60f3698">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="30" uuid="b2b2de90-8679-4ff3-a35f-2e8dc164bab2">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="30" height="30" uuid="75d53f3a-7fed-4b83-afab-59377d1a837a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[HN]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="30" height="20" uuid="b6f90de6-4123-46b0-b9fa-76c6ba26bd2a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{HN}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="b19fc70c-1f11-40d6-b4b0-8e0cca7d7060">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="e9116e5e-1163-4c12-b279-b53ecdc844bc"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[idcard]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="20" uuid="8517e966-2d9b-4495-b8a5-a53738762a07"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{idcard}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="99" uuid="ce53c7ce-b907-4a95-9bb4-589925e99e89">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="99" height="30" uuid="99933341-f3c1-4429-957f-65ec6bba879a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อ-สกุล]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="2" y="0" width="97" height="20" uuid="a0ab9c6f-cc85-40f2-9926-a00118df862a"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="60" uuid="bdea3839-235c-4a5e-acc0-ebb492a3a417">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="60" height="30" uuid="13cf69e5-04ac-419e-9fc3-75ebbb18fad1"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[วันเกิด]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="60" height="20" uuid="1e1ec269-32d3-48e0-baff-2a2bbaaf46a1"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{birth}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="69" uuid="a8b2811c-cd51-4124-b0ba-771a7b559eb9">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="69" height="30" uuid="7a344444-697c-4bb6-bd4f-1c5fa171d6a8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[อายุ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="69" height="20" uuid="e7ac2ca6-52f4-4204-ad80-349342a8dfdd"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="34" uuid="45c0f8f2-9caf-440c-8fc3-1b1c81f3c895">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="34" height="30" uuid="acd7a86d-769e-4754-8bc6-f5d027129eb4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[หมู่ที่ ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="34" height="20" uuid="e31f905e-a4b0-4942-a29a-7855c1fa1235"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{mumoi}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="41281157-0245-4127-b218-ca0aa4997ec8">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="40" height="30" uuid="470f974c-ac4c-444c-96d3-c9af51c76878"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[รหัสสิทธิ์]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="40" height="20" uuid="a58a33d9-d375-4f9f-bf2b-6b59670479c9"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{rightcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="126" uuid="c1355ede-9dbb-4163-8b5f-b1fdfb7773ed">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="126" height="30" uuid="fc7583e1-665b-4cf9-8519-b102638b653d"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อสิทธิ์]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="126" height="20" uuid="fd1fcc91-2328-49f4-8cfa-752d6618523f"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[" "+$F{rightname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="68" uuid="dda012e3-7757-4a2f-b38e-9dcbcd930575">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="68" height="30" uuid="2ed2681b-0248-4119-891a-a88cf7372ae7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[รหัสโรคเรื้อรัง]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="68" height="20" uuid="bb71a391-905b-4c34-9c1c-0e5180c0eabb"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{chroniccode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="65" uuid="87c10cc2-b62d-402f-939c-09518d569999">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="65" height="30" uuid="849ff808-aff7-49f8-8dbc-b3dd5ef6a98a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[วันที่รับบริการ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="65" height="20" uuid="2cddd19c-fbcb-4d95-866e-7df98c6a21c5"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{servicedate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="111" uuid="bdd98d36-cf18-4232-89dc-82cd875870f4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="111" height="30" uuid="e9733f9a-7be7-47eb-83f2-004f44ff0953"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[รหัสยา]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="111" height="20" uuid="5d185549-2a47-451f-a83d-3a963e399f73"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{drugcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

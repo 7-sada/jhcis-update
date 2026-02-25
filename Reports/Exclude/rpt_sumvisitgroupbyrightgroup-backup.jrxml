@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rpt_sumvisitgroupbyrightgroup" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d7a5fd3-81e3-4909-9789-8bfdcd4d4783">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="Crosstab Data Text" hAlign="Center"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="office" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[(select count(v.visitno) as num,ifnull(c2.rightgroupname,'ไม่ระบุ') as rightgroup,
+concat(year(v.visitdate)+543,"",(case
+ when month(v.visitdate) = 1 then '(04)ม.ค.'
+ when month(v.visitdate) = 2 then '(05)ก.พ.'
+ when month(v.visitdate) = 3 then '(06)มี.ค.'
+ when month(v.visitdate) = 4 then '(07)เม.ย.'
+ when month(v.visitdate) = 5 then '(08)พ.ค.'
+ when month(v.visitdate) = 6 then '(09)มิ.ย.'
+ when month(v.visitdate) = 7 then '(10)ก.ค.'
+ when month(v.visitdate) = 8 then '(11)ส.ค.'
+ when month(v.visitdate) = 9 then '(12)ก.ย.'
+ when month(v.visitdate) = 10 then '(01)ต.ค.'
+ when month(v.visitdate) = 11 then '(02)พ.ย.'
+ when month(v.visitdate) = 12 then '(03)ธ.ค.'
+end)) as my
+,
+concat(year(v.visitdate)+543,(case
+ when month(v.visitdate) = 1 then '01'
+ when month(v.visitdate) = 2 then '02'
+ when month(v.visitdate) = 3 then '03'
+ when month(v.visitdate) = 4 then '04'
+ when month(v.visitdate) = 5 then '05'
+ when month(v.visitdate) = 6 then '06'
+ when month(v.visitdate) = 7 then '07'
+ when month(v.visitdate) = 8 then '08'
+ when month(v.visitdate) = 9 then '09'
+ when month(v.visitdate) = 10 then '10'
+ when month(v.visitdate) = 11 then '11'
+ when month(v.visitdate) = 12 then '12'
+end)) as myShow
+from visit v
+left join cright c ON (v.rightcode = c.rightcode)
+left join crightgroup c2 on (c.rightgroup = c2.rightgroupcode)
+where v.visitdate between $P{sdate} and $P{edate}
+and v.flagservice = '03'
+group by month(v.visitdate),c2.rightgroupcode
+order by myShow )]]>
+	</queryString>
+	<field name="num" class="java.lang.Long"/>
+	<field name="rightgroup" class="java.lang.String"/>
+	<field name="my" class="java.lang.String"/>
+	<field name="myShow" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="118" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="49" width="802" height="34" uuid="304257d0-0284-42a1-a27a-4cd34fa0a85a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{office}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="83" width="802" height="35" uuid="679be4f9-e2d8-4b93-a5e7-875fcb810c93"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ระหว่างวันที่ "+$P{showDate1} + " ถึงวันที่ "+$P{showDate2}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="15" width="802" height="34" uuid="5d6f523b-49f1-4135-a09a-21b987b0e869"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ผลการให้บริการแยกตามสิทธิ์การรักษา"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<summary>
+		<band height="154" splitType="Stretch">
+			<crosstab>
+				<reportElement x="0" y="0" width="802" height="154" uuid="4d348bd0-ca7e-41ad-9ebe-299f577e673f"/>
+				<crosstabHeaderCell>
+					<cellContents backcolor="#F0F8FF" mode="Opaque">
+						<staticText>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="106" height="30" uuid="e6766605-ad99-46bf-a651-300d76d54a99"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<text><![CDATA[ประเภทสิทธิ์]]></text>
+						</staticText>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="rightgroup" width="106" totalPosition="End">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{rightgroup}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField>
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="106" height="25" uuid="12d947a3-d5b3-40ba-985f-acce51b03cf8"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{rightgroup}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents backcolor="#BFE1FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<staticText>
+								<reportElement x="0" y="0" width="106" height="25" uuid="55c9942f-f430-4fbe-b6b9-d4f4aafc9b2f"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<text><![CDATA[รวม]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="my" height="30" totalPosition="End">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{my}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField>
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="59" height="30" uuid="82e63d06-32a6-4028-b13c-eaa9a3504b9b"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{my}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents backcolor="#BFE1FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<staticText>
+								<reportElement x="0" y="0" width="52" height="30" uuid="a1e93dfb-723b-47c8-88d7-6734dbc8e1af"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9"/>
+								</textElement>
+								<text><![CDATA[รวม]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="numMeasure" class="java.lang.Long" calculation="Sum">
+					<measureExpression><![CDATA[$F{num}]]></measureExpression>
+				</measure>
+				<crosstabCell width="60" height="25">
+					<cellContents>
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="59" height="25" uuid="9a4e7dcb-a70d-477c-873e-47ab8f5018c8"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{numMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="60" height="25" rowTotalGroup="rightgroup">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="59" height="25" uuid="900303e3-e212-442e-bacd-e75a41efd4e4"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{numMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="52" height="25" columnTotalGroup="my">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="52" height="25" uuid="00d03e16-a1e9-4ea9-ab4a-7af7314b06af"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{numMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="52" height="25" rowTotalGroup="rightgroup" columnTotalGroup="my">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="52" height="25" uuid="2028a2b7-b0e6-4f54-a438-ea0d401b41a8"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Tahoma" size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{numMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+			</crosstab>
+		</band>
+	</summary>
+</jasperReport>

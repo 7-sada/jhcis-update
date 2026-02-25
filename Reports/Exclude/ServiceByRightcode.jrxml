@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ServiceByRightcode" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryWithPageHeaderAndFooter="true" uuid="41751d6a-29cf-4740-9c06-99a73e4a92f9">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 2_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data1" uuid="00cc6c3b-5174-41b2-b198-098b75ef611b">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select if(cp.rightgroupname is null,"ไม่ระบุ",cp.rightgroupname) as rightgroupname
+,p2.*
+from
+(select cr.rightcode,if(cr.rightname is null,"ไม่ระบุ",cr.rightname) as rightname,cr.rightgroup,
+sum(p1.visit_type) as newperson,sum(p1.totalperson) as totolperson,sum(p1.visit_count) as times,sum(p1.sumgrain) as gain,
+sum(p1.sumservice) as service,sum(p1.sumcost) as cost
+from
+(SELECT
+  v.pid as pid,v.pcucodeperson,count(distinct(pid)) as totalPerson,sum(money1) as sumService,sum(money3) as sumCost,sum(money2) as sumGrain
+  ,COUNT(*) AS visit_count,
+  MIN(visitdate) AS first_visit,
+  GROUP_CONCAT(v.visitdate) AS visitdate,
+  CASE
+    WHEN COUNT(*) >= 2 THEN '0'
+    ELSE '1'
+  END AS visit_type,
+  v.rightcode
+FROM visit v
+WHERE v.visitdate BETWEEN $P{sdate} AND $P{edate}
+and v.flagservice in ('02','03')
+GROUP BY v.pid) as p1
+left join cright cr on (cr.rightcode = p1.rightcode)
+group by cr.rightcode) as p2
+left join crightgroup cp on (p2.rightgroup = cp.rightgroupcode)
+order by cp.rightgroupcode]]>
+		</queryString>
+		<field name="rightgroupname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="rightcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="rightname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="rightgroup" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="newperson" class="java.lang.Double"/>
+		<field name="totolperson" class="java.math.BigDecimal"/>
+		<field name="times" class="java.math.BigDecimal">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="gain" class="java.lang.Double"/>
+		<field name="service" class="java.lang.Double"/>
+		<field name="cost" class="java.lang.Double">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<variable name="sumnewperson" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{newperson}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="sumTotalPerson" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{totolperson}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="sumTimes" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{times}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="sumGrain" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{gain}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="sumSeervice" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{service}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="sumCost" class="java.lang.Double" resetType="Group" resetGroup="rightgroupname" calculation="Sum">
+			<variableExpression><![CDATA[$F{cost}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="Totalnewperson" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{newperson}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="TotalTotalPerson" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{newperson}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="TotalTimes" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{times}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="TotalGrain" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{gain}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="TotalSeervice" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{service}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<variable name="TotalCost" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{cost}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+		<group name="rightgroupname">
+			<groupExpression><![CDATA[$F{rightgroupname}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="office" class="java.lang.String"/>
+	<parameter name="showDate1" class="java.lang.String"/>
+	<parameter name="showDate2" class="java.lang.String"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dum]]>
+	</queryString>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="80" splitType="Stretch">
+			<staticText>
+				<reportElement x="11" y="0" width="539" height="30" uuid="9f32ce2d-d0c0-41b5-9e95-99b58d7f2a84"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[สปภ 02/1 การให้บริการจำแนกตามสิทธิ์]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="11" y="33" width="539" height="20" uuid="d9bb8512-1559-41fe-85bb-053a5fc577f1"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{office}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="11" y="53" width="539" height="20" uuid="ce45859c-12f5-437b-961f-dea1e231b862"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ประมวลผลระหว่างวันที่ "+$P{showDate1}+ " ถึงวันที่ "+$P{showDate2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="22" splitType="Stretch">
+			<textField>
+				<reportElement x="430" y="0" width="80" height="20" uuid="cd00e770-d317-4d65-be5d-170c1c4dd8d2"/>
+				<textElement textAlignment="Right">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}+"/"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="510" y="0" width="40" height="20" uuid="cefd9bb3-a551-4c85-a827-d43030b0088a"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="0" y="0" width="65" height="20" uuid="7cb1a37a-8b37-45eb-99e5-8dbf7605edee"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField pattern="h.mm.ss a">
+				<reportElement x="65" y="2" width="100" height="20" uuid="a543137b-8d3e-41f5-b851-6d1a52b9f015"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="207" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table 2" style="table 2" x="0" y="0" width="555" height="207" uuid="af8b23c0-5929-4452-b811-8fcaa9006c76"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data1" uuid="ee41016a-aff8-4da3-aeda-795b9f0fb368">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:columnGroup width="551" uuid="5b9424a7-53fa-4036-a543-15f0fdafdf9f">
+						<jr:groupHeader groupName="rightgroupname">
+							<jr:cell height="30" rowSpan="1">
+								<textField isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="547" height="30" uuid="1d316f39-b562-4187-ad49-93b0d3ddc5bd"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[" "+$F{rightgroupname}]]></textFieldExpression>
+								</textField>
+							</jr:cell>
+						</jr:groupHeader>
+						<jr:column width="131" uuid="110fc051-39e2-4f5e-844c-60e1fcbecb26">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<staticText>
+										<reportElement x="0" y="0" width="131" height="30" uuid="267f164a-36c7-46c6-a0c6-be3124671f6a"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<text><![CDATA[รวม]]></text>
+									</staticText>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="131" height="41" uuid="b517838b-f584-4d10-af3b-de367abcb051"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[สิทธิ์ ย่อย]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="131" height="30" uuid="076f89ce-ed0c-4d31-b76c-af1ebf79650c"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[รวมทั้งสิ้น]]></text>
+								</staticText>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="131" height="20" uuid="5c3cfd07-e9c0-444c-9d20-081114fd210a"/>
+									<textElement textAlignment="Left" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[" "+$F{rightname}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="50" uuid="c6697ffb-a00c-472a-8c39-5ac59c3e5093">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="50" height="30" uuid="37cfebc9-5dc0-4027-8674-b9f9a8a8f68e"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumnewperson}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="50" height="41" uuid="f0e9ece6-0fa3-4c09-8c40-c9fb4c77b677"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน
+(ใหม่)]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="30" uuid="ad4c246e-c01a-433f-b5bf-f7acaf39b6e0"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{Totalnewperson}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="20" uuid="7fd3f2a8-7e66-43b0-9469-b6d72108f2ae"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{newperson}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="50" uuid="b5631e34-f130-41a8-a40b-8fee972dd949">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="50" height="30" uuid="c701db11-7285-4ae3-9f35-914aeda0e011"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumTotalPerson}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="50" height="41" uuid="f03e1d19-ab46-4be4-be90-48edbb360c3c"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[คน
+ทั้งหมด]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="30" uuid="f19c0da7-2bb1-47f4-a7ac-3f5267ae0e5d"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{TotalTotalPerson}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="20" uuid="f3fe19bc-44fd-460f-b1a6-7b395d5a02ea"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{totolperson}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="50" uuid="6546de0e-9b68-42d1-863a-fd8ec58c3fc8">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="50" height="30" uuid="0a536aa1-3907-4bc3-ae30-f25a4e3e36ab"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumTimes}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="50" height="41" uuid="74378a21-8d1a-44a1-8638-a113aa97a873"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ครั้ง]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="30" uuid="a4494d61-d92a-4f30-9d87-7214b10e6e50"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{TotalTimes}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="50" height="20" uuid="261a6f6a-ea95-425f-85ff-8cc5cb9bf783"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{times}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="90" uuid="e5f626d1-2e29-432c-82f7-9dedf675791b">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="90" height="30" uuid="acb35ecb-3380-4b4b-ba11-2ff17c727a0d"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumGrain}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="90" height="41" uuid="2ca113c6-7180-474d-aa13-dc0f0a2d99b1"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[เรียกเก็บ
+(บาท)]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="30" uuid="34fe3a5f-c065-4983-8c5c-5a1af5e810bb"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{TotalGrain}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="20" uuid="89905ea1-3666-4d2b-978a-4199a3247fe2"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{gain}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="90" uuid="c09582a0-5154-415c-badb-a3f8de053405">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="90" height="30" uuid="c953fea9-a678-4e00-9c4d-ee901d7fa247"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumSeervice}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="90" height="41" uuid="7074f837-19f5-4618-b0f5-a87d5c028097"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ค่าบริการ
+(บาท)]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="30" uuid="814768d5-b8b2-4460-ad45-1f6b59b93ca2"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{TotalSeervice}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="20" uuid="1e661133-3d52-4b8b-9dca-f0944d74100d"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{service}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="90" uuid="10df2a5b-ff20-4195-bc01-3adbc89f686b">
+							<jr:groupFooter groupName="rightgroupname">
+								<jr:cell style="table 2_TH" height="30" rowSpan="1">
+									<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+										<reportElement x="0" y="0" width="90" height="30" uuid="271c07ad-0b12-4ecb-bfe5-2567a8029bc1"/>
+										<textElement textAlignment="Center" verticalAlignment="Middle">
+											<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+										</textElement>
+										<textFieldExpression><![CDATA[$V{sumCost}]]></textFieldExpression>
+									</textField>
+								</jr:cell>
+							</jr:groupFooter>
+							<jr:columnHeader style="table 2_CH" height="41" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="90" height="41" uuid="86d45492-1657-4129-9f50-418578c01227"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ต้นทุน
+(บาท)]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:columnFooter style="table 2_CH" height="30" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="30" uuid="f89595e7-ac83-459a-9f10-3bae9e6d9cd1"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{TotalCost}]]></textFieldExpression>
+								</textField>
+							</jr:columnFooter>
+							<jr:detailCell style="table 2_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="90" height="20" uuid="e1a5869f-27c8-4be0-ba5b-7e94dee2a6af"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{cost}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>
