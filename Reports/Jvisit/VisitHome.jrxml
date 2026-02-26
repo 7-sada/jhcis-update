@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VisitHome" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b95c25f1-0628-4a4d-8a4f-373b7b701fbe">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="VisitData" uuid="a8017a4a-7def-4a5c-8a64-fd94afb7102b">
+		<parameter name="DateRepStart" class="java.lang.String">
+			<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+		</parameter>
+		<parameter name="DateRepEnd" class="java.lang.String" isForPrompting="false">
+			<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[select A.pid,A.fullname,A.age,A.mumoi,A.villcode,A.villname,A.pcucodeperson,
+A.dateserv,A.thaidate,A.ppspecial,A.ppname,A.pcucode,A.visitno,A.patientsign,
+A.homehealthdetail,A.homehealthresult,A.homehealthplan,A.dateappoint,A.dateappointhai
+from
+(select cc.pid,concat(ifnull(titlename,ifnull(p1.prename,'...')) ," ", fname," ", lname) as fullname,
+getAgeYearNum(p1.birth,cc.dateserv) as Age,p1.mumoi,h.villcode,p4.villname,cc.pcucodeperson,
+cc.dateserv,concat((cast(extract(day from cc.dateserv) as char)),
+((case when (extract(month from cc.dateserv)) = 1 then ' ม.ค. '
+      when (extract(month from cc.dateserv)) = 2 then ' ก.พ. '
+      when (extract(month from cc.dateserv)) = 3 then ' มี.ค. '
+      when (extract(month from cc.dateserv)) = 4 then ' เม.ษ. '
+      when (extract(month from cc.dateserv)) = 5 then ' พ.ค. '
+      when (extract(month from cc.dateserv)) = 6 then ' มิ.ย. '
+      when (extract(month from cc.dateserv)) = 7 then ' ก.ค. '
+      when (extract(month from cc.dateserv)) = 8 then ' ส.ค. '
+      when (extract(month from cc.dateserv)) = 9 then ' ก.ย. '
+      when (extract(month from cc.dateserv)) = 10 then ' ต.ค. '
+      when (extract(month from cc.dateserv)) = 11 then ' พ.ย. '
+      when (extract(month from cc.dateserv)) = 12 then ' ธ.ค. '
+      else 'n/a' end)),
+(cast((extract(year from cc.dateserv)+543) as char(20)))) as thaidate,
+cc.ppspecial,cs.ppname,fs.pcucode,fs.visitno,vh.patientsign,vh.homehealthdetail,vh.homehealthresult
+,vh.homehealthplan,vh.dateappoint,
+concat((cast(extract(day from vh.dateappoint) as char)),
+((case when (extract(month from vh.dateappoint)) = 1 then ' ม.ค. '
+      when (extract(month from vh.dateappoint)) = 2 then ' ก.พ. '
+      when (extract(month from vh.dateappoint)) = 3 then ' มี.ค. '
+      when (extract(month from vh.dateappoint)) = 4 then ' เม.ษ. '
+      when (extract(month from vh.dateappoint)) = 5 then ' พ.ค. '
+      when (extract(month from vh.dateappoint)) = 6 then ' มิ.ย. '
+      when (extract(month from vh.dateappoint)) = 7 then ' ก.ค. '
+      when (extract(month from vh.dateappoint)) = 8 then ' ส.ค. '
+      when (extract(month from vh.dateappoint)) = 9 then ' ก.ย. '
+      when (extract(month from vh.dateappoint)) = 10 then ' ต.ค. '
+      when (extract(month from vh.dateappoint)) = 11 then ' พ.ย. '
+      when (extract(month from vh.dateappoint)) = 12 then ' ธ.ค. '
+      else 'n/a' end)),
+(cast((extract(year from vh.dateappoint)+543) as char(20)))) as dateappointhai
+from
+(select aa.pid,aa.dateserv,max(aa.ppspecial) as ppspecial,aa.pcucodeperson
+from f43specialpp aa
+where aa.dateserv = (select max(bb.dateserv) from f43specialpp bb where aa.pid = bb.pid
+                  and bb.dateserv between $P!{DateRepStart} and  $P!{DateRepEnd})
+and aa.ppspecial in ('1B1282','1B1281','1B1280')
+group by aa.pid) cc
+join cspecialpp cs on (cc.ppspecial = cs.ppcode)
+join f43specialpp fs on (cc.pid = fs.pid and cc.dateserv = fs.dateserv
+               and cc.ppspecial = fs.ppspecial and cc.pcucodeperson = fs.pcucodeperson)
+left join visithomehealthindividual vh on (fs.pcucode = vh.pcucode) and (fs.visitno = vh.visitno)
+join person p1 on (p1.pid = cc.pid and p1.pcucodeperson = cc.pcucodeperson)
+join ctitle p2 on p1.prename = p2.titlecode
+left join house h on (p1.hcode = h.hcode and p1.pcucodeperson = h.pcucode)
+left join village p4 on (h.villcode = p4.villcode and h.pcucode = p4.pcucode)
+where cc.ppspecial = '1B1281'
+and right(h.villcode,2)<>'00')A
+group by A.pid,A.fullname,A.age,A.mumoi,A.villcode,A.villname,A.pcucodeperson,
+A.dateserv,A.thaidate,A.ppspecial,A.ppname,A.pcucode,A.visitNo]]>
+		</queryString>
+		<field name="pid" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fullname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="age" class="java.lang.Long">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="mumoi" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="villcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="villname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="pcucodeperson" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dateserv" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="thaidate" class="java.lang.String"/>
+		<field name="ppspecial" class="java.lang.String">
+			<fieldDescription><![CDATA[รหัสการให้บริการส่งเสริม ป้องกันโรค(กำหนดโดย สนย)]]></fieldDescription>
+		</field>
+		<field name="ppname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="pcucode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="visitno" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="patientsign" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="homehealthdetail" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="homehealthresult" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="homehealthplan" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dateappoint" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dateappointhai" class="java.lang.String"/>
+		<group name="villcode">
+			<groupExpression><![CDATA[$F{villcode}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="DateRepStart" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DateRepEnd" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="offAddress" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="dStartEnd" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select 1 as dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="76" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="8fa96026-c8f4-47aa-8464-2fbe2b964c08" key="textField-3" positionType="Float" stretchType="RelativeToTallestObject" x="10" y="41" width="556" height="23" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Angsana New" size="14" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{offAddress}]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement uuid="823f5628-a8cf-4194-8cb0-ab1e024ccc65" x="337" y="15" width="257" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Angsana New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{dStartEnd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="6a906bc0-084f-459b-aa85-d272ed0ff1ff" x="11" y="15" width="267" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Angsana New" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รายงานการเยี่ยมบ้าน  ประเภทเตียง : ติดบ้าน"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ad397bf0-48b0-4af6-b514-a38eea958b51" key="staticText-1" x="279" y="15" width="58" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Angsana New" size="14" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ตั้งแต่วันที่ :]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<summary>
+		<band height="176" splitType="Stretch">
+			<componentElement>
+				<reportElement uuid="bb7fb203-0875-4b37-8556-6d0309eef511" key="table 1" style="table 1" x="0" y="0" width="802" height="176"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="VisitData" uuid="f720786c-6f66-4ed3-9c4c-ae17b35b8cc0">
+						<datasetParameter name="DateRepStart">
+							<datasetParameterExpression><![CDATA[$P{DateRepStart}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="DateRepEnd">
+							<datasetParameterExpression><![CDATA[$P{DateRepEnd}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:columnGroup width="790" uuid="ffa516c7-ddd1-4b2d-9839-84a912eb06ad">
+						<jr:tableFooter style="table_CH" height="30" rowSpan="1">
+							<textField>
+								<reportElement uuid="7c74eb8e-d2d8-404a-9e93-03c39f6546a9" x="0" y="0" width="790" height="30"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA["รวมทั้งสิ้น "+ $V{REPORT_COUNT}+ " คน"]]></textFieldExpression>
+							</textField>
+						</jr:tableFooter>
+						<jr:groupHeader groupName="villcode">
+							<jr:cell style="table_TH" height="30" rowSpan="1">
+								<textField>
+									<reportElement uuid="6479b4c1-e4d0-468d-b1d6-f3dc05ada3cc" x="0" y="0" width="790" height="30"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{villcode}.equals("84060900")?$F{villname}:"หมู่ที่ "+$F{mumoi}+"  "
++ $F{villname}]]></textFieldExpression>
+								</textField>
+							</jr:cell>
+						</jr:groupHeader>
+						<jr:column width="50" uuid="17b2859e-9e08-4cfb-9140-5ff2eeeba9da">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="4ec8bf7d-6bd4-4446-b7d3-caa560136e1e" x="0" y="0" width="50" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ลำดับที่]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField>
+									<reportElement uuid="6a1b1acb-d6db-4d07-9938-debfe1fc7c92" x="0" y="0" width="50" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{villcode_COUNT}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="160" uuid="571aaa1c-298f-424a-9649-7114ecf28b08">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="79eb3fe6-3d91-44b3-87c2-39177818428d" x="0" y="0" width="160" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ชื่อ-นามสกุล]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="ceff3b11-e7c3-4fc8-bdd7-8564b4045ef2" x="0" y="0" width="160" height="20"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{fullname}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="40" uuid="2942aa47-1c37-4d46-b115-1f4429c9f65b">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="4f61708c-a386-4d32-b1b7-f0d95a1c112f" x="0" y="0" width="40" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[อายุ(ปี)]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="a7e5cd46-9ccd-4b59-810b-ad77073225e4" x="0" y="0" width="40" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="65" uuid="7b837caf-7128-4466-acab-e144c2433071">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="8566fa24-e55a-43a6-b8f3-20ca68e8ffca" x="0" y="0" width="65" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[วันที่เยี่ยม]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="d10aebaa-4ad3-4bf9-8af4-53bec02ad7f7" x="0" y="0" width="65" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{thaidate}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="150" uuid="78373d14-2945-4abf-8609-93bae1ab9f10">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="3c549443-92fa-42fc-bca6-6829e31785b0" x="0" y="0" width="150" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[สภาพ/อาการ]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="565101b0-d356-4a90-b216-45106ea29774" x="0" y="0" width="150" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{patientsign}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="130" uuid="5eed8233-42f0-4dc3-8269-77b2828826a5">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="539ec66d-8c84-41e9-a66f-dc1f709de33d" x="0" y="0" width="130" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[การให้บริการดูแลรักษา]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="e0282702-5351-4acc-9e67-1dc3fa2a890d" x="0" y="0" width="130" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{homehealthdetail}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="130" uuid="8670d5d0-3710-4b7a-9dbc-ed4ea0278acb">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="0083d868-df68-4482-b60d-c619d1ee15ea" x="0" y="0" width="130" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14" isBold="true"/>
+									</textElement>
+									<text><![CDATA[ประเมินผล]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="a27da202-a5d8-4bb5-b6d2-779714c3b895" x="0" y="0" width="130" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{homehealthresult}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="65" uuid="889678a1-50ae-417f-a3d6-c04ab9d1d4fc">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement uuid="d9e632ac-1202-4823-ae24-3427628e6ceb" x="0" y="0" width="65" height="30"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<text><![CDATA[นัดครั้งต่อไป]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="20" rowSpan="1">
+								<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+									<reportElement uuid="17502bad-a449-468d-963a-0e97087ba439" x="0" y="0" width="65" height="20"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Angsana New" size="14"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{dateappointhai}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

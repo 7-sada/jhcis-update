@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FamilyFolder_episub"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="p_pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["06096"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pid" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["4274"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT
+     DATE_FORMAT(visitepi.dateepi,"%Y-%m-%d")AS dateepi,
+     visitepi.`vaccinecode` AS visitepi_vaccinecode,
+     visitepiappoint.`vaccinecode` AS visitepiappoint_vaccinecode,
+     DATE_FORMAT(visitepiappoint.`dateappoint`,"%Y-%m-%d")AS visitepiappoint_dateappoint,
+     DATE_FORMAT(person.`birth`,"%Y-%m-%d")AS person_birth,
+     cdrug.`drugname` AS cdrug_drugname,
+     cdrug_A.`drugname` AS cdrug_A_drugname,
+CONVERT(CONCAT(  DATE_FORMAT(dateepi,"%Y")-DATE_FORMAT(birth,"%Y") - (DATE_FORMAT(dateepi,"00-%m-%d")<DATE_FORMAT(birth,"00-%m-%d")), " - ",
+	CASE SIGN(DATE_FORMAT(dateepi ,"%m")-DATE_FORMAT(birth,"%m"))
+ 	 WHEN 0 THEN (11 - DATE_FORMAT(birth,"%m") + DATE_FORMAT(dateepi,"%m") -  (DATE_FORMAT(birth,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d")))
+ 	 WHEN -1 THEN (12 - DATE_FORMAT(birth,"%m") + DATE_FORMAT(dateepi,"%m") -  (DATE_FORMAT(dateepi,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d")))
+ 	 WHEN 1 THEN(DATE_FORMAT(dateepi,"%m") - DATE_FORMAT(birth,"%m") -  (DATE_FORMAT(dateepi,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d"))) END,  " - ",
+	CASE SIGN(DATE_FORMAT(dateepi,"%d") - DATE_FORMAT(birth,"%d"))
+ 	 WHEN 0 THEN( DATE_FORMAT(birth,"%d") - DATE_FORMAT(dateepi,"%d") )
+	 WHEN -1 THEN (DATE_FORMAT(LAST_DAY(birth),"%d") + DATE_FORMAT(dateepi, "%d")  -  DATE_FORMAT(birth, "%d"))
+ 	 WHEN 1 THEN (DATE_FORMAT(dateepi,"%d") - DATE_FORMAT(birth,"%d") -  (DATE_FORMAT(dateepi,"%d") < DATE_FORMAT(birth,"%d")))  END  ) USING utf8) AS age_ymd
+FROM
+     `visitepi` visitepi INNER JOIN `person` person ON visitepi.`pcucodeperson` = person.`pcucodeperson`
+     AND visitepi.`pid` = person.`pid`
+     LEFT OUTER JOIN `visitepiappoint` visitepiappoint ON visitepi.`pcucodeperson` = visitepiappoint.`pcucodeperson`
+     AND visitepiappoint.`pid` = visitepi.`pid`
+     AND visitepiappoint.`visitno` = visitepi.`visitno`
+     LEFT OUTER JOIN `cdrug` cdrug ON visitepi.`vaccinecode` = cdrug.`drugcode`
+     LEFT OUTER JOIN `cdrug` cdrug_A ON visitepiappoint.`vaccinecode` = cdrug_A.`drugcode`
+WHERE
+     visitepi.pcucodeperson = '$P!{p_pcucode}'
+     and visitepi.pid = '$P!{p_pid}'
+ORDER BY
+     visitepi.dateepi ASC]]></queryString>
+
+	<field name="dateepi" class="java.util.Date"/>
+	<field name="visitepi_vaccinecode" class="java.lang.String"/>
+	<field name="visitepiappoint_vaccinecode" class="java.lang.String"/>
+	<field name="visitepiappoint_dateappoint" class="java.util.Date"/>
+	<field name="person_birth" class="java.util.Date"/>
+	<field name="cdrug_drugname" class="java.lang.String"/>
+	<field name="cdrug_A_drugname" class="java.lang.String"/>
+	<field name="age_ymd" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="39"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="89"
+						y="2"
+						width="80"
+						height="18"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วัคซีน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="347"
+						y="2"
+						width="72"
+						height="18"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วันนัดครั้งต่อไป]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="3"
+						y="2"
+						width="79"
+						height="18"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วันที่]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="3"
+						y="32"
+						width="534"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="265"
+						y="2"
+						width="80"
+						height="18"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[อายุเมื่อได้รับ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="423"
+						y="2"
+						width="87"
+						height="18"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วัคซีนที่นัดรับ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="265"
+						y="16"
+						width="80"
+						height="18"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[(ปี-เดือน-วัน)]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="2"
+						y="2"
+						width="534"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="90"
+						y="0"
+						width="175"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{cdrug_drugname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="347"
+						y="0"
+						width="72"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{visitepiappoint_dateappoint}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="0"
+						width="79"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{dateepi}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="266"
+						y="0"
+						width="80"
+						height="18"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{age_ymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="423"
+						y="0"
+						width="114"
+						height="18"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{cdrug_drugname}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="4"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

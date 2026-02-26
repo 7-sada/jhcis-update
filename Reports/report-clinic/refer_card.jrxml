@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="refer_card" pageWidth="595" pageHeight="842" columnWidth="525" leftMargin="50" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" uuid="094cf57d-f75d-4b75-92e8-a186d56e177c">
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="48"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="datadrug" uuid="fb87a8d7-5372-4771-a48b-a5678d8f1607">
+		<parameter name="visitno" class="java.lang.Integer"/>
+		<queryString>
+			<![CDATA[select vd.drugcode,c.drugname,vd.unit,vd.dose
+from visitdrug vd
+join cdrug c on (vd.drugcode = c.drugcode)
+where visitno = $P{visitno}
+and c.drugtype <> '06']]>
+		</queryString>
+		<field name="drugcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="drugname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="unit" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dose" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+	</subDataset>
+	<subDataset name="datadiag" uuid="8805c8c6-4f8f-4f0e-9916-dda3091da08c">
+		<parameter name="visitno" class="java.lang.Integer"/>
+		<queryString>
+			<![CDATA[SELECT vd.diagcode,cd.diseasename,
+case  when dxtype = '01' then 'โรคหลัก (Principle Dx)'
+when dxtype = '04' then 'อื่นๆ (Other)'
+when dxtype = '05' then 'สาเหตุภายนอก (External Cause)'
+when dxtype = '07' then 'เนื้องอก (Morphology)'
+else '..ไม่ระบุ..'
+end as dxname
+from visitdiag vd
+join cdisease cd on (vd.diagcode = cd.diseasecode)
+where vd.visitno = $P{visitno}
+ORDER BY vd.dxtype]]>
+		</queryString>
+		<field name="diagcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="diseasename" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dxname" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="visitno" class="java.lang.Integer"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Program Files\\jhcis-client\\Reports\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select v.visitno,year(v.visitdate)+543 as NoYY,day(v.visitdate) as dd,v.numberrefer,of.tel,
+(CASE WHEN MONTH(v.visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(v.visitdate)=2 THEN 'กุมภาพันธ์' WHEN MONTH(v.visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(v.visitdate)=4 THEN 'เมษายน' WHEN MONTH(v.visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(v.visitdate)=6 THEN 'มิถุนายน' WHEN MONTH(v.visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(v.visitdate)=8 THEN 'สิงหาคม' WHEN MONTH(v.visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(v.visitdate)=10 THEN 'ตุลาคม' WHEN MONTH(v.visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(v.visitdate)=12 THEN 'ธันวาคม' end) as mm, (Year(v.visitdate)+543) as yy,
+v.pcucode,ch1.hosname,
+v.pid,t.titlenamelong,p.fname,p.lname,getAgeYearNum(p.birth,v.visitdate) as ageyy,
+if(p.sex='1','ชาย','หญิง') as psex,ifnull(ifnull(pa.hno,p.hnomoi),'..ไม่ระบุ..') as hno,ifnull(ifnull(pa.mu,p.mumoi),'..ไม่ระบุุ..') as moo,
+ifnull(ifnull(cs1.subdistname,cs.subdistname),'..ไม่ระบุ..') as tumbon,
+ifnull(ifnull(cd1.distname,cd.distname),'..ไม่ระบุ..') as ampur,
+ifnull(ifnull(cp1.provname,cp.provname),'..ไม่ระบุ..') as province,
+v.refertohos,ch.hosname as hosrefer,
+ifnull(v.symptoms,'.ไม่ระบุ..') as presentdiag,ifnull(v.symptomsco,'..ไม่ระบุ..') as pastdiag,
+ifnull(cast(v.temperature as char),'..ไม่ระบุ..') as bt,ifnull(cast(v.pressure as char),'..ไม่ระบุ..') as bp,
+ifnull(cast(v.pulse as char),'..ไม่ระบุ..') as p,ifnull(cast(v.respri as char),'..ไม่ระบุ..') as r,ifnull(cast(v.weight as char),'..ไม่ระบุ..') as weight,ifnull(cast(v.height as char),'..ไม่ระบุ..') as height,
+(case when v.gaheent = '1' then 'ปกติ'
+when v.gaheent = '2' then 'ผิดปกติ'
+when v.gaheent = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as HEENT,
+(case when v.gahlart = '1' then 'ปกติ'
+when v.gahlart = '2' then 'ผิดปกติ'
+when v.gahlart = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as HLART,
+(case when v.galung = '1' then 'ปกติ'
+when v.galung = '2' then 'ผิดปกติ'
+when v.galung = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as LUNG,
+(case when v.gaab = '1' then 'ปกติ'
+when v.gaab = '2' then 'ผิดปกติ'
+when v.gaab = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as Ab,
+(case when v.gaext = '1' then 'ปกติ'
+when v.gaext = '2' then 'ผิดปกติ'
+when v.gaext = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as Ext,
+(case when v.ganeuro = '1' then 'ปกติ'
+when v.ganeuro = '2' then 'ผิดปกติ'
+when v.ganeuro = '9' then 'ไม่ตรวจ'
+else '..ไม่ระบุ..' end ) as Neuro,ifnull(v.diagnote,'..ไม่ระบุ..') as diagnote,
+ifnull(v.vitalcheck,'..ไม่ระบุ..') as vitalcheck,
+-- ifnull(vd.diagcode,'..ไม่ระบุ..') as diagcode,
+-- ifnull(cdi.diseasenamethai,'..ไม่ระบุ..') as diseasenamethai,
+(case when v.refer = '00' then 'ไม่ใช่  Case Refer'
+when v.refer = '01' then 'เกินขีดความสามารถของหน่วยงานนี้'
+when v.refer = '02' then 'อาการดีขึ้น จึงส่งไประดับล่าง'
+when v.refer = '03' then 'เป็นความประสงค์ของผู้รับบริการ ฯ'
+when v.refer = '04' then 'ส่งไปเพื่อการวินิจฉัยที่ถูกต้อง'
+when v.refer = '05' then 'ส่งไปเพื่อทันตกรรม'
+when v.refer = '06' then 'เพื่อการรักษาต่อเนื่อง'
+when v.refer = '99' then 'อื่นๆ'
+else '..ไม่ระบุ..' end) as caseRefer,
+ifnull(cast(round(vb.sugarnumdigit,2) as char),'..ไม่ระบุ..') as sugarnumdigit1,
+(case when vb.foodsuspend = '0' then 'งด'
+when vb.foodsuspend = '1' then 'ไม่งด'
+else '...ไม่ระบุ...' end) as foodsuspend
+,(case when vb.typetesting = '1' then '1:DTX(หลอดเลือดฝอย)'
+when vb.typetesting = '2' then '2:FBS(หลอดเลือดดำ)'
+else '...ไม่ระบุ...' end) as typetesting,
+(case when vb.interviewres = '1' then 'ปกติ'
+when vb.interviewres = '2' then 'เสี่ยงน้อย'
+when vb.interviewres = '3' then 'เสี่ยงปานกลาง'
+when vb.interviewres = '4' then 'เสี่ยงสูง'
+else '...ไม่ระบุ...' end) as interview,
+ifnull(v7.request,'..ไม่ระบุ..') as request,u.officerposition,
+ifnull(v.username,concat(ct1.titlenamelong,' ',u.fullname)) as officername,
+concat(ct1.titlename,' ',u.fname,' ',u.lname) as officername1,
+p.idcard,ifnull(v.rightcode,'..ไม่ระบุ..') as rightcode,ifnull(v.rightno,'..ไม่ระบุ..') as rightno,r.rightname,v.hosmain,ifnull(h1.hosname,'..ไม่ระบุ..') as hospname1,
+concat(ifnull(cast(day(p.dateexpire) as char),'..'),' ',
+(CASE WHEN MONTH(p.dateexpire)=1 THEN 'มกราคม'
+   WHEN MONTH(p.dateexpire)=2 THEN 'กุมภาพันธ์' WHEN MONTH(p.dateexpire)=3 THEN 'มีนาคม'
+   WHEN MONTH(p.dateexpire)=4 THEN 'เมษายน' WHEN MONTH(p.dateexpire)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(p.dateexpire)=6 THEN 'มิถุนายน' WHEN MONTH(p.dateexpire)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(p.dateexpire)=8 THEN 'สิงหาคม' WHEN MONTH(p.dateexpire)=9 THEN 'กันยายน'
+   WHEN MONTH(p.dateexpire)=10 THEN 'ตุลาคม' WHEN MONTH(p.dateexpire)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(p.dateexpire)=12 THEN 'ธันวาคม' else 'ไม่ระบุ' end),' ' ,
+ifnull(cast(year(p.dateexpire)+543 as char),'..')) as dateexpire
+from visit v
+left join office of on (v.pcucode = of.offid)
+left join person p on (v.pcucode = p.pcucodeperson) and (v.pid = p.pid)
+left join ctitle t on (p.prename = t.titlecode)
+left join cright r on (v.rightcode = r.rightcode)
+left join chospital h1 on (h1.hoscode = v.hosmain)
+left join personaddresscontact pa on (p.pid = pa.pid and p.pcucodeperson = pa.pcucodeperson)
+left join csubdistrict cs on (p.subdistcodemoi = cs.subdistcode and p.distcodemoi = cs.distcode and p.provcodemoi = cs.provcode)
+left join cdistrict cd on (p.distcodemoi = cd.distcode and p.provcodemoi = cd.provcode)
+left join cprovince cp on (p.provcodemoi = cp.provcode)
+left join csubdistrict cs1 on (pa.subdistcode = cs1.subdistcode and pa.distcode = cs1.distcode and pa.provcode = cs1.provcode)
+left join cdistrict cd1 on (pa.distcode = cd1.distcode and pa.provcode = cd1.provcode)
+left join cprovince cp1 on (pa.provcode = cp1.provcode)
+left join chospital ch on (v.refertohos = ch.hoscode)
+left join chospital ch1 on (v.pcucode = ch1.hoscode)
+left join visit7referhisreferres v7 on (v.visitno = v7.visitno) and (v.pcucode = v7.pcucode)
+left join visitlabsugarblood vb on (v.visitno = vb.visitno and v.pcucode = vb.pcucode)
+-- left join visitdiag vd on (v.visitno = vd.visitno and v.pcucode =vd.pcucode)
+-- left join cdisease cdi on (vd.diagcode = cdi.diseasecode)
+left join user u on (v.username = u.username)
+left join ctitle ct1 on (u.prename = ct1.titlecode)
+where v.visitno = $P{visitno}
+and v.refer <> '00']]>
+	</queryString>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="NoYY" class="java.lang.Long"/>
+	<field name="dd" class="java.lang.Long"/>
+	<field name="numberrefer" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tel" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="mm" class="java.lang.String"/>
+	<field name="yy" class="java.lang.Long"/>
+	<field name="pcucode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="titlenamelong" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ageyy" class="java.lang.Integer"/>
+	<field name="psex" class="java.lang.String"/>
+	<field name="hno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="moo" class="java.lang.String">
+		<fieldDescription><![CDATA[หมู่บ้าน(..น่าจะตามทะเบียนบ้านของเจ้าของสิทธิ)]]></fieldDescription>
+	</field>
+	<field name="tumbon" class="java.lang.String"/>
+	<field name="ampur" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="province" class="java.lang.String"/>
+	<field name="refertohos" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosrefer" class="java.lang.String"/>
+	<field name="presentdiag" class="java.lang.String"/>
+	<field name="pastdiag" class="java.lang.String"/>
+	<field name="bt" class="java.lang.String"/>
+	<field name="bp" class="java.lang.String"/>
+	<field name="p" class="java.lang.String"/>
+	<field name="r" class="java.lang.String"/>
+	<field name="weight" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="HEENT" class="java.lang.String"/>
+	<field name="HLART" class="java.lang.String"/>
+	<field name="LUNG" class="java.lang.String"/>
+	<field name="Ab" class="java.lang.String"/>
+	<field name="Ext" class="java.lang.String"/>
+	<field name="Neuro" class="java.lang.String"/>
+	<field name="diagnote" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="caseRefer" class="java.lang.String"/>
+	<field name="sugarnumdigit1" class="java.lang.String"/>
+	<field name="foodsuspend" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="typetesting" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="interview" class="java.lang.String"/>
+	<field name="request" class="java.lang.String">
+		<fieldDescription><![CDATA[สิ่งที่ต้องการให้สถานบริการปลายทาง ดำเนินการ สำหรับส่งออกในแฟ้ม REFER_HISTORY]]></fieldDescription>
+	</field>
+	<field name="officerposition" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="officername" class="java.lang.String"/>
+	<field name="officername1" class="java.lang.String"/>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rightcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rightno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rightname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosmain" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hospname1" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateexpire" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vitalcheck" class="java.lang.String"/>
+	<field name="height" class="java.lang.String"/>
+	<group name="visitNo">
+		<groupExpression><![CDATA[$F{visitno}]]></groupExpression>
+		<groupFooter>
+			<band height="66">
+				<componentElement>
+					<reportElement key="table 1" style="table 1" x="0" y="12" width="525" height="50" uuid="051afc1c-1ae7-4887-acdc-20cefec27cde"/>
+					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<datasetRun subDataset="datadiag" uuid="e7836ce1-d82b-49c2-aa22-071d50722261">
+							<datasetParameter name="visitno">
+								<datasetParameterExpression><![CDATA[$P{visitno}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+						<jr:column width="90" uuid="f665599f-532c-415b-b164-9a712731ea4f">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="90" height="30" uuid="ecd1885c-afb6-4aa9-b47b-a33893bf7b4e"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Tahoma" size="10" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="false"/>
+									</textElement>
+									<text><![CDATA[รหัสโรค]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="22" rowSpan="1">
+								<textField>
+									<reportElement x="0" y="0" width="90" height="22" uuid="12e38afd-e7c7-4876-9246-b0cac791cfb5"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{diagcode}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="302" uuid="5ba09467-41c2-4e50-9073-c73883b44828">
+							<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="302" height="30" uuid="b9ea736c-3247-46b1-90f1-58287901dde1"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Tahoma" size="10" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+									</textElement>
+									<text><![CDATA[ชื่อโรค]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="22" rowSpan="1">
+								<textField isStretchWithOverflow="true">
+									<reportElement x="0" y="0" width="302" height="22" uuid="e12b15b4-be78-4a36-9389-25b73465b490"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{diseasename}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="109" uuid="47e5ad1a-5fbd-4369-9e3d-7b6f4dca42d4">
+							<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="109" height="30" uuid="c1c8b491-328c-4ba1-9f89-647295d60b7e"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="Tahoma" size="10" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+									</textElement>
+									<text><![CDATA[ลำดับสำคัญของโรค]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table_TD" height="22" rowSpan="1">
+								<textField isStretchWithOverflow="true">
+									<reportElement x="0" y="0" width="109" height="22" uuid="b62cfd73-8983-45b7-9e5f-3e85d2177106"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{dxname}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:table>
+				</componentElement>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="208">
+			<image>
+				<reportElement x="-43" y="0" width="579" height="100" uuid="0bcd4fb8-c976-49f1-89d9-630bc433c8d6"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR}+"\\logo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="92" width="525" height="28" uuid="a5a4d2cb-9655-41df-ab21-1351d94b5c4d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="11" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ใบส่งตัวผู้ป่วยไปรับการตรวจหรือรักษาต่อ]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="345" y="120" width="180" height="20" uuid="8558b06a-9ebd-4086-91c4-f99bb91820f5"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขที่........................................ "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="256" y="141" width="269" height="20" uuid="7efe2a71-1161-411d-af01-8e1ecbc271a0"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันที่ "+$F{dd}+" เดือน "+$F{mm}+" พศ. "+$F{yy}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="165" width="430" height="20" uuid="8a2d8780-f0ca-44b3-9490-96a44a0cd5d3"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["จาก "+ $F{hosname}+"     เบอร์โทร : "+$F{tel}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="187" width="345" height="20" uuid="747981ab-944c-49e4-819e-4b7ee5362a83"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ถึง   "+ $F{hosrefer}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="38" splitType="Stretch">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="525" height="38" uuid="e3c57ae5-cd12-422e-ab84-6dfa62cba941"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["                   "+"พร้อมหนังสือนี้ ขอส่งตัวผู้ป่วยชื่อ "+$F{titlenamelong}+" "+$F{fname}+" "+ $F{lname}
++" เพศ "+$F{psex}+" อายุ "+ $F{ageyy}+ " ปี อยู่บ้านเลขที่ "+$F{hno}+
+" หมุ่ที่ "+ $F{moo}+ " ตำบล "+ $F{tumbon}+" อำเภอ "+$F{ampur}+
+" จังหวัด "+ $F{province}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="50">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="525" height="50" uuid="3c687431-6e3d-45d3-bf8a-ae4a6ae463d2"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["1. ประวัติการป่วยปัจจุบัน และอาการสำคัญ :"+"\n"+"     "+$F{presentdiag}+"\n"+"\n"+"2. ผลสัญญาณชีพ( Vital Sign) :"
++"\n"+"     "+" V/S   BT = "+$F{bt}+" c BP "+$F{bp}+" mmHg"+" P "+$F{p}
++" ครั้ง/min"+" R "+$F{r}+" ครั้ง/min"+" นน. "+$F{weight}+" กก."+" ส่วนสูง "+$F{height}+" ซม."
++"\n"+"\n"
++"3. การเจ็บป่วยในอดีต/ประวัติครอบครัว :"+"\n"+"     "+$F{pastdiag}+"\n"+"\n"
++"4. ผลการตรวจร่างกาย/ผลการตรวจทางห้องปฏิบัติการ :" + "\n"+"     "+"HEENT: "+$F{HEENT}
++" HEART: "+$F{HLART}+" LUNG: "+$F{LUNG}+" Ab: "+$F{Ab}+" Ext: "
++$F{Ext}+" Neuro: "+$F{Neuro}+"\n"+"     "+"น้ำตาลในเลือด : "+$F{sugarnumdigit1}+", งดน้ำ(อาหาร) : "+$F{foodsuspend}
++"\n"+"     "+$F{vitalcheck}+"\n"+"\n"+"5. การวินิจฉัยโรคชั้นต้น :"+"\n"+
+"     "+ $F{diagnote}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="166" splitType="Stretch">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="525" height="166" uuid="7bb955a0-3f27-4e38-a327-f49310be87ae"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["7. สาเหตุที่ส่ง : "+$F{caseRefer}+"\n"+"8. รายละเอียดอื่นๆ : "+$F{request}
++"\n"+"\n"+"\n"+"                                                                             "
++"ลงชื่อ .................................................................................."
++"\n"+"                                                                                           "
++"("+$F{officername1}+")"
++"\n "+"                                                                            "
++"ตำแหน่ง    "+$F{officerposition}
++"\n"+"\n"+"\n"
++" หมายเหตุ :    เลขบัตรประชาชน : "+$F{idcard}+"\n"+" สิทธิการรักษา "+$F{rightname}
++"  โรงพยาบาลหลักของสิทธิ : "+$F{hospname1}+"\n"+" เลขที่บัตร "+$F{rightno}
++"    หมดอายุ "+ $F{dateexpire}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+	<summary>
+		<band height="84" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="31" width="525" height="53" uuid="6700b878-2abb-453f-a43b-7836b20b278a"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="datadrug" uuid="6624ea26-ce63-410e-a8d2-d9a47178d169">
+						<datasetParameter name="visitno">
+							<datasetParameterExpression><![CDATA[$P{visitno}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="48" uuid="ba888a43-e408-47b1-bcc3-a46fdd9e095e">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="48" height="30" uuid="8e43152e-1bab-407d-b6a6-2a7463783434"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ลำดับ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="48" height="20" uuid="042017c0-ff34-4bc0-b5e6-3633904cee39"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="256" uuid="38f85272-9122-48be-8b6f-ba3246c941e4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="256" height="30" uuid="c008e23d-559e-48ee-92ed-f098a7262743"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อยา]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="256" height="20" uuid="5fdbd93d-85a1-41b9-9735-01fa97fe8412"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{drugname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="62" uuid="9a224cf1-9d5e-4bae-a158-53b2b15a609b">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="62" height="30" uuid="55e1e5d0-6414-4e06-8de2-c6f22c34e003"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[จำนวน(หน่วย)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="62" height="20" uuid="df1c7050-e19c-4561-89a2-8e2ee85f796a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{unit}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="156" uuid="6bde30e4-a750-4bc5-8cda-3256eff0abf7">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="156" height="30" uuid="dcb3afc7-5b03-4b7f-a667-cb239a8606f2"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[วิธีใช้]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="156" height="20" uuid="13baaf6e-eb57-4428-8ec6-d26bce36bbe8"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{dose}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+			<staticText>
+				<reportElement x="0" y="10" width="222" height="20" uuid="76e8c54c-3b94-476b-90e5-4e7271ef61a7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[6. กาารักษาที่ได้ให้ไว้แล้ว :]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

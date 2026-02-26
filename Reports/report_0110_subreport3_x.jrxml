@@ -1,0 +1,3547 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="report_0110_subreport3_x"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="842"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="AllSectionsNoDetail"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="sdate" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="edate" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="startDate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-12-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="endDate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-12-31"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdate" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="header_1" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="header_2" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["01856"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT  "1" AS idx,
+
+v0110_5_heal_chk_in_mon_st1.pid AS pc, 
+birth,Ivd,chk_UC,
+DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2', 
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay , 0.0 as weight
+
+FROM person INNER JOIN v0110_5_heal_chk_in_mon_st1 ON person.pid = v0110_5_heal_chk_in_mon_st1.pid
+
+UNION
+
+SELECT
+"2",
+"",
+visitepi.visitno,
+visit.incup AS arg,
+Left(vaccinecode,3) AS vc3,
+IF( Left(visit.rightcode,1)='7'  OR Left(visit.rightcode,1)='8'  OR visit.rightcode = '00' OR visit.rightcode='02' OR visit.rightcode='03' ,
+	CASE 
+		when Left(visit.rightcode,1)='7' then 'u'
+		when Left(visit.rightcode,1)='8'  then 'u'
+		when visit.rightcode='00'  then 'a'
+		when visit.rightcode='02' OR  visit.rightcode='03'  then 'b' 
+	END,'n') AS chk_UC,
+0,
+0.0
+FROM
+(person
+Inner Join visit ON person.pid = visit.pid AND visit.pcucode = person.pcucodeperson)
+Inner Join visitepi ON visit.visitno = visitepi.visitno AND visit.pcucode = visitepi.pcucodeperson
+WHERE  
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 6
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice BETWEEN '01' and '03') OR (visit.flagservice IS NULL))
+
+UNION
+
+SELECT   "3", "", "", "",
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE 
+	IF(incup IN(1,0),incup,
+	IF(visit.hosmain=(select offid from office WHERE offid = $P{pcucode}),1,0)) 
+		WHEN '1' THEN '3' 
+		WHEN '0' THEN '4' END , 
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) AS rgroup,
+cdrug.drugtypesub,  Count(1) AS vn, 0.0 
+
+FROM 
+person
+Inner Join visit ON person.pid = visit.pid AND person.pcucodeperson = visit.pcucode
+Inner Join visitdrug ON visit.visitno = visitdrug.visitno AND visit.pcucode = visitdrug.pcucode
+Inner Join cdrug ON visitdrug.drugcode = cdrug.drugcode
+
+WHERE  
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 6
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice BETWEEN '01' and '03') OR (visit.flagservice IS NULL))  
+
+GROUP BY
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE 
+	IF(incup IN(1,0),incup,
+	IF(visit.hosmain=(select offid from office WHERE offid=$P{pcucode} ),1,0)) 
+		WHEN '1' THEN '3' 
+		WHEN '0' THEN '4' END , 
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) , 
+cdrug.drugtypesub
+HAVING 
+cdrug.drugtypesub = '1'
+
+UNION
+
+SELECT   "4", "", "", "",
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE 
+	IF(incup IN(1,0),incup,
+	IF(visit.hosmain=(select offid from office WHERE offid = $P{pcucode} ),1,0)) 
+		WHEN '1' THEN '3' 
+		WHEN '0' THEN '4' END , 
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) AS rgroup,
+cdrug.drugtypesub,  Count(1) AS vn, 0.0 
+FROM 
+person
+Inner Join visit ON person.pid = visit.pid AND person.pcucodeperson = visit.pcucode
+Inner Join visitdrug ON visit.visitno = visitdrug.visitno AND visit.pcucode = visitdrug.pcucode
+Inner Join cdrug ON visitdrug.drugcode = cdrug.drugcode
+WHERE  
+(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) BETWEEN 6  AND 14)
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice BETWEEN '01' and '03') OR (visit.flagservice IS NULL))  
+GROUP BY
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE 
+	IF(incup IN(1,0),incup,
+	IF(visit.hosmain=(select offid from office  WHERE offid = $P{pcucode}),1,0)) 
+		WHEN '1' THEN '3' 
+		WHEN '0' THEN '4' END , 
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) , 
+cdrug.drugtypesub
+HAVING 
+cdrug.drugtypesub = '1'
+
+UNION
+
+SELECT  "5", "","","",
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE 
+	IF(incup IN(1,0),incup,
+	IF(visit.hosmain=(select offid from office  WHERE offid = $P{pcucode}),1,0)) 
+		WHEN '1' THEN '3' 
+		WHEN '0' THEN '4' END , 
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) AS rgroup, "",
+Count(1) AS vn, 0.0 
+
+FROM (person INNER JOIN visit ON person.pid = visit.pid  AND person.pcucodeperson = visit.pcucode) 
+INNER JOIN visitepi ON visit.visitno = visitepi.visitno  AND visit.pcucode = visitepi.pcucodeperson
+WHERE  
+(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) BETWEEN  5  AND 15)
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice BETWEEN '01' and '03') OR (visit.flagservice IS NULL))
+AND (visitepi.vaccinecode='MMR' OR  visitepi.vaccinecode='MEAS')
+GROUP BY
+	IF( LEFT(visit.rightcode,1) IN('7','8') , 
+	CASE 
+		IF(incup IN(1,0),incup,
+		IF(visit.hosmain=(select offid from office  WHERE offid = $P{pcucode}),1,0)) 
+			WHEN '1' THEN '3' 
+			WHEN '0' THEN '4' END , 
+		IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5'))
+
+UNION
+
+SELECT
+"6",
+v0110_5_bmi_in_mon_y0_5.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y0_5.rgroup,
+"", "", 
+v0110_5_bmi_in_mon_y0_5.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y0_5
+Inner Join visit ON v0110_5_bmi_in_mon_y0_5.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y0_5.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y0_5.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid is NULL
+UNION
+
+SELECT  "7", `v0110_5_bmi_in_mon_y6_14`.`agemonth`,
+`v0110_5_bmi_in_mon_y6_14`.`pid`,
+`v0110_5_bmi_in_mon_y6_14`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y6_14`.`sex` , `visit`.`weight`
+FROM
+`v0110_5_bmi_in_mon_y6_14`
+Inner Join `visit` ON `v0110_5_bmi_in_mon_y6_14`.`maxVisitdate` = `visit`.`visitdate` AND `v0110_5_bmi_in_mon_y6_14`.`pid` = `visit`.`pid`
+Inner Join `v0110_last_visit_in_mon_st2` ON `visit`.`visitno` = `v0110_last_visit_in_mon_st2`.`maxVn`
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y6_14.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid  IS NULL
+UNION
+
+SELECT
+"8",
+v0110_5_bmi_in_mon_y1518.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y1518.rgroup,
+"", "", 
+v0110_5_bmi_in_mon_y1518.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y1518
+Inner Join visit ON v0110_5_bmi_in_mon_y1518.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y1518.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y1518.pid
+WHERE
+visit.weight > 0
+AND visit.weight/((visit.height/100)*(visit.height/100))<18.5
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid is NULL
+
+UNION
+
+SELECT
+"9",
+v0110_5_bmi_in_mon_y19.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y19.rgroup,
+"", "", 
+v0110_5_bmi_in_mon_y19.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y19
+Inner Join visit ON v0110_5_bmi_in_mon_y19.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y19.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_19_bf_lo ON v0110_5_bmi_19_bf_lo.pid = v0110_5_bmi_in_mon_y19.pid
+WHERE
+visit.weight > 0
+AND visit.weight/((visit.height/100)*(visit.height/100))<18.5
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_19_bf_lo.pid is NULL
+
+UNION
+
+SELECT  "10", `v0110_5_bmi_in_mon_y19`.`agemonth`,
+`v0110_5_bmi_in_mon_y19`.`pid`,
+`v0110_5_bmi_in_mon_y19`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y19`.`sex` , `visit`.`weight`
+FROM
+`v0110_5_bmi_in_mon_y19`
+Inner Join `visit` ON `v0110_5_bmi_in_mon_y19`.`maxVisitdate` = `visit`.`visitdate` AND `v0110_5_bmi_in_mon_y19`.`pid` = `visit`.`pid`
+Inner Join `v0110_last_visit_in_mon_st2` ON `visit`.`visitno` = `v0110_last_visit_in_mon_st2`.`maxVn`
+Left Join v0110_5_bmi_19_bf_ov ON v0110_5_bmi_19_bf_ov.pid = v0110_5_bmi_in_mon_y19.pid
+WHERE
+`visit`.`weight` > 0 
+AND `visit`.`height` > 0
+AND `visit`.`weight`/((`visit`.`height`/100)*(`visit`.`height`/100))>=25
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice ='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_19_bf_ov.pid is NULL
+UNION
+
+SELECT
+"11",
+v0110_5_bmi_in_mon_y0_5.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y0_5.rgroup,
+"", "", 
+v0110_5_bmi_in_mon_y0_5.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y0_5
+Inner Join visit ON v0110_5_bmi_in_mon_y0_5.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y0_5.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y0_5.pid
+WHERE
+visit.weight > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid is NULL
+
+UNION
+
+SELECT  "12", v0110_5_bmi_in_mon_y1518.agemonth,
+v0110_5_bmi_in_mon_y1518.pid,
+v0110_5_bmi_in_mon_y1518.rgroup,"",
+"", v0110_5_bmi_in_mon_y1518.sex , visit.weight
+FROM
+v0110_5_bmi_in_mon_y1518
+Inner Join visit ON v0110_5_bmi_in_mon_y1518.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y1518.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y1518.pid
+WHERE
+visit.weight > 0 
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice ='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid is NULL
+
+UNION
+SELECT  "13", `v0110_5_bmi_in_mon_y6_14`.`agemonth`,
+`v0110_5_bmi_in_mon_y6_14`.`pid`,
+`v0110_5_bmi_in_mon_y6_14`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y6_14`.`sex` , `visit`.`weight`
+FROM
+v0110_5_bmi_in_mon_y6_14
+Inner Join visit ON v0110_5_bmi_in_mon_y6_14.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y6_14.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y6_14.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid  IS NULL
+
+UNION
+SELECT  "14_1",
+visit.visitno,
+person.birth,
+visit.incup as ivd,
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE incup 
+WHEN '1' THEN 'u1' 
+WHEN '2' THEN 'u0' ELSE 'u1' END,
+IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'a','b','b') , 'n')) AS chk_UC,
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2', 
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay , 
+0.0 as weight
+FROM
+cdrug
+Inner Join visitdrug ON cdrug.drugcode = visitdrug.drugcode
+Inner Join visit ON visitdrug.pcucode = visit.pcucode AND visitdrug.visitno = visit.visitno
+Inner Join person ON visit.pcucodeperson = person.pcucodeperson AND visit.pid = person.pid
+WHERE 1=1
+AND DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 15
+AND cdrug.drugtype =  '08' AND cdrug.drugtypesub =  '1'
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}
+
+UNION
+SELECT  "14_2",
+visit.visitno,
+person.birth,
+visit.incup as ivd,
+IF( LEFT(visit.rightcode,1) IN('7','8') , 
+CASE incup 
+WHEN '1' THEN 'u1' 
+WHEN '2' THEN 'u0' ELSE 'u1' END,
+IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'a','b','b') , 'n')) AS chk_UC,
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2', 
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay , 
+0.0 as weight
+FROM
+visitdentalcheck
+Inner Join visit ON visitdentalcheck.pcucode = visit.pcucode AND visitdentalcheck.visitno = visit.visitno
+Inner Join person ON visit.pcucodeperson = person.pcucodeperson AND visit.pid = person.pid
+WHERE 1=1
+AND DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 15
+AND ((visit.flagservice = '03') OR (visit.flagservice IS NULL))
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND visit.pcucode = $P{pcucode}]]></queryString>
+
+	<field name="idx" class="java.lang.String"/>
+	<field name="pc" class="java.lang.Integer"/>
+	<field name="birth" class="java.lang.String"/>
+	<field name="Ivd" class="java.lang.String"/>
+	<field name="chk_UC" class="java.lang.String"/>
+	<field name="age_years" class="java.lang.String"/>
+	<field name="ay" class="java.lang.String"/>
+	<field name="weight" class="java.math.BigDecimal"/>
+
+	<variable name="va3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="va1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="va2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vb1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu11" class="java.lang.Integer" resetType="Report" incrementType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu01" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn1" class="java.lang.Integer" resetType="Report" incrementType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="v1total" class="java.lang.Integer" resetType="Report" incrementType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{va1}.intValue()) +
+($V{vb1}.intValue()) + 
+($V{vu11}.intValue()) +
+($V{vu01}.intValue())+
+($V{vn1}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="vb2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu12" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu02" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn2_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="v2total" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{va2}.intValue()) +
+($V{vb2}.intValue()) + 
+($V{vu12}.intValue()) +
+($V{vu02}.intValue())+
+($V{vn2_temp}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="vb3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu13" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu03" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="v3total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{va3}.intValue()) +
+($V{vb3}.intValue()) + 
+($V{vu13}.intValue()) +
+($V{vu03}.intValue())+
+($V{vn3}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "a" ) ? 
+new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "b" ) ? 
+new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+$F{idx}.equals( "2" ) && 
+$F{chk_UC}.equals( "DTP" ) &&  
+($F{age_years}==null || $F{age_years}.equals( "n" ))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="bcg_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "u" )  
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{dtp_a}.intValue()) +
+($V{dtp_b}.intValue()) + 
+($V{dtp_u_1}.intValue()) +
+($V{dtp_u_0}.intValue())+
+($V{dtp_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{bcg_a}.intValue()) +
+($V{bcg_b}.intValue()) + 
+($V{bcg_u_1}.intValue()) +
+($V{bcg_u_0}.intValue())+
+($V{bcg_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{dhb_a}.intValue()) +
+($V{dhb_b}.intValue()) + 
+($V{dhb_u_1}.intValue()) +
+($V{dhb_u_0}.intValue())+
+($V{dhb_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{mmr_a}.intValue()) +
+($V{mmr_b}.intValue()) + 
+($V{mmr_u_1}.intValue()) +
+($V{mmr_u_0}.intValue())+
+($V{mmr_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="mea_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{mea_a}.intValue()) +
+($V{mea_b}.intValue()) + 
+($V{mea_u_1}.intValue()) +
+($V{mea_u_0}.intValue())+
+($V{mea_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_total" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(  
+($V{hbv_a}.intValue()) +
+($V{hbv_b}.intValue()) + 
+($V{hbv_u_1}.intValue()) +
+($V{hbv_u_0}.intValue())+
+($V{hbv_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="den6_1_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "4" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="den6_2_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "4" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="den6_3_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "4" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="den6_4_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "4" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="den6_5_temp" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="mmr6_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "1" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="mmr6_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "2" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="mmr6_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "3" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="mmr6_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "4" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="mmr6_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<initialValueExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "5" )? new Integer(1) : new Integer(0) )]]></initialValueExpression>
+	</variable>
+	<variable name="nbless5_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) || 
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) || 
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) 
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) || 
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) || 
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "2" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "4" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "5" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))  
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))  
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "2" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))  
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))  
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "4" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))  
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "5" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "2" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "4" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "5" ))
+|| 
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" )) 
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" )) 
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" )) 
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" )) 
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์")) 
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์")) 
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์")) 
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์")) 
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์")) 
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "3" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "3" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="test" class="java.lang.String" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight(
+$F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})]]></variableExpression>
+	</variable>
+	<variable name="je_n" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "n" ) && $F{chk_UC}.equals("JE1")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "n" ) && $F{chk_UC}.equals("JE2")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "n" ) && $F{chk_UC}.equals("JE3"))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="je_u_0" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "2" )&& $F{chk_UC}.equals("JE1")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "2" )&& $F{chk_UC}.equals("JE2")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "2" )&& $F{chk_UC}.equals("JE3"))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="je_u_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "1" )&& $F{chk_UC}.equals("JE1")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "1" )&& $F{chk_UC}.equals("JE2")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "1" )&& $F{chk_UC}.equals("JE3"))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="je_b" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "b" ) && $F{chk_UC}.equals("JE1")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "b" ) && $F{chk_UC}.equals("JE2")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "b" ) && $F{chk_UC}.equals("JE3"))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="je_a" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "a" ) && $F{chk_UC}.equals("JE1")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "a" ) && $F{chk_UC}.equals("JE2")) ||
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "a" ) && $F{chk_UC}.equals("JE3"))
+? new Integer(1) : new Integer(0) 
+)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "5" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "4" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "3" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "2" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) 
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "1" ))
+|| 
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="den5_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_1_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_2_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_3_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_4_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_5_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_3" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_4" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_5" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_1_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_2_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_3_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_4_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_5_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="245"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="11"
+						y="55"
+						width="152"
+						height="71"
+						key="staticText-8"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ส่วนที่ 3]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="126"
+						width="56"
+						height="17"
+						key="staticText-9"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[กลุ่มผู้ใช้บริการ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="228"
+						width="152"
+						height="17"
+						key="staticText-10"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[   รวมผู้มารับบริการ ( 1 - 5 )]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="211"
+						width="152"
+						height="17"
+						key="staticText-11"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ 5. สิทธิอื่นๆ(รวมทั้งที่ไม่ระบุสิทธิ)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="194"
+						width="152"
+						height="17"
+						key="staticText-12"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ 4. UC นอกเครือข่าย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="177"
+						width="152"
+						height="17"
+						key="staticText-13"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ 3. UC ในเครือข่าย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="160"
+						width="152"
+						height="17"
+						key="staticText-14"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ 2. ประกันสังคม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="143"
+						width="152"
+						height="17"
+						key="staticText-15"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ 1. ข้าราชการ/รัฐวิสาหกิจ/เบิกต้นสังกัด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="203"
+						y="55"
+						width="304"
+						height="17"
+						key="staticText-16"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[การดูแลเด็กเล็ก(แรกเกิด - 5 ปี)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="163"
+						y="55"
+						width="40"
+						height="71"
+						key="staticText-17"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คลีนิค
+สุขภาพ
+เด็กดี]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="203"
+						y="72"
+						width="200"
+						height="37"
+						key="staticText-18"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ได้รับวัคซีน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="203"
+						y="109"
+						width="29"
+						height="17"
+						key="staticText-19"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[DTP]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="403"
+						y="72"
+						width="69"
+						height="37"
+						key="staticText-20"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="163"
+						y="126"
+						width="41"
+						height="17"
+						key="staticText-21"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="403"
+						y="109"
+						width="38"
+						height="17"
+						key="staticText-22"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ขาด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="230"
+						y="109"
+						width="29"
+						height="17"
+						key="staticText-23"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[BCG]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="258"
+						y="109"
+						width="29"
+						height="17"
+						key="staticText-24"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[DHB]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="286"
+						y="109"
+						width="29"
+						height="17"
+						key="staticText-25"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[MMR]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="315"
+						y="109"
+						width="29"
+						height="17"
+						key="staticText-26"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[หัด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="343"
+						y="109"
+						width="30"
+						height="17"
+						key="staticText-27"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Hep.P]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="441"
+						y="109"
+						width="31"
+						height="17"
+						key="staticText-28"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[เกิน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="542"
+						y="72"
+						width="34"
+						height="54"
+						key="staticText-29"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[รับวัคซีน
+หัดเยอร-
+มัน/MMR]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="507"
+						y="72"
+						width="35"
+						height="54"
+						key="staticText-30"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[รับการ
+ตรวจ
+สุขภาพ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="472"
+						y="72"
+						width="35"
+						height="54"
+						key="staticText-31"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ส่งเสริม
+ป้องกัน
+ทันตฯ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="203"
+						y="126"
+						width="29"
+						height="17"
+						key="staticText-32"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="230"
+						y="126"
+						width="29"
+						height="17"
+						key="staticText-33"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="258"
+						y="126"
+						width="29"
+						height="17"
+						key="staticText-34"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="286"
+						y="126"
+						width="29"
+						height="17"
+						key="staticText-35"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="315"
+						y="126"
+						width="29"
+						height="17"
+						key="staticText-36"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="343"
+						y="126"
+						width="30"
+						height="17"
+						key="staticText-37"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="441"
+						y="126"
+						width="31"
+						height="17"
+						key="staticText-38"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="403"
+						y="126"
+						width="38"
+						height="17"
+						key="staticText-39"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="507"
+						y="55"
+						width="183"
+						height="17"
+						key="staticText-40"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[การดูแลเด็กโตและเยาวชน(6 - 14 ปี)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="472"
+						y="126"
+						width="35"
+						height="17"
+						key="staticText-41"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="542"
+						y="126"
+						width="34"
+						height="17"
+						key="staticText-42"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="507"
+						y="126"
+						width="35"
+						height="17"
+						key="staticText-43"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="575"
+						y="72"
+						width="74"
+						height="37"
+						key="staticText-44"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="575"
+						y="109"
+						width="37"
+						height="17"
+						key="staticText-45"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ขาด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="612"
+						y="109"
+						width="37"
+						height="17"
+						key="staticText-46"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[เกิน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="649"
+						y="72"
+						width="41"
+						height="54"
+						key="staticText-47"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ส่งเสริม
+ป้องกัน
+ทันตฯ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="612"
+						y="126"
+						width="37"
+						height="17"
+						key="staticText-48"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="575"
+						y="126"
+						width="37"
+						height="17"
+						key="staticText-49"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="649"
+						y="126"
+						width="41"
+						height="17"
+						key="staticText-50"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="690"
+						y="55"
+						width="115"
+						height="17"
+						key="staticText-51"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[การดูแลเด็กและผู้ใหญ่(>14ปี)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="690"
+						y="72"
+						width="41"
+						height="54"
+						key="staticText-52"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[รับการตรวจสุขภาพ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="690"
+						y="126"
+						width="41"
+						height="17"
+						key="staticText-53"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="731"
+						y="72"
+						width="74"
+						height="37"
+						key="staticText-54"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="731"
+						y="109"
+						width="37"
+						height="17"
+						key="staticText-55"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ขาด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="768"
+						y="109"
+						width="37"
+						height="17"
+						key="staticText-56"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[เกิน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="768"
+						y="126"
+						width="37"
+						height="17"
+						key="staticText-57"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="67"
+						y="126"
+						width="96"
+						height="17"
+						backcolor="#FFFFCC"
+						key="staticText-59"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<text><![CDATA[...คนใหม่หมายถึง คนใหม่ในปี--->]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="143"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{va3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="143"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{va1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="143"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{va2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="160"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vb1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="177"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu11})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="194"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu01})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="211"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vn1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="228"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{va1}.intValue()) +($V{vb1}.intValue()) + ($V{vu11}.intValue()) +($V{vu01}.intValue())+ ($V{vn1}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="160"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vb2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="177"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu12})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="194"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu02})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="211"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vn2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="160"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vb3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="177"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu13})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="194"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vu03})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="211"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{vn3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="690"
+						y="228"
+						width="41"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{va3}.intValue()) 
++($V{vb3}.intValue()) 
++($V{vu13}.intValue())
++($V{vu03}.intValue())
++($V{vn3}.intValue())
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="143"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dtp_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="160"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dtp_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="177"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dtp_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="194"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dtp_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="211"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dtp_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="143"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{bcg_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="160"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{bcg_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="177"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{bcg_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="194"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{bcg_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="211"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{bcg_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="143"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dhb_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="160"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dhb_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="177"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dhb_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="194"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dhb_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="211"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{dhb_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="143"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="160"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="177"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="194"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="211"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="143"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mea_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="160"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mea_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="177"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mea_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="194"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mea_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="211"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mea_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="143"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{hbv_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="160"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{hbv_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="177"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{hbv_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="194"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{hbv_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="211"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{hbv_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="228"
+						width="28"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+$V{dtp_a}.intValue()  +
+$V{dtp_b}.intValue()  +
+$V{dtp_u_1}.intValue() +
+$V{dtp_u_0}.intValue() +
+$V{dtp_n}.intValue()
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="230"
+						y="228"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{bcg_a}.intValue()) +($V{bcg_b}.intValue()) + ($V{bcg_u_1}.intValue()) +($V{bcg_u_0}.intValue())+ ($V{bcg_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="258"
+						y="228"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{dhb_a}.intValue()) +($V{dhb_b}.intValue()) + ($V{dhb_u_1}.intValue()) +($V{dhb_u_0}.intValue())+ ($V{dhb_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="228"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mmr_a}.intValue()) +($V{mmr_b}.intValue()) + ($V{mmr_u_1}.intValue()) +($V{mmr_u_0}.intValue())+ ($V{mmr_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="228"
+						width="29"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mea_a}.intValue()) +($V{mea_b}.intValue()) + ($V{mea_u_1}.intValue()) +($V{mea_u_0}.intValue())+ ($V{mea_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="343"
+						y="228"
+						width="30"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{hbv_a}.intValue()) +($V{hbv_b}.intValue()) + ($V{hbv_u_1}.intValue()) +($V{hbv_u_0}.intValue())+ ($V{hbv_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="111"
+						y="3"
+						width="496"
+						height="17"
+						key="staticText-60"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[ตารางที่ 2 สรุปกิจกรรมสำคัญของสถานพยาบาล(สอ./PCU) ที่แม่ข่ายไม่ได้ดำเนินการเอง]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="111"
+						y="19"
+						width="496"
+						height="17"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" isPdfEmbedded ="true" pdfEncoding ="Identity-H"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{header_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd MMMMM yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="111"
+						y="36"
+						width="496"
+						height="17"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" isPdfEmbedded ="true" pdfEncoding ="Identity-H"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{header_2}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="634"
+						y="3"
+						width="168"
+						height="16"
+						key="staticText-61"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[แบบ 0110 รง. 5 (Version - ตค 48)]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="143"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-3"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_1}.intValue() + $V{den5_1_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="160"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-4"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_2}.intValue() + $V{den5_2_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="177"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-5"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_3}.intValue() + $V{den5_3_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="194"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-6"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_4}.intValue() + $V{den5_4_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="211"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-7"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_5}.intValue() + $V{den5_5_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="472"
+						y="228"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-14"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+$V{den5_1}.intValue() + $V{den5_1_1}.intValue() +
+$V{den5_2}.intValue() + $V{den5_2_1}.intValue() +
+$V{den5_3}.intValue() + $V{den5_3_1}.intValue() +
+$V{den5_4}.intValue() + $V{den5_4_1}.intValue() +
+$V{den5_5}.intValue() + $V{den5_5_1}.intValue() 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="143"
+						width="34"
+						height="17"
+						key="textField-16"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr6_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="160"
+						width="34"
+						height="17"
+						key="textField-17"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr6_2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="177"
+						width="34"
+						height="17"
+						key="textField-18"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr6_3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="194"
+						width="34"
+						height="17"
+						key="textField-19"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr6_4})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="211"
+						width="34"
+						height="17"
+						key="textField-20"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{mmr6_5})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="542"
+						y="228"
+						width="34"
+						height="17"
+						key="textField-21"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mmr6_1}.intValue()) +($V{mmr6_2}.intValue()) + ($V{mmr6_3}.intValue()) +($V{mmr6_4}.intValue())+ ($V{mmr6_5}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="177"
+						width="38"
+						height="17"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless5_3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="143"
+						width="38"
+						height="17"
+						key="textField-23"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless5_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="160"
+						width="38"
+						height="17"
+						key="textField-24"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless5_2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="211"
+						width="38"
+						height="17"
+						key="textField-25"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless5_5})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="194"
+						width="38"
+						height="17"
+						key="textField-26"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless5_4})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="177"
+						width="31"
+						height="17"
+						key="textField-27"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover5_3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="143"
+						width="31"
+						height="17"
+						key="textField-28"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover5_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="160"
+						width="31"
+						height="17"
+						key="textField-29"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover5_2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="211"
+						width="31"
+						height="17"
+						key="textField-30"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover5_5})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="194"
+						width="31"
+						height="17"
+						key="textField-31"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover5_4})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="143"
+						width="37"
+						height="17"
+						key="textField-32"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless6_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="177"
+						width="37"
+						height="17"
+						key="textField-33"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless6_3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="160"
+						width="37"
+						height="17"
+						key="textField-34"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless6_2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="211"
+						width="37"
+						height="17"
+						key="textField-35"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless6_5})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="194"
+						width="37"
+						height="17"
+						key="textField-36"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbless6_4})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="177"
+						width="37"
+						height="17"
+						key="textField-37"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover6_3})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="143"
+						width="37"
+						height="17"
+						key="textField-38"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover6_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="160"
+						width="37"
+						height="17"
+						key="textField-39"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover6_2})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="211"
+						width="37"
+						height="17"
+						key="textField-40"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover6_5})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="194"
+						width="37"
+						height="17"
+						key="textField-41"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{nbover6_4})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="228"
+						width="38"
+						height="17"
+						key="textField-42"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbless5_1}.intValue()) +($V{nbless5_2}.intValue()) + ($V{nbless5_3}.intValue()) +($V{nbless5_4}.intValue())+ ($V{nbless5_5}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="228"
+						width="31"
+						height="17"
+						key="textField-43"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbover5_1}.intValue()) +($V{nbover5_2}.intValue()) + ($V{nbover5_3}.intValue()) +($V{nbover5_4}.intValue())+ ($V{nbover5_5}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="575"
+						y="228"
+						width="37"
+						height="17"
+						key="textField-44"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbless6_1}.intValue()) +($V{nbless6_2}.intValue()) + ($V{nbless6_3}.intValue()) +($V{nbless6_4}.intValue())+ ($V{nbless6_5}.intValue())))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="228"
+						width="37"
+						height="17"
+						key="textField-45"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbover6_1}.intValue()) +($V{nbover6_2}.intValue()) + ($V{nbover6_3}.intValue()) +($V{nbover6_4}.intValue())+ ($V{nbover6_5}.intValue())))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="731"
+						y="126"
+						width="37"
+						height="17"
+						key="staticText-62"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="143"
+						width="37"
+						height="17"
+						key="textField-65"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless9_1}.intValue()) 
++ ($V{nbless7_1}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="160"
+						width="37"
+						height="17"
+						key="textField-66"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless9_2}.intValue()) 
++ ($V{nbless7_2}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="177"
+						width="37"
+						height="17"
+						key="textField-67"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless9_3}.intValue()) 
++ ($V{nbless7_3}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="194"
+						width="37"
+						height="17"
+						key="textField-68"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless9_4}.intValue()) 
++ ($V{nbless7_4}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="211"
+						width="37"
+						height="17"
+						key="textField-69"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless9_5}.intValue()) 
++ ($V{nbless7_5}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="731"
+						y="228"
+						width="37"
+						height="17"
+						key="textField-70"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbless7_1}.intValue()) 
++($V{nbless7_2}.intValue()) 
++($V{nbless7_3}.intValue())
++($V{nbless7_4}.intValue())
++($V{nbless7_5}.intValue())
+
++($V{nbless9_1}.intValue()) 
++($V{nbless9_2}.intValue()) 
++($V{nbless9_3}.intValue())
++($V{nbless9_4}.intValue())
++($V{nbless9_5}.intValue())
+
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="143"
+						width="37"
+						height="17"
+						key="textField-77"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover10_1}.intValue()) 
++ ($V{nbover12_1}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="160"
+						width="37"
+						height="17"
+						key="textField-78"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover10_2}.intValue()) 
++ ($V{nbover12_2}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="177"
+						width="37"
+						height="17"
+						key="textField-79"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover10_3}.intValue()) 
++ ($V{nbover12_3}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="194"
+						width="37"
+						height="17"
+						key="textField-80"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover10_4}.intValue()) 
++ ($V{nbover12_4}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="211"
+						width="37"
+						height="17"
+						key="textField-81"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover10_5}.intValue()) 
++ ($V{nbover12_5}.intValue()) 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="768"
+						y="228"
+						width="37"
+						height="17"
+						key="textField-82"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+($V{nbover12_1}.intValue()) 
++($V{nbover12_2}.intValue()) 
++($V{nbover12_3}.intValue())
++($V{nbover12_4}.intValue())
++($V{nbover12_5}.intValue())
+
++($V{nbover10_1}.intValue()) 
++($V{nbover10_2}.intValue()) 
++($V{nbover10_3}.intValue())
++($V{nbover10_4}.intValue())
++($V{nbover10_5}.intValue())
+
+))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="373"
+						y="109"
+						width="30"
+						height="17"
+						key="staticText-63"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[JE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="373"
+						y="126"
+						width="30"
+						height="17"
+						key="staticText-64"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="143"
+						width="30"
+						height="17"
+						key="textField-83"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{je_a})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="160"
+						width="30"
+						height="17"
+						key="textField-84"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{je_b})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="177"
+						width="30"
+						height="17"
+						key="textField-85"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{je_u_1})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="194"
+						width="30"
+						height="17"
+						key="textField-86"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{je_u_0})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="211"
+						width="30"
+						height="17"
+						key="textField-87"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null($V{je_n})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="228"
+						width="30"
+						height="17"
+						key="textField-88"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{je_a}.intValue()) +($V{je_b}.intValue()) + ($V{je_u_1}.intValue()) +($V{je_u_0}.intValue())+ ($V{je_n}.intValue())))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="690"
+						y="29"
+						width="112"
+						height="16"
+						forecolor="#CCCCCC"
+						key="staticText-65"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="6"/>
+					</textElement>
+				<text><![CDATA[report_0110_subreport3  15 ธค.52]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="143"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-102"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_1}.intValue() + $V{den6_1_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="160"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-103"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_2}.intValue() + $V{den6_2_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="177"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-104"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_3}.intValue() + $V{den6_3_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="194"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-105"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_4}.intValue() + $V{den6_4_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="211"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-106"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_5}.intValue() + $V{den6_5_1}.intValue() ))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="649"
+						y="228"
+						width="41"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-107"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+$V{den6_1}.intValue() + $V{den6_1_1}.intValue() +
+$V{den6_2}.intValue() + $V{den6_2_1}.intValue() +
+$V{den6_3}.intValue() + $V{den6_3_1}.intValue() +
+$V{den6_4}.intValue() + $V{den6_4_1}.intValue() +
+$V{den6_5}.intValue() + $V{den6_5_1}.intValue() 
+))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="507"
+						y="228"
+						width="35"
+						height="17"
+						backcolor="#FFFFFF"
+						key="textField-108"/>
+					<box topBorder="Thin" topBorderColor="#000000" leftBorder="Thin" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="Thin" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  
+$V{vu02}.intValue() + $V{vu12}.intValue() 
++ $V{va2}.intValue() + $V{vb2}.intValue()
++ $V{vn2}.intValue()
+))]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

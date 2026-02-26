@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="mainreport_subreport3"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="782"
+		 pageHeight="555"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="SelectDate" isForPrompting="false" class="java.sql.Timestamp"/>
+	<parameter name="agegroup" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select
+case when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) between 15 and 29
+           then '15-29'
+    when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) between 30 and 60
+          then '30-60'
+    when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) > 60
+          then '60 +'
+   else '<15 ' end as agegroup
+,count(concat(visit.pid,visit.pcucodeperson)) aa
+,sum(if(sex='1',1,0) ) as male
+,sum(if(sex='2',1,0) ) as female
+from person
+  inner join visit on person.pid = visit.pid and
+          person.pcucodeperson = visit.pcucodeperson
+  inner join visitdiag on visit.visitno = visitdiag.visitno
+        and visit.pcucode = visitdiag.pcucode
+  inner join house on person.hcode = house.hcode
+        and person.pcucodeperson = house.pcucode
+where diagcode = 'Z13.3'
+  and getAgeYearNum(birth,concat(year('$P!{SelectDate}') - (month('$P!{SelectDate}') <10 ),'-07-01')) >= 15
+  and right(villcode,2) !='00'
+  and concat(person.pid,person.pcucodeperson) not in
+       (select concat(persondeath.pid, persondeath.pcucodeperson)
+       from  persondeath)
+  and person.typelive in ('0','1','3')
+
+  and visitdate between
+   concat(year('$P!{SelectDate}') - (month('$P!{SelectDate}') <10 ),'-10-01')
+   and  concat(date_format('$P!{SelectDate}','%Y-%m'),'-' ,day(last_day('$P!{SelectDate}')))
+
+and (case when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) between 15 and 29
+           then '15-29'
+    when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) between 30 and 60
+          then '30-60'
+    when getAgeYearNum(birth,concat(year('$P!{SelectDate}')-(month('$P!{SelectDate}') <10 ),'-07-01') ) > 60
+          then '60 +'
+   else '<15 ' end) = '$P!{agegroup}'
+group by agegroup]]></queryString>
+
+	<field name="agegroup" class="java.lang.String"/>
+	<field name="aa" class="java.lang.Long"/>
+	<field name="male" class="java.math.BigDecimal"/>
+	<field name="female" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="17"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="73"
+						height="17"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.Long"><![CDATA[$F{aa}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="74"
+						y="0"
+						width="73"
+						height="17"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{male}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="147"
+						y="0"
+						width="73"
+						height="17"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{female}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

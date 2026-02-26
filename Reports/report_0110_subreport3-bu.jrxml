@@ -1,0 +1,3381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report_0110_subreport3" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="842" leftMargin="0" rightMargin="0" topMargin="20" bottomMargin="20" uuid="2a7e0b61-606b-4e8a-bcb2-af7e9e48b3b3">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="546"/>
+	<property name="ireport.y" value="116"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="startDate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2009-12-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="endDate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2009-12-31"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdate" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="header_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="header_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["visit.pcucode='01913'"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT  "1" AS idx,
+
+v0110_5_heal_chk_in_mon_st1.pid AS pc,
+birth,Ivd,chk_UC,
+DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2',
+IF(DATE_FORMAT(Ivd,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(Ivd,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay , 0.0 as weight
+
+FROM person INNER JOIN v0110_5_heal_chk_in_mon_st1 ON person.pid = v0110_5_heal_chk_in_mon_st1.pid
+
+UNION
+
+SELECT
+"2",
+"",
+visitepi.visitno,
+visit.incup AS arg,
+Left(vaccinecode,3) AS vc3,
+IF( Left(visit.rightcode,1)='7'  OR Left(visit.rightcode,1)='8'  OR visit.rightcode = '00' OR visit.rightcode='02' OR visit.rightcode='03' ,
+	CASE
+		when Left(visit.rightcode,1)='7' then 'u'
+		when Left(visit.rightcode,1)='8'  then 'u'
+		when visit.rightcode='00'  then 'a'
+		when visit.rightcode='02' OR  visit.rightcode='03'  then 'b'
+	END,'n') AS chk_UC,
+0,
+0.0
+FROM
+(person
+Inner Join visit ON person.pid = visit.pid AND visit.pcucode = person.pcucodeperson)
+Inner Join visitepi ON visit.visitno = visitepi.visitno AND visit.pcucode = visitepi.pcucodeperson
+WHERE
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 6
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+
+
+
+UNION
+
+SELECT  "5", "","","",
+IF( LEFT(visit.rightcode,1) IN('7','8') ,
+CASE incup WHEN '1' THEN '3' WHEN '2' THEN '4' ELSE '3' END,
+	IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5')) AS rgroup,
+	"", Count(1), 0.0
+
+FROM (person INNER JOIN visit ON person.pid = visit.pid  AND person.pcucodeperson = visit.pcucode)
+INNER JOIN visitepi ON visit.visitno = visitepi.visitno  AND visit.pcucode = visitepi.pcucodeperson
+WHERE
+(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) BETWEEN  5  AND 15)
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND (visitepi.vaccinecode like 'MMR%' OR  visitepi.vaccinecode='MEAS')
+GROUP BY
+	IF( LEFT(visit.rightcode,1) IN('7','8') ,
+	CASE incup WHEN '1' THEN '3' WHEN '2' THEN '4' ELSE '3' END,
+		IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'1','2','2') , '5'))
+
+UNION
+
+SELECT
+"6",
+v0110_5_bmi_in_mon_y0_5.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y0_5.rgroup,
+"", "",
+v0110_5_bmi_in_mon_y0_5.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y0_5
+Inner Join visit ON v0110_5_bmi_in_mon_y0_5.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y0_5.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y0_5.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid is NULL
+UNION
+
+SELECT  "7", `v0110_5_bmi_in_mon_y6_14`.`agemonth`,
+`v0110_5_bmi_in_mon_y6_14`.`pid`,
+`v0110_5_bmi_in_mon_y6_14`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y6_14`.`sex` , `visit`.`weight`
+FROM
+`v0110_5_bmi_in_mon_y6_14`
+Inner Join `visit` ON `v0110_5_bmi_in_mon_y6_14`.`maxVisitdate` = `visit`.`visitdate` AND `v0110_5_bmi_in_mon_y6_14`.`pid` = `visit`.`pid`
+Inner Join `v0110_last_visit_in_mon_st2` ON `visit`.`visitno` = `v0110_last_visit_in_mon_st2`.`maxVn`
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y6_14.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid  IS NULL
+UNION
+
+SELECT
+"8",
+v0110_5_bmi_in_mon_y1518.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y1518.rgroup,
+"", "",
+v0110_5_bmi_in_mon_y1518.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y1518
+Inner Join visit ON v0110_5_bmi_in_mon_y1518.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y1518.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y1518.pid
+WHERE
+visit.weight > 0
+AND visit.weight/((visit.height/100)*(visit.height/100))<18.5
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid is NULL
+
+UNION
+
+SELECT
+"9",
+v0110_5_bmi_in_mon_y19.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y19.rgroup,
+"", "",
+v0110_5_bmi_in_mon_y19.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y19
+Inner Join visit ON v0110_5_bmi_in_mon_y19.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y19.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn AND visit.pid = v0110_last_visit_in_mon_st2.pid
+Left Join v0110_5_bmi_19_bf_lo ON v0110_5_bmi_19_bf_lo.pid = v0110_5_bmi_in_mon_y19.pid
+WHERE
+visit.weight > 0
+AND visit.weight/((visit.height/100)*(visit.height/100))<18.5
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_19_bf_lo.pid is NULL
+
+UNION
+
+SELECT  "10", `v0110_5_bmi_in_mon_y19`.`agemonth`,
+`v0110_5_bmi_in_mon_y19`.`pid`,
+`v0110_5_bmi_in_mon_y19`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y19`.`sex` , `visit`.`weight`
+FROM
+`v0110_5_bmi_in_mon_y19`
+Inner Join `visit` ON `v0110_5_bmi_in_mon_y19`.`maxVisitdate` = `visit`.`visitdate` AND `v0110_5_bmi_in_mon_y19`.`pid` = `visit`.`pid`
+Inner Join `v0110_last_visit_in_mon_st2` ON `visit`.`visitno` = `v0110_last_visit_in_mon_st2`.`maxVn` AND visit.pid = v0110_last_visit_in_mon_st2.pid
+Left Join v0110_5_bmi_19_bf_ov ON v0110_5_bmi_19_bf_ov.pid = v0110_5_bmi_in_mon_y19.pid
+WHERE
+`visit`.`weight` > 0
+AND `visit`.`height` > 0
+AND `visit`.`weight`/((`visit`.`height`/100)*(`visit`.`height`/100))>=25
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_19_bf_ov.pid is NULL
+UNION
+
+SELECT
+"11",
+v0110_5_bmi_in_mon_y0_5.agemonth,visit.visitno,
+v0110_5_bmi_in_mon_y0_5.rgroup,
+"", "",
+v0110_5_bmi_in_mon_y0_5.sex,
+visit.weight
+FROM
+v0110_5_bmi_in_mon_y0_5
+Inner Join visit ON v0110_5_bmi_in_mon_y0_5.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y0_5.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y0_5.pid
+WHERE
+visit.weight > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid is NULL
+
+UNION
+
+SELECT  "12", v0110_5_bmi_in_mon_y1518.agemonth,
+v0110_5_bmi_in_mon_y1518.pid,
+v0110_5_bmi_in_mon_y1518.rgroup,"",
+"", v0110_5_bmi_in_mon_y1518.sex , visit.weight
+FROM
+v0110_5_bmi_in_mon_y1518
+Inner Join visit ON v0110_5_bmi_in_mon_y1518.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y1518.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_ov ON v0110_5_bmi_18_bf_ov.pid = v0110_5_bmi_in_mon_y1518.pid
+WHERE
+visit.weight > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_ov.pid is NULL
+
+UNION
+SELECT  "13", `v0110_5_bmi_in_mon_y6_14`.`agemonth`,
+`v0110_5_bmi_in_mon_y6_14`.`pid`,
+`v0110_5_bmi_in_mon_y6_14`.`rgroup`,"",
+"", `v0110_5_bmi_in_mon_y6_14`.`sex` , `visit`.`weight`
+FROM
+v0110_5_bmi_in_mon_y6_14
+Inner Join visit ON v0110_5_bmi_in_mon_y6_14.maxVisitdate = visit.visitdate AND v0110_5_bmi_in_mon_y6_14.pid = visit.pid
+Inner Join v0110_last_visit_in_mon_st2 ON visit.visitno = v0110_last_visit_in_mon_st2.maxVn
+Left Join v0110_5_bmi_18_bf_lo ON v0110_5_bmi_18_bf_lo.pid = v0110_5_bmi_in_mon_y6_14.pid
+WHERE
+`visit`.`weight` > 0
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND v0110_5_bmi_18_bf_lo.pid  IS NULL
+
+UNION
+SELECT  "14_1",
+visit.visitno,
+person.birth,
+visit.incup as ivd,
+IF( LEFT(visit.rightcode,1) IN('7','8') ,
+CASE incup
+WHEN '1' THEN 'u1'
+WHEN '2' THEN 'u0' ELSE 'u1' END,
+IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'a','b','b') , 'n')) AS chk_UC,
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay ,
+0.0 as weight
+FROM
+cdrug
+Inner Join visitdrug ON cdrug.drugcode = visitdrug.drugcode
+Inner Join visit ON visitdrug.pcucode = visit.pcucode AND visitdrug.visitno = visit.visitno
+Inner Join person ON visit.pcucodeperson = person.pcucodeperson AND visit.pid = person.pid
+WHERE 1=1
+AND DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 15
+AND cdrug.drugtype =  '02' AND cdrug.drugtypesub =  '1'
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}
+
+UNION
+SELECT  "14_2",
+visit.visitno,
+person.birth,
+visit.incup as ivd,
+IF( LEFT(visit.rightcode,1) IN('7','8') ,
+CASE incup
+WHEN '1' THEN 'u1'
+WHEN '2' THEN 'u0' ELSE 'u1' END,
+IF(visit.rightcode IN('00','02','03') , ELT(FIELD(visit.rightcode,'00','02','03'),'a','b','b') , 'n')) AS chk_UC,
+DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) as age_years,
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  < 6 , '1',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  between 6 and 14 , '2',
+IF(DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d'))  > 14 , '3', '0')))  as ay ,
+0.0 as weight
+FROM
+visitdentalcheck
+Inner Join visit ON visitdentalcheck.pcucode = visit.pcucode AND visitdentalcheck.visitno = visit.visitno
+Inner Join person ON visit.pcucodeperson = person.pcucodeperson AND visit.pid = person.pid
+WHERE 1=1
+AND DATE_FORMAT(visitdate,'%Y')-DATE_FORMAT(birth,'%Y') - (DATE_FORMAT(visitdate,'00-%m-%d')<DATE_FORMAT(birth,'00-%m-%d')) < 15
+AND ((visit.flagservice<='03') OR (visit.flagservice IS NULL))
+AND visit.visitdate BETWEEN $P{startDate} AND $P{endDate}]]>
+	</queryString>
+	<field name="idx" class="java.lang.String"/>
+	<field name="pc" class="java.lang.Integer"/>
+	<field name="birth" class="java.lang.String"/>
+	<field name="Ivd" class="java.lang.String"/>
+	<field name="chk_UC" class="java.lang.String"/>
+	<field name="age_years" class="java.lang.String"/>
+	<field name="ay" class="java.lang.String"/>
+	<field name="weight" class="java.math.BigDecimal"/>
+	<variable name="va3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="va1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="va2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vb1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu11" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu01" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="v1total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{va1}.intValue()) +
+($V{vb1}.intValue()) +
+($V{vu11}.intValue()) +
+($V{vu01}.intValue())+
+($V{vn1}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="vb2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu12" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu02" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn2_temp" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="v2total" class="java.lang.Integer">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{va2}.intValue()) +
+($V{vb2}.intValue()) +
+($V{vu12}.intValue()) +
+($V{vu02}.intValue())+
+($V{vn2_temp}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="vb3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu13" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vu03" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "3" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="v3total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{va3}.intValue()) +
+($V{vb3}.intValue()) +
+($V{vu13}.intValue()) +
+($V{vu03}.intValue())+
+($V{vn3}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "a" ) ?
+new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "b" ) ?
+new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DTP" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+$F{idx}.equals( "2" ) &&
+$F{chk_UC}.equals( "DTP" ) &&
+($F{age_years}==null || $F{age_years}.equals( "n" ))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="bcg_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "BCG" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "DHB" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MMR" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mea_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "MEA" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "a" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "b" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "u" )
+&& $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[($F{idx}.equals( "2" ) && $F{chk_UC}.equals( "HBV" ) && $F{age_years}.equals( "n" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="dtp_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{dtp_a}.intValue()) +
+($V{dtp_b}.intValue()) +
+($V{dtp_u_1}.intValue()) +
+($V{dtp_u_0}.intValue())+
+($V{dtp_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="bcg_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{bcg_a}.intValue()) +
+($V{bcg_b}.intValue()) +
+($V{bcg_u_1}.intValue()) +
+($V{bcg_u_0}.intValue())+
+($V{bcg_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="dhb_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{dhb_a}.intValue()) +
+($V{dhb_b}.intValue()) +
+($V{dhb_u_1}.intValue()) +
+($V{dhb_u_0}.intValue())+
+($V{dhb_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="mmr_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{mmr_a}.intValue()) +
+($V{mmr_b}.intValue()) +
+($V{mmr_u_1}.intValue()) +
+($V{mmr_u_0}.intValue())+
+($V{mmr_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="mea_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{mea_a}.intValue()) +
+($V{mea_b}.intValue()) +
+($V{mea_u_1}.intValue()) +
+($V{mea_u_0}.intValue())+
+($V{mea_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="hbv_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[new java.lang.Integer(
+($V{hbv_a}.intValue()) +
+($V{hbv_b}.intValue()) +
+($V{hbv_u_1}.intValue()) +
+($V{hbv_u_0}.intValue())+
+($V{hbv_n}.intValue()) )]]></variableExpression>
+	</variable>
+	<variable name="mmr6_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "1" )? new Integer($F{ay}) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr6_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "2" )? new Integer($F{ay}) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr6_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "3" )? new Integer($F{ay}) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr6_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "4" )? new Integer($F{ay}) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="mmr6_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "5" ) && $F{chk_UC}.equals( "5" )? new Integer($F{ay}) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="nbless5_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) ||
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) ||
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) ||
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless5_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก")) ||
+(SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "6" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover5_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก")) && $F{idx}.equals( "11" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless6_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ"))
+&& $F{idx}.equals( "13" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover6_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "7" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless7_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักต่ำ")))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover7_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมากเกินเกณฑ์"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "8" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "3" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbless9_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "9" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "1" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "2" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "3" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "4" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover10_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{idx}.equals( "10" ) && $F{Ivd}.equals( "5" )
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="test" class="java.lang.String">
+		<variableExpression><![CDATA[SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight(
+$F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})]]></variableExpression>
+	</variable>
+	<variable name="je_n" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "n" ) && $F{chk_UC}.startsWith("JE"))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="je_u_0" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "2" )&& $F{chk_UC}.startsWith("JE"))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="je_u_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "u" ) && $F{Ivd}.equals( "1" )&& $F{chk_UC}.startsWith("JE"))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="je_b" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "b" ) && $F{chk_UC}.startsWith("JE"))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="je_a" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[(
+($F{idx}.equals( "2" ) && $F{age_years}.equals( "a" ) && $F{chk_UC}.startsWith("JE"))
+? new Integer(1) : new Integer(0)
+)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "5" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "5" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "4" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "4" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "3" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "3" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "2" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "2" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="nbover12_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูง"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "1" ))
+||
+((SetupNu_0_18Y.UpdateNutritionStateAge0_18AgeWeight($F{pc}.intValue(),$F{weight}.doubleValue(),$F{ay})
+.equals("น้ำหนักสูงมาก"))
+&& $F{idx}.equals( "12" ) && $F{Ivd}.equals( "1" ))
+? new Integer(1) : new Integer(0)]]></variableExpression>
+	</variable>
+	<variable name="den5_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_1_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_2_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_3_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_4_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den5_5_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "1" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_3" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_4" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_5" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_1_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "a" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_2_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "b" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_3_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u1" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_4_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "u0" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="den6_5_1" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "14_2" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" ) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<variable name="vn2" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[( $F{idx}.equals( "1" ) && $F{chk_UC}.equals( "n" )  && $F{ay}.equals( "2" )? new Integer(1) : new Integer(0) )]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="251" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="cf8f7d76-8415-4400-8e71-e058b6906ecb" key="staticText-8" x="11" y="55" width="152" height="71"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ส่วนที่ 3]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0f8e1b12-35ae-40ce-8748-cf90197600b6" key="staticText-9" x="11" y="126" width="56" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[กลุ่มผู้ใช้บริการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="10b6e9f3-3a72-4493-99d8-0dc83f10537c" key="staticText-10" x="11" y="228" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[   รวมผู้มารับบริการ ( 1 - 5 )]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="42c507fe-e677-4363-a328-37bb168216ab" key="staticText-11" x="11" y="211" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ 5. สิทธิอื่นๆ(รวมทั้งที่ไม่ระบุสิทธิ)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="aa0bcdbf-fe30-4eaa-a2ca-c90109ed35c6" key="staticText-12" x="11" y="194" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ 4. UC นอกเครือข่าย]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4f5d0983-f16b-442b-925a-4c37e1a51ba8" key="staticText-13" x="11" y="177" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ 3. UC ในเครือข่าย]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="cfcaddbe-9f7d-4d54-8f1f-f95ae3920797" key="staticText-14" x="11" y="160" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ 2. ประกันสังคม]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="30f448ea-2ddf-4f6e-8116-37b2678fda19" key="staticText-15" x="11" y="143" width="152" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ 1. ข้าราชการ/รัฐวิสาหกิจ/เบิกต้นสังกัด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="63bce690-1008-4d96-a778-d6b737748f35" key="staticText-16" x="203" y="55" width="304" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[การดูแลเด็กเล็ก(แรกเกิด - 5 ปี)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6fb1498e-3946-4322-afe1-145f2b22ee00" key="staticText-17" x="163" y="55" width="40" height="71"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คลีนิค
+สุขภาพ
+เด็กดี]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d9db352f-514e-4c34-834b-e3b2ad349f5f" key="staticText-18" x="203" y="72" width="200" height="37"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ได้รับวัคซีน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="eefd3af0-acfd-4682-b41e-c6eac86112de" key="staticText-19" x="203" y="109" width="27" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[DTP]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="10739d21-ba58-4cb3-bc64-e111c9b3eec3" key="staticText-20" x="403" y="72" width="69" height="37"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2f92ed49-7e67-4620-8aa5-aebe805277f8" key="staticText-21" x="163" y="126" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="681f1b8e-4230-44aa-bcdb-970c47ebc644" key="staticText-22" x="403" y="109" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ขาด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d817f1f3-6ab7-48c3-bac8-3f339fdb83dd" key="staticText-23" x="230" y="109" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[BCG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="061b4a04-4c02-483a-85b0-97c4a081044c" key="staticText-24" x="258" y="109" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[DHB]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7bf9c547-5510-49ef-9feb-5a0926641f86" key="staticText-25" x="286" y="109" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[MMR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="de43c24e-f75b-4117-a977-4557d2f818d9" key="staticText-26" x="315" y="109" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[หัด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c8c19ea2-6562-4c44-8210-7b57d6ed9cef" key="staticText-27" x="343" y="109" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[Hep.P]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9d553973-d397-4ed5-b47d-98405a676026" key="staticText-28" x="441" y="109" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[เกิน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b274c654-7f30-4dab-8fea-9a5c3dd99293" key="staticText-29" x="542" y="72" width="33" height="54"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[รับวัคซีน
+หัดเยอร-
+มัน/MMR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5ab966db-d53f-4639-b6bf-6c2f9cddee79" key="staticText-30" x="507" y="72" width="35" height="54"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[รับการ
+ตรวจ
+สุขภาพ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="73a30eaa-7ec2-4d6d-a028-8e7467f5ea3d" key="staticText-31" x="472" y="72" width="35" height="54"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ส่งเสริม
+ป้องกัน
+ทันตฯ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="27167d58-7b6b-40ca-aaeb-c2082cbca8ce" key="staticText-32" x="203" y="126" width="27" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6fbe90a7-4193-4a22-ba6f-aeae8acf13d2" key="staticText-33" x="230" y="126" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="69cac62e-ef6e-428e-a4a0-0d8de4b70fa0" key="staticText-34" x="258" y="126" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a0843ee3-d95a-4035-80f2-8a33fdc3c109" key="staticText-35" x="286" y="126" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e9b838b0-e841-48d1-ae50-f287521013ae" key="staticText-36" x="315" y="126" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="42ca26ab-61ce-441c-bb96-91eac10150c3" key="staticText-37" x="343" y="126" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4d2593ea-445a-43be-ab9e-51ccada76fe4" key="staticText-38" x="441" y="126" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="43026b30-3e3c-4f94-8718-c87d35b7476b" key="staticText-39" x="403" y="126" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="753bdf6b-d72b-4c7f-acdd-74d11dd9cace" key="staticText-40" x="507" y="55" width="183" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[การดูแลเด็กโตและเยาวชน(6 - 14 ปี)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="06759013-2c26-46ca-9a53-bb6b46c1f837" key="staticText-41" x="472" y="126" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="817ac9b7-02e2-4454-980b-dbdc73d37d2d" key="staticText-42" x="542" y="126" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="cf378222-6020-4e5e-bbe4-be6aad36b182" key="staticText-43" x="507" y="126" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5aebd944-ae71-43c8-b7a8-b2718c7c8988" key="staticText-44" x="575" y="72" width="74" height="37"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c31757f0-4a75-4302-b4e1-f8023be43ee0" key="staticText-45" x="575" y="109" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ขาด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3213dbf4-124e-40b9-9c80-0548232c96d4" key="staticText-46" x="612" y="109" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[เกิน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f74dd5a2-44cb-4d9c-9d79-0806c3f5a898" key="staticText-47" x="649" y="72" width="41" height="54"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ส่งเสริม
+ป้องกัน
+ทันตฯ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="241ff19c-c0c7-4cc4-bec3-e325df814a3f" key="staticText-48" x="612" y="126" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="62539d6a-9dce-457d-be81-4563f207a01b" key="staticText-49" x="575" y="126" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="58c4b4d9-718e-427d-8e7e-2c8eee1f0116" key="staticText-50" x="649" y="126" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9623de38-e289-4552-b069-ad1cd666ee92" key="staticText-51" x="690" y="55" width="115" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[การดูแลเด็กและผู้ใหญ่(>14ปี)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b2f18f91-937c-487e-be2c-fb2da233bed9" key="staticText-52" x="690" y="72" width="41" height="54"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[รับการตรวจสุขภาพ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8550074c-af6c-4c4a-bd32-ca999793f1b7" key="staticText-53" x="690" y="126" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="faf31559-360f-487a-b5eb-1acadf515f48" key="staticText-54" x="731" y="72" width="74" height="37"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ภาวะโภชนาการ
+บกพร่อง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f8f289b8-fda2-4d44-835b-c2de4e884a6c" key="staticText-55" x="731" y="109" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ขาด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a9c77504-6a6f-4645-9852-22c7d16f665e" key="staticText-56" x="768" y="109" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[เกิน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="82102c5e-62b9-4342-9264-03b4e46788ca" key="staticText-57" x="768" y="126" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ea4a60ce-9e10-4974-acf4-231b0aafe2f4" key="staticText-59" x="67" y="126" width="96" height="17" backcolor="#FFFFCC"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="6" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[...คนใหม่หมายถึง คนใหม่ในปี--->]]></text>
+			</staticText>
+			<textField evaluationTime="Report" isBlankWhenNull="true">
+				<reportElement uuid="858d3a31-ed5b-4e02-a199-51e540360421" key="textField" x="690" y="143" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{va3})]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="2461e4a9-a1de-4082-8aa3-62e8035852c3" key="textField" x="163" y="143" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{va1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="03e375d4-0e08-4ff9-b63e-d979efc69287" key="textField" x="507" y="143" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{va2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="75a38524-a3e6-47f8-8c8b-2a1d09bd6aee" key="textField" x="163" y="160" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vb1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="07646ce6-f970-4046-abc9-d1685f946e17" key="textField" x="163" y="177" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu11})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4c74ef2c-8d29-4ff1-963d-03cf8eb71a56" key="textField" x="163" y="194" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu01})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="5e3bf995-fde5-46f5-b43f-a5213e3be540" key="textField" x="163" y="211" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vn1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f2250538-0f3e-4690-933b-2228bdb20b1e" key="textField" x="163" y="228" width="40" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{va1}.intValue()) +($V{vb1}.intValue()) + ($V{vu11}.intValue()) +($V{vu01}.intValue())+ ($V{vn1}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b9fc348a-d7d0-4467-968f-f88d42728929" key="textField" x="507" y="160" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vb2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0626e421-c127-475a-8d51-9b134653a94e" key="textField" x="507" y="177" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu12})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="5c782f7d-a23b-4eb8-ad78-d5cecc16c767" key="textField" x="507" y="194" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu02})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="04904388-45e5-4f6f-bda5-7db573f804d9" key="textField" x="507" y="211" width="35" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vn2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="82138bfd-df47-42cd-b493-bac5e070a56e" key="textField" x="690" y="160" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vb3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="1f428a5f-2e2c-40f4-ba5a-14ff9e10f9ee" key="textField" x="690" y="177" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu13})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="95ef7cd7-c409-42e2-be71-3dfa8120adaf" key="textField" x="690" y="194" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vu03})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="30b2ce03-4f1d-4d39-82a4-01dce45fe2d1" key="textField" x="690" y="211" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{vn3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8649f70c-fb45-42dd-ad01-8fb601dc60f7" key="textField" x="690" y="228" width="41" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{va3}.intValue())
++($V{vb3}.intValue())
++($V{vu13}.intValue())
++($V{vu03}.intValue())
++($V{vn3}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField pattern="#" isBlankWhenNull="true">
+				<reportElement uuid="349b6b95-48aa-4328-8030-5147f87d12ae" key="textField" x="203" y="143" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dtp_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0d97a29b-532c-4847-96c2-f88a4d3926fb" key="textField" x="203" y="160" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dtp_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b8103d4a-873b-4b1a-bb3e-31429c48b570" key="textField" x="203" y="177" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dtp_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="526bb49e-f304-40f8-b399-0ff92cd82b0d" key="textField" x="203" y="194" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dtp_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="df215d76-5429-45dd-b6d1-d8c5e9f9ee18" key="textField" x="203" y="211" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dtp_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="7776788e-bae3-4ce1-920e-0aa6d9dc67c8" key="textField" x="230" y="143" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{bcg_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="fcef884b-2306-4848-b068-558e08eaba5b" key="textField" x="230" y="160" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{bcg_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="3d0632c2-f1e1-4f60-a2a4-c278d2db19a2" key="textField" x="230" y="177" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{bcg_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="74341f9a-f660-41c0-aa9e-10db0d56e859" key="textField" x="230" y="194" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{bcg_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="89e7ef67-90d2-4db7-a682-3d5bbc8b08ae" key="textField" x="230" y="211" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{bcg_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0aa1fd69-7fb2-4f3e-9d4e-77b08652114f" key="textField" x="258" y="143" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dhb_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="75c94458-9319-4908-b80c-dc76688de567" key="textField" x="258" y="160" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dhb_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="88298d42-53f7-4a29-b968-d272dc433e05" key="textField" x="258" y="177" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dhb_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="487f263f-b8ec-4476-aa5e-989bc3341b85" key="textField" x="258" y="194" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dhb_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8ca25ecb-675b-46aa-b9c1-f78509bfd112" key="textField" x="258" y="211" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{dhb_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c7ec6ff5-4be3-47a5-9654-8d32f894c5d9" key="textField" x="286" y="143" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ba62f4ce-5c9a-468b-bed0-ec68ca95f271" key="textField" x="286" y="160" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="60e28c7e-9306-41ea-9dcd-76b58b38c8b0" key="textField" x="286" y="177" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c481c92e-aace-44b2-a011-e167db7021d1" key="textField" x="286" y="194" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="795bd7ec-56b2-487c-9712-a68f55932f6d" key="textField" x="286" y="211" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0ef04fcb-09f4-46c5-a13d-20fcb730e269" key="textField" x="315" y="143" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mea_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="9338ca0e-98e6-4e19-9d14-517706136886" key="textField" x="315" y="160" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mea_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2bff0d71-f6cc-4afe-97fc-9bbe6b3bc989" key="textField" x="315" y="177" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mea_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c72e9922-7620-4b46-baf1-4512a719092d" key="textField" x="315" y="194" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mea_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="50d07f95-e2a6-46d4-8a7b-b60f54883536" key="textField" x="315" y="211" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mea_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a0cd39b4-371a-4ed2-84ef-8c6399eea041" key="textField" x="343" y="143" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{hbv_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a0bb8ddc-3963-47cd-b9de-74fccf7cc7f2" key="textField" x="343" y="160" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{hbv_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f008e932-4868-4102-9387-1423de2c5883" key="textField" x="343" y="177" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{hbv_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="70e84f6c-82b2-4248-9e9d-585b401440dc" key="textField" x="343" y="194" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{hbv_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="e020a989-2009-4a28-9d30-2bbe7951d541" key="textField" x="343" y="211" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{hbv_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="94004634-7a06-477e-b01d-0a9f7d457e20" key="textField" x="203" y="228" width="26" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+$V{dtp_a}.intValue()  +
+$V{dtp_b}.intValue()  +
+$V{dtp_u_1}.intValue() +
+$V{dtp_u_0}.intValue() +
+$V{dtp_n}.intValue()
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="5a3b393d-f942-42dc-adef-8142b8b97f63" key="textField" x="230" y="228" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{bcg_a}.intValue()) +($V{bcg_b}.intValue()) + ($V{bcg_u_1}.intValue()) +($V{bcg_u_0}.intValue())+ ($V{bcg_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="7d47fe41-eb11-4924-9fde-740400479053" key="textField" x="258" y="228" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{dhb_a}.intValue()) +($V{dhb_b}.intValue()) + ($V{dhb_u_1}.intValue()) +($V{dhb_u_0}.intValue())+ ($V{dhb_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="d7c5b91e-88c1-49fd-b03e-b758001bcc63" key="textField" x="286" y="228" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mmr_a}.intValue()) +($V{mmr_b}.intValue()) + ($V{mmr_u_1}.intValue()) +($V{mmr_u_0}.intValue())+ ($V{mmr_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8b73b8c6-92cc-487a-b6b8-6c6628981469" key="textField" x="315" y="228" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mea_a}.intValue()) +($V{mea_b}.intValue()) + ($V{mea_u_1}.intValue()) +($V{mea_u_0}.intValue())+ ($V{mea_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="63825d3e-37a8-40af-8c06-86c1b4117f5c" key="textField" x="343" y="228" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{hbv_a}.intValue()) +($V{hbv_b}.intValue()) + ($V{hbv_u_1}.intValue()) +($V{hbv_u_0}.intValue())+ ($V{hbv_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="0733a3c9-c839-4d27-b0b6-ed8c4e7e00de" key="staticText-60" x="111" y="3" width="496" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ตารางที่ 2 สรุปกิจกรรมสำคัญของสถานพยาบาล(สอ./PCU) ที่แม่ข่ายไม่ได้ดำเนินการเอง]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="03e740de-2754-4ca9-8ebe-13a73c904665" key="textField-1" x="111" y="19" width="496" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="11c85f15-1e7b-4ff8-a392-e57726038861" key="textField-2" x="111" y="36" width="496" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_2}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b5f1512b-2685-41d8-b843-aa0aa98c3907" key="staticText-61" x="634" y="3" width="168" height="16"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<text><![CDATA[แบบ 0110 รง. 5 (Version - ตค 48)]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2ef396d9-dbc8-4dfc-be4d-c906e5f8e337" key="textField-3" mode="Transparent" x="472" y="143" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_1}.intValue() + $V{den5_1_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c6245720-1401-466e-914b-5ca4c61a9172" key="textField-4" mode="Transparent" x="472" y="160" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_2}.intValue() + $V{den5_2_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField pattern="#" isBlankWhenNull="true">
+				<reportElement uuid="b26adddc-6787-43f6-a080-84859820f8d8" key="textField-5" mode="Transparent" x="472" y="177" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_3}.intValue() + $V{den5_3_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0c95f08e-8d61-4918-ae37-8f23462267f3" key="textField-6" mode="Transparent" x="472" y="194" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_4}.intValue() + $V{den5_4_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="74726e35-57b0-4a21-8e6c-39d37456076f" key="textField-7" mode="Transparent" x="472" y="211" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den5_5}.intValue() + $V{den5_5_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="039ba656-ad41-49ca-b317-576600ca4f51" key="textField-14" mode="Transparent" x="472" y="228" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+$V{den5_1}.intValue() + $V{den5_1_1}.intValue() +
+$V{den5_2}.intValue() + $V{den5_2_1}.intValue() +
+$V{den5_3}.intValue() + $V{den5_3_1}.intValue() +
+$V{den5_4}.intValue() + $V{den5_4_1}.intValue() +
+$V{den5_5}.intValue() + $V{den5_5_1}.intValue()
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="73fc5681-d1dc-4e20-a1b5-b3553d721c1c" key="textField-16" x="542" y="143" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr6_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c353e1a9-e182-4945-8554-3f9d812cf5a4" key="textField-17" x="542" y="160" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr6_2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a0d0789a-b0e7-4b35-bfb1-22230ca8654a" key="textField-18" x="542" y="177" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr6_3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="5d16d63c-6aa1-4203-8e15-d0a78a96f2f6" key="textField-19" x="542" y="194" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr6_4})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="7da38684-e4a2-43a6-9404-33408cd37214" key="textField-20" x="542" y="211" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{mmr6_5})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="df38310a-c253-4489-ac96-93aaab174f0b" key="textField-21" x="542" y="228" width="33" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{mmr6_1}.intValue()) +($V{mmr6_2}.intValue()) + ($V{mmr6_3}.intValue()) +($V{mmr6_4}.intValue())+ ($V{mmr6_5}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b8769cfc-e116-4b41-9b04-45e9c6e6a8f1" key="textField" x="403" y="177" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless5_3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f1ef43fb-0873-4400-9312-d7f3381494e0" key="textField-23" x="403" y="143" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless5_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c96f2873-ed74-472f-90f5-64dff6c5c5b2" key="textField-24" x="403" y="160" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless5_2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="7429f362-1122-4c55-9fbf-7f711dffb679" key="textField-25" x="403" y="211" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless5_5})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="278afd8a-8cdb-42cc-8b9c-b8d1fdc55ace" key="textField-26" x="403" y="194" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless5_4})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="481838c2-96dc-4c11-88fb-d00b1be1fbdd" key="textField-27" x="441" y="177" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover5_3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4047e043-fbb1-4edd-84e4-972033660fe7" key="textField-28" x="441" y="143" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover5_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="3b8add04-876d-45f6-ae56-fa6569f85a2e" key="textField-29" x="441" y="160" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover5_2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2b0333bd-4707-44b0-bd74-6f9eb585374d" key="textField-30" x="441" y="211" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover5_5})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4a583fb2-c108-467f-b1c1-c5ed9e62380a" key="textField-31" x="441" y="194" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover5_4})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="6535e98a-65fa-4b64-bb3d-1bb61c7ff171" key="textField-32" x="575" y="143" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless6_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="cce22af3-2eac-4142-be2a-a7b6e125e414" key="textField-33" x="575" y="177" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless6_3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="24652bac-ade4-4d6b-83f2-74f58d8c4e13" key="textField-34" x="575" y="160" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless6_2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4e014ff3-3407-4674-8c99-af519ec61012" key="textField-35" x="575" y="211" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless6_5})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="57b7618a-52a3-4c6e-aeff-39ea9c744746" key="textField-36" x="575" y="194" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbless6_4})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ecba906b-aed4-4715-b441-c9bd63cd9a72" key="textField-37" x="612" y="177" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover6_3})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="fb7dcfe6-a2a3-4b57-a326-7d9194e40a88" key="textField-38" x="612" y="143" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover6_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c300a442-4aae-4ea1-9197-cb3b803307e4" key="textField-39" x="612" y="160" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover6_2})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="91730b10-e135-4682-9f5d-f4df65251711" key="textField-40" x="612" y="211" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover6_5})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c95f21f0-49b2-414d-a06a-004c0ea33975" key="textField-41" x="612" y="194" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{nbover6_4})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="3bba22f3-0b9b-4bf0-b9cf-fd62b30a3881" key="textField-42" x="403" y="228" width="38" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbless5_1}.intValue()) +($V{nbless5_2}.intValue()) + ($V{nbless5_3}.intValue()) +($V{nbless5_4}.intValue())+ ($V{nbless5_5}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="1dcaac51-dc79-43be-8f41-7ccf4e9686cd" key="textField-43" x="441" y="228" width="31" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbover5_1}.intValue()) +($V{nbover5_2}.intValue()) + ($V{nbover5_3}.intValue()) +($V{nbover5_4}.intValue())+ ($V{nbover5_5}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b2fe104e-bf55-462b-bef8-a7b370abc153" key="textField-44" x="575" y="228" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbless6_1}.intValue()) +($V{nbless6_2}.intValue()) + ($V{nbless6_3}.intValue()) +($V{nbless6_4}.intValue())+ ($V{nbless6_5}.intValue())))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c49a440e-7bbd-43dd-9a9a-0911e6db47e2" key="textField-45" x="612" y="228" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{nbover6_1}.intValue()) +($V{nbover6_2}.intValue()) + ($V{nbover6_3}.intValue()) +($V{nbover6_4}.intValue())+ ($V{nbover6_5}.intValue())))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="abe38a55-f01d-4ae6-946b-7ab0f2b77a27" key="staticText-62" x="731" y="126" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[คนใหม่]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ec0082df-6370-4b73-bd96-2bc7c1445aae" key="textField-65" x="731" y="143" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless9_1}.intValue())
++ ($V{nbless7_1}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="21c4a871-b12d-45ab-a072-64d94c2370be" key="textField-66" x="731" y="160" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless9_2}.intValue())
++ ($V{nbless7_2}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="1161da75-3c6d-4ff5-a5b8-118189ded06d" key="textField-67" x="731" y="177" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless9_3}.intValue())
++ ($V{nbless7_3}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="25f8ae08-7180-478e-9e0d-c34dbf60dfcc" key="textField-68" x="731" y="194" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless9_4}.intValue())
++ ($V{nbless7_4}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="1d22c714-b574-468e-8afe-c11487b839e3" key="textField-69" x="731" y="211" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless9_5}.intValue())
++ ($V{nbless7_5}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="d6553fd2-c13c-44a6-8089-dbf7e75aaac7" key="textField-70" x="731" y="228" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbless7_1}.intValue())
++($V{nbless7_2}.intValue())
++($V{nbless7_3}.intValue())
++($V{nbless7_4}.intValue())
++($V{nbless7_5}.intValue())
+
++($V{nbless9_1}.intValue())
++($V{nbless9_2}.intValue())
++($V{nbless9_3}.intValue())
++($V{nbless9_4}.intValue())
++($V{nbless9_5}.intValue())
+
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8f44680b-17d6-4370-9baf-f5fbfd600e53" key="textField-77" x="768" y="143" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover10_1}.intValue())
++ ($V{nbover12_1}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="bda75ca9-22c0-47a7-b0cd-e935acad64da" key="textField-78" x="768" y="160" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover10_2}.intValue())
++ ($V{nbover12_2}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="9498a63e-beba-4379-bdb2-5dc2ea8e3f88" key="textField-79" x="768" y="177" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover10_3}.intValue())
++ ($V{nbover12_3}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="607c5164-3ec1-447c-b61c-9453cd85a0a6" key="textField-80" x="768" y="194" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover10_4}.intValue())
++ ($V{nbover12_4}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0385cd26-d33d-4e3a-8845-b9973f2f39c9" key="textField-81" x="768" y="211" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover10_5}.intValue())
++ ($V{nbover12_5}.intValue())
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="46aad64e-cd3e-4d18-a690-3cf31cb3a0ab" key="textField-82" x="768" y="228" width="37" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+($V{nbover12_1}.intValue())
++($V{nbover12_2}.intValue())
++($V{nbover12_3}.intValue())
++($V{nbover12_4}.intValue())
++($V{nbover12_5}.intValue())
+
++($V{nbover10_1}.intValue())
++($V{nbover10_2}.intValue())
++($V{nbover10_3}.intValue())
++($V{nbover10_4}.intValue())
++($V{nbover10_5}.intValue())
+
+))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="5b6d21d4-1742-4f63-982b-475c1691151f" key="staticText-63" x="373" y="109" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[JE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e41f7fd3-a70a-4aaf-ae70-10b86ddf8b5b" key="staticText-64" x="373" y="126" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[ครั้ง]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="dd9e3d9e-e04c-4c51-a24f-9815be8a71ad" key="textField-83" x="373" y="143" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{je_a})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ad69d23a-d5fe-436d-ba48-0c739055fd31" key="textField-84" x="373" y="160" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{je_b})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="dffa9b3b-8b1e-4e34-92ad-19aff369f668" key="textField-85" x="373" y="177" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{je_u_1})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="faf95257-a38a-48f7-bd85-52411c3e3524" key="textField-86" x="373" y="194" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{je_u_0})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="039e71f8-f642-4b2a-ab6c-05bc5a41b92a" key="textField-87" x="373" y="211" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null($V{je_n})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2e163d10-b09d-4518-9ba9-5f08d03a68d9" key="textField-88" x="373" y="228" width="30" height="17"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  ($V{je_a}.intValue()) +($V{je_b}.intValue()) + ($V{je_u_1}.intValue()) +($V{je_u_0}.intValue())+ ($V{je_n}.intValue())))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="9f68fb7f-3a63-4c85-b272-fbc4c559b88d" key="staticText-65" x="690" y="29" width="112" height="16" forecolor="#CCCCCC"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="6"/>
+				</textElement>
+				<text><![CDATA[report_0110_subreport3  15 ธค.52]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="9531bf27-fbb3-488e-82f6-c6df929f8f89" key="textField-102" mode="Transparent" x="649" y="143" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_1}.intValue() + $V{den6_1_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="fbbe7ee5-4f18-4f56-8c07-2ea88faf798b" key="textField-103" mode="Transparent" x="649" y="160" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_2}.intValue() + $V{den6_2_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField pattern="#" isBlankWhenNull="true">
+				<reportElement uuid="3a511c11-0849-4a9f-a76d-89bd99b29077" key="textField-104" mode="Transparent" x="649" y="177" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_3}.intValue() + $V{den6_3_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="fac453dd-130e-476b-a914-8f1c1da02ec7" key="textField-105" mode="Transparent" x="649" y="194" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_4}.intValue() + $V{den6_4_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="cc0c5694-d21c-4b56-a1ee-b211c343a83c" key="textField-106" mode="Transparent" x="649" y="211" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(  $V{den6_5}.intValue() + $V{den6_5_1}.intValue() ))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="dc413304-c6db-45de-9120-d90cfcdeefa2" key="textField-107" mode="Transparent" x="649" y="228" width="41" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+$V{den6_1}.intValue() + $V{den6_1_1}.intValue() +
+$V{den6_2}.intValue() + $V{den6_2_1}.intValue() +
+$V{den6_3}.intValue() + $V{den6_3_1}.intValue() +
+$V{den6_4}.intValue() + $V{den6_4_1}.intValue() +
+$V{den6_5}.intValue() + $V{den6_5_1}.intValue()
+))]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c084fd90-b8f7-4a3e-8b8b-47db9564068e" key="textField-108" mode="Transparent" x="507" y="228" width="35" height="17" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.Zero2Null(new java.lang.Integer(
+$V{vu02}.intValue() + $V{vu12}.intValue()
++ $V{va2}.intValue() + $V{vb2}.intValue()
++ $V{vn2}.intValue()
+))]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

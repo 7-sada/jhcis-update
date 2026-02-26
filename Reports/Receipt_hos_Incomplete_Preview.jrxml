@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Receipt_hos_incomplete_Preview" pageWidth="431" pageHeight="576" columnWidth="397" leftMargin="20" rightMargin="14" topMargin="28" bottomMargin="20" uuid="349f41ee-ec35-44d5-81d2-22f3b4bf73da">
+	<property name="ireport.zoom" value="1.610510000000001"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="115"/>
+	<parameter name="visitno" class="java.lang.String"/>
+	<parameter name="receiptno" class="java.lang.String"/>
+	<parameter name="username" class="java.lang.String"/>
+	<parameter name="position" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Project_Java\\_DesktopApp\\jhcis\\Reports\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PayMoney" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select p2.*
+from(
+select v.pcucode,v.visitno,ifnull(bb.diagcode,"ไม่ระบุรหัสการวินิจฉัย") as diagcode,ifnull(di.diseasenamethai,"") asdiseasenamethai
+,date_add(v.visitdate,interval 543 year) as visit_datethai,
+v.pid,p.fname,p.lname,ct.titlename
+,p1.drugcode,
+(case when p1.drugtype = '10' then '01'
+when p1.drugtype = '11' then '03'
+else p1.drugtype
+end) as drugtype,p1.drugname,p1.prefix,p1.noclaim,p1.paid,v.username,u.fname as uname,u.lname as ulname,u.officerposition
+from visit v
+left join
+(
+select vi.pcucode,vi.visitno,vi.diagcode
+from visitdiag vi
+where vi.dxtype = '01' and vi.visitno = $P{visitno}
+group by vi.visitno ) as bb on (v.visitno = bb.visitno and v.pcucode = bb.pcucode)
+join (
+select aa.visitno,aa.drugcode,aa.drugtype,
+(case when aa.drugtype in('01','10') and aa.nationaccount = '1' then 'ค่ายาในบัญชียาหลักแห่งชาติ'
+when aa.drugtype in('01','10') and aa.nationaccount = '2' then 'ค่ายานอกบัญชียาหลักแห่งชาติ'
+when aa.drugtype in('03','11') and aa.nationaccount = '1' then 'ค่าอุปกรณ์ในบัญชียาหลักแห่งชาติ'
+when aa.drugtype in ('03','11') and aa.nationaccount = '2' then 'ค่าอุปกรณ์นอกบัญชียาหลักแห่งชาติ'
+when aa.drugtype in ('06') and aa.nationaccount = '14' then 'ค่าบริการทางกายภาพบำบัด'
+else aa.drugname
+end) as drugname,
+ifnull(concat("(",aa.drugcodeaccountdept,")"),"") as prefix,aa.noclaim,aa.paid
+from (
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+sum(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+,sum(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugtype in  ('10','01')) and cd.nationaccount = '2'
+group by vd.visitno
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+sum(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+,sum(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugtype in  ('10','01')) and cd.nationaccount = '1'
+group by vd.visitno
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+sum(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+,sum(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugtype in  ('03','11')) and cd.nationaccount = '1'
+group by vd.visitno
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,ifnull(cd.nationaccount,'2') as nationaccount,cd.drugcodeaccountdept,
+sum(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+,sum(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugtype in  ('03','11')) and (cd.nationaccount = '2' or cd.nationaccount is null)
+group by vd.visitno
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.chargeitem as nationaccount,cd.drugcodeaccountdept,
+sum(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+,sum(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugcode like 'K%' and cd.chargeitem = '14')
+group by vd.visitno
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2)) as noclaim
+,(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and cd.drugtype in  ('07')
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2)) as noclaim
+,(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and cd.drugtype in  ('91') and cd.drugcode not like "DF%"
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2)) as noclaim
+,(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and cd.drugtype in  ('02')
+union all
+select vd.visitno,vd.drugcode,cd.drugname,cd.drugtype,cd.nationaccount,cd.drugcodeaccountdept,
+if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2)) as noclaim
+,(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid
+from visitdrug vd
+left join cdrug cd on (vd.drugcode = cd.drugcode)
+where vd.visitno = $P{visitno}
+and (cd.drugtype = '06' and cd.drugcode not like 'K%'))
+as aa)
+as p1 on (v.visitno = p1.visitno)
+left join cdisease di on (bb.diagcode = di.diseasecode)
+left join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join ctitle ct on (ct.titlecode = p.prename)
+left join user u on (u.username = v.username)
+order by p1.drugtype) as p2
+order by p2.drugtype]]>
+	</queryString>
+	<field name="pcucode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="diagcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="asdiseasenamethai" class="java.lang.String"/>
+	<field name="visit_datethai" class="java.sql.Date"/>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="titlename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugtype" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="prefix" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="noclaim" class="java.math.BigDecimal"/>
+	<field name="paid" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="username" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="uname" class="java.lang.String"/>
+	<field name="ulname" class="java.lang.String"/>
+	<field name="officerposition" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="sumPaid" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{paid}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="sumNoclaim" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{noclaim}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="GrandTotal" class="java.lang.Double">
+		<variableExpression><![CDATA[$V{sumNoclaim}+$V{sumPaid}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="numberOfRecord" class="java.lang.Number" resetType="Column" calculation="Count"/>
+	<variable name="Get_sub_noclaim" class="java.lang.Double" resetType="None" calculation="System">
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="Get_sub_claim" class="java.lang.Double" resetType="None" calculation="System">
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="SubNoclaim" class="java.lang.Double" resetType="None" calculation="System">
+		<variableExpression><![CDATA[($V{Get_sub_noclaim}.equals(new Double(0.00))?new Double(0.00):$V{Get_sub_noclaim})]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="SubClaim" class="java.lang.Double" resetType="None" calculation="System">
+		<variableExpression><![CDATA[$V{Get_sub_claim}+$V{Get_sub_noclaim}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="138" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="332" y="14" width="49" height="20" uuid="c2623f71-e0f4-4f22-a18d-12da3b966cca"/>
+				<textElement textAlignment="Right">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="303" y="62" width="78" height="20" uuid="b264fc0a-cb7e-47e2-a8f8-c2f7d5b3e0c1"/>
+				<textElement textAlignment="Right">
+					<font fontName="TH SarabunPSK" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visit_datethai}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="303" y="85" width="73" height="20" uuid="4b99e3ac-39d7-4ef2-8267-0272ebcdcd72"/>
+				<textElement textAlignment="Right">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["  "+$F{pid}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="67" y="96" width="236" height="31" uuid="9190a4b9-e588-45de-aef2-e9c4bea4fcbe"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{diagcode}+"-"+$F{asdiseasenamethai}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="37" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="26" height="37" uuid="7223047e-8db5-4bf0-8441-0522aa6af63e"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ลำดับ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="26" y="0" width="201" height="37" uuid="2c2157a9-cbd9-4bff-89bb-4bd98df43368"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[รายการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="227" y="0" width="160" height="20" uuid="0343c2f3-f3df-4325-9efb-a9356cf3d66d"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[จำนวนเงิน(บาท)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="318" y="20" width="69" height="17" uuid="42f4cee7-bf49-42b0-a2d3-1ed21cd647f0"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[เบิกได้]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="227" y="20" width="91" height="17" uuid="a89dd23a-e1dd-4af3-a45b-77fc2f37c3b5"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[เบิกไม่ได้]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="26" height="19" uuid="b2027835-ab67-4075-a263-b1a9d8be7c14"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="26" y="0" width="201" height="19" uuid="6a5dba1e-6d60-4977-9801-55903a52e4e3"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$F{prefix}+" "+$F{drugname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="227" y="0" width="85" height="19" uuid="d02b2275-847e-4a64-975a-48d30266a823"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{noclaim})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="318" y="0" width="69" height="19" uuid="a14d7235-9bb2-4dee-bb37-03c335e4c6c1"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{paid})]]></textFieldExpression>
+			</textField>
+			<break>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="17" width="100" height="1" uuid="70da0c60-786f-4883-86ca-ace451f95619">
+					<printWhenExpression><![CDATA[($V{REPORT_COUNT}%11) == 0]]></printWhenExpression>
+				</reportElement>
+			</break>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="1"/>
+	</columnFooter>
+	<lastPageFooter>
+		<band height="154" splitType="Prevent">
+			<textField isStretchWithOverflow="true" evaluationTime="Report" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="318" y="65" width="69" height="20" uuid="06cbe179-3b34-4c7a-83cd-4f605dcff6c6"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{GrandTotal}+$V{Get_sub_claim}+$V{Get_sub_noclaim}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="318" y="40" width="69" height="22" uuid="6fa46264-5101-4c22-93ad-3319fabfea66"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Get_sub_claim}+$V{sumPaid}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="218" y="113" width="163" height="20" uuid="5891c64a-ea27-4a8b-8b0d-8b2d0497659c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["   "+$P{username}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="218" y="132" width="163" height="20" uuid="5a66f56b-8b7d-48ce-ac98-69c048f9abfd"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["     "+$P{position}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report" isBlankWhenNull="true">
+				<reportElement x="0" y="65" width="218" height="20" uuid="9cab6061-9df9-4fc8-9a22-14e4701f1a83"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[NumToBaht.toBaht($V{GrandTotal}+$V{Get_sub_noclaim}+$V{Get_sub_claim})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="227" y="40" width="85" height="22" uuid="1608e252-c7fd-447c-aebc-1244254bc3e0"/>
+				<textElement textAlignment="Right">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Get_sub_noclaim}+$V{sumNoclaim}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="0" y="0" width="397" height="20" uuid="612668fd-5820-4728-8f8b-859fc6d5cb16"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="visitno">
+					<subreportParameterExpression><![CDATA[$P{visitno}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="SUB_NOCLLAIM" toVariable="Get_sub_noclaim"/>
+				<returnValue subreportVariable="SUb_Paid" toVariable="Get_sub_claim"/>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "\\Receipt_hos_incomplete_Preview_subreport1.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="26" y="113" width="138" height="20" uuid="e0605b1f-f255-4cf8-bb29-82c751d6c176"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{PayMoney}]]></textFieldExpression>
+			</textField>
+		</band>
+	</lastPageFooter>
+</jasperReport>

@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="_X_d___drug_label1" pageWidth="227" pageHeight="142" orientation="Landscape" columnWidth="227" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="19cfe6eb-feb6-4ef0-957e-28bcf164ace6">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="vn" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["71149"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HCC" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["01871"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+`person`.`pid`,
+Concat(ifnull(titlename,ifnull(`person`.`prename`,'...')),`person`.`fname`,'  ',`person`.
+`lname`,'(HN:',convert(visit.pid using utf8),') อายุ-ปดว:',getAgeYearNum(birth,visitdate),'-',getAgeMonthNum(birth,visitdate),'-',getAgeDayNum(birth,visitdate)) as pati
+,IF(visitdate IS NULL,'',concat(convert(DAY(visitdate) using utf8),' ',
+   CASE WHEN MONTH(visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(visitdate)=2 THEN 'กุมภาพันธ์' WHEN MONTH(visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(visitdate)=4 THEN 'เมษายน' WHEN MONTH(visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(visitdate)=6 THEN 'มิถุนายน' WHEN MONTH(visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(visitdate)=8 THEN 'สิงหาคม' WHEN MONTH(visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(visitdate)=10 THEN 'ตุลาคม' WHEN MONTH(visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(visitdate)=12 THEN 'ธันวาคม' END,' ',YEAR(visitdate)+543) )
+   as visitdate
+,date_format(`visit`.`visitdate`,'%Y-%m-%d') as vsd,
+Concat('ยา: ',`cdrug`.`drugname`) as drugn,
+Concat(CAST(`visitdrug`.`unit` As Char), ' ', ifnull(IFNULL(`unitsellname`,unitsell),'หน่วย')) as unt,
+Concat('วิธีใช้: ',`visitdrug`.`dose`) as used,
+Concat(`chospital`.`hosname`,' จ.',`cprovince`.`provname`) as hos,
+concat('คำเตือน: ',IF(cdrug.drugcaution IS NULL,'-',LEFT(cdrug.drugcaution,120)),'...') as caution,
+concat('สรรพคุณ: ',IF(cdrug.drugproperties IS NULL,'-',LEFT(cdrug.drugproperties,100)),'...') as drugproperties,
+cdrug.drugcode
+#,cdrug.dateexpire as dateexpire
+# OR DATEDIFF(dateexpire,visitdate)<0
+,IF(cdrug.dateexpire IS NULL OR DAY(cdrug.dateexpire)='0'  OR DATEDIFF(cdrug.dateexpire,visitdate)<0
+  ,'',concat(convert(DAY(cdrug.dateexpire) using utf8),' ',
+CASE WHEN MONTH(cdrug.dateexpire)=1 THEN 'มกราคม'
+   WHEN MONTH(cdrug.dateexpire)=2 THEN 'กุมภาพันธ์' WHEN MONTH(cdrug.dateexpire)=3 THEN 'มีนาคม'
+   WHEN MONTH(cdrug.dateexpire)=4 THEN 'เมษายน' WHEN MONTH(cdrug.dateexpire)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(cdrug.dateexpire)=6 THEN 'มิถุนายน' WHEN MONTH(cdrug.dateexpire)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(cdrug.dateexpire)=8 THEN 'สิงหาคม' WHEN MONTH(cdrug.dateexpire)=9 THEN 'กันยายน'
+   WHEN MONTH(cdrug.dateexpire)=10 THEN 'ตุลาคม' WHEN MONTH(cdrug.dateexpire)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(cdrug.dateexpire)=12 THEN 'ธันวาคม'
+   END,' ',YEAR(cdrug.dateexpire)+543)) as dateexpire
+
+,IFNULL(`office`.`tel`,'') as tel
+,IFNULL(drugnamethai,'..ไม่ระบุชื่อยาภาษาไทยไว้ฯ') dnTh
+FROM
+`visit`
+Inner Join `person` ON `person`.`pid` = `visit`.`pid` and person.pcucodeperson = visit.pcucodeperson
+left join ctitle on person.prename = titlecode
+Inner Join `visitdrug` ON `visit`.`visitno` = `visitdrug`.`visitno` and visit.pcucode = visitdrug.pcucode
+Inner Join `cdrug` ON `visitdrug`.`drugcode` = `cdrug`.`drugcode`
+left join cdrugunitsell on unitsell = unitsellcode
+,`office`
+Inner Join `chospital` ON `office`.`offid` = `chospital`.`hoscode`
+Inner Join `cprovince` ON `chospital`.`provcode` = `cprovince`.`provcode`
+
+where
+	visit.visitno = '78829']]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pati" class="java.lang.String"/>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vsd" class="java.lang.String"/>
+	<field name="drugn" class="java.lang.String"/>
+	<field name="unt" class="java.lang.String"/>
+	<field name="used" class="java.lang.String"/>
+	<field name="hos" class="java.lang.String"/>
+	<field name="caution" class="java.lang.String"/>
+	<field name="drugproperties" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateexpire" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tel" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dnTh" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="1" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="112" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-2" mode="Transparent" x="10" y="5" width="217" height="10" isRemoveLineWhenBlank="true" uuid="83663544-74bd-4636-9a1b-cfa1bd1ad708"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hos}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-10" positionType="Float" mode="Transparent" x="10" y="15" width="28" height="10" isRemoveLineWhenBlank="true" uuid="664288fe-c8b3-4fb2-8617-a1a49085876c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันที่:"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="d MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement key="textField-3" positionType="Float" mode="Transparent" x="38" y="15" width="189" height="10" isRemoveLineWhenBlank="true" uuid="e985f099-6f0a-4741-9d88-7f6970e00708"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitdate}+" โทร."+$F{tel}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-4" positionType="Float" mode="Transparent" x="10" y="25" width="217" height="10" isRemoveLineWhenBlank="true" uuid="1c876536-2b4c-46ad-8605-c3b9d68d1181"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{pati}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-7" positionType="Float" mode="Transparent" x="10" y="35" width="170" height="12" isRemoveLineWhenBlank="true" uuid="15b273a1-1301-47d3-aba1-a8291e280195"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drugn}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-8" positionType="Float" mode="Transparent" x="180" y="35" width="45" height="12" isRemoveLineWhenBlank="true" uuid="7f1a9284-d31f-4215-bf29-adf28a7f9368"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{unt}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-9" positionType="Float" mode="Opaque" x="8" y="47" width="217" height="12" isRemoveLineWhenBlank="true" forecolor="#000000" backcolor="#FFFFFF" uuid="adbd8cb7-d818-4f52-834f-2a44ed4ca9e7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="7" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อยาภาษาไทย:" + $F{dnTh}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-5" positionType="Float" mode="Transparent" x="11" y="59" width="157" height="12" isRemoveLineWhenBlank="true" uuid="052dc801-4099-4893-8876-9c793957a6d6"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drugproperties}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-9" positionType="Float" mode="Transparent" x="10" y="71" width="158" height="12" isRemoveLineWhenBlank="true" uuid="5087b2e7-eb18-4bb8-ad66-57719f72b137"/>
+				<box>
+					<pen lineWidth="0.5" lineColor="#990000"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#990000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#990000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#990000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#990000"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{used}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-6" positionType="Float" mode="Transparent" x="10" y="83" width="158" height="12" isRemoveLineWhenBlank="true" uuid="71ba8d49-6e55-45b7-8c77-427d6dc02f7e"/>
+				<box>
+					<pen lineWidth="0.75" lineColor="#990000"/>
+					<topPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<leftPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<bottomPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<rightPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{caution}+"-"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-11" positionType="Float" mode="Transparent" x="10" y="95" width="158" height="12" isRemoveLineWhenBlank="true" forecolor="#333333" uuid="706b8793-6350-44da-ad4d-7a77e6115682"/>
+				<box>
+					<pen lineWidth="0.75" lineColor="#990000"/>
+					<topPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<leftPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<bottomPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+					<rightPen lineWidth="0.75" lineStyle="Solid" lineColor="#990000"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันหมดอายุ: "+$F{dateexpire}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

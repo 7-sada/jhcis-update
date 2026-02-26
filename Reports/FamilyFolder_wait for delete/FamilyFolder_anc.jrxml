@@ -1,0 +1,773 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FamilyFolder_anc"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="564"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="1"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="SUBREPORT_DIR" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["D:\\myireport\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["06096"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pid" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["398"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT
+     person.`pid`,
+     concat(person.pcucodeperson,person.pid)as ppid,
+     concat(ifnull(ctitle.`titlename`,''),ifnull(`person`.`fname`,''),'  ',ifnull(`person`.`lname`,''))as name,
+     ifnull(idcard,'...ไม่ระบุฯ')as idc,
+     DATE_FORMAT(person.`birth`,"%Y-%m-%d")as birth,
+     concat(person.pcucodeperson,'-',person.pid,'/',substring(curdate(),1,4)+543)as hnyear,
+     hnomoi,
+     mumoi,
+     subdistname,
+     subdistname,
+     distname,
+     provname,
+     CONVERT(CONCAT(DATE_FORMAT(CURRENT_DATE,"%Y")-DATE_FORMAT(person.birth,"%Y")-(DATE_FORMAT(CURRENT_DATE,"00-%m-%d")<DATE_FORMAT(person.birth,"00-%m-%d"))," ปี  ",CASE SIGN(DATE_FORMAT(CURRENT_DATE,"%m")-DATE_FORMAT(person.birth,"%m"))WHEN 0 THEN(11-DATE_FORMAT(person.birth,"%m")+DATE_FORMAT(CURRENT_DATE,"%m")-(DATE_FORMAT(person.birth,"00-00-%d")<DATE_FORMAT(birth,"00-00-%d")))WHEN -1 THEN(12-DATE_FORMAT(person.birth,"%m")+DATE_FORMAT(CURRENT_DATE,"%m")-(DATE_FORMAT(CURRENT_DATE,"00-00-%d")<DATE_FORMAT(person.birth,"00-00-%d")))WHEN 1 THEN(DATE_FORMAT(CURRENT_DATE,"%m")-DATE_FORMAT(person.birth,"%m")-(DATE_FORMAT(CURRENT_DATE,"00-00-%d")<DATE_FORMAT(person.birth,"00-00-%d")))END," เดือน  ",CASE SIGN(DATE_FORMAT(CURRENT_DATE,"%d")-DATE_FORMAT(person.birth,"%d"))WHEN 0 THEN(DATE_FORMAT(person.birth,"%d")-DATE_FORMAT(CURRENT_DATE,"%d"))WHEN -1 THEN(DATE_FORMAT(LAST_DAY(person.birth),"%d")+DATE_FORMAT(CURRENT_DATE,"%d")-DATE_FORMAT(person.birth,"%d"))WHEN 1 THEN(DATE_FORMAT(CURRENT_DATE,"%d")-DATE_FORMAT(person.birth,"%d")-(DATE_FORMAT(CURRENT_DATE,"%d")<DATE_FORMAT(person.birth,"%d")))END," วัน")USING utf8)AS age_ymd,
+     CASE person.`sex` WHEN '1'THEN 'ชาย'WHEN '2'THEN 'หญิง'ELSE 'ไม่ระบุ'END AS person_sex,
+     coccupa.`occupaname` AS coccupa_occupaname,
+     creligion.`religionname` AS creligion_religionname,
+     cstatus.`statusname` AS cstatus_statusname,
+     cnation.`nationname` AS cnation_nationname,
+     allergic,
+     visitancpregnancy.`pregno` AS visitancpregnancy_pregno,
+     visitancpregnancy.`firstdatecheck` AS visitancpregnancy_firstdatecheck,
+     DATE_FORMAT(visitancpregnancy.`lmp`,"%Y-%m-%d") AS visitancpregnancy_lmp,
+     if( isnull(visitancpregnancy.`edc`) , DATE_FORMAT(date_add( visitancpregnancy.`lmp`,INTERVAL 280 DAY),"%Y-%m-%d"),DATE_FORMAT(visitancpregnancy.`edc`,"%Y-%m-%d")) AS visitancpregnancy_edc,
+     CASE visitancpregnancy.`fpbefore` WHEN '0' THEN 'ไม่เคย' WHEN '1' THEN 'ยาเม็ด' WHEN '2' THEN 'ยาฉีด' WHEN '3' THEN 'ห่วงอนามัย' WHEN '4' THEN 'ยาหลอดฝัง' WHEN '5' THEN 'ถุงยาง' WHEN '9' THEN 'เคยวิธีอื่น' END AS visitancpregnancy_fpbefore,
+     visitancpregnancy.`firstabnormal` AS visitancpregnancy_firstabnormal
+FROM
+     `cprovince` cprovince LEFT OUTER JOIN `person` person ON cprovince.`provcode` = person.`provcodemoi`
+     LEFT OUTER JOIN `cdistrict` cdistrict ON person.`provcodemoi` = cdistrict.`provcode`
+     AND cdistrict.`distcode` = person.`distcodemoi`
+     LEFT OUTER JOIN `csubdistrict` csubdistrict ON person.`provcodemoi` = csubdistrict.`provcode`
+     AND csubdistrict.`distcode` = person.`distcodemoi`
+     AND csubdistrict.`subdistcode` = person.`subdistcodemoi`
+     LEFT OUTER JOIN `coccupa` coccupa ON person.`occupa` = coccupa.`occupacode`
+     LEFT OUTER JOIN `creligion` creligion ON person.`religion` = creligion.`religioncode`
+     LEFT OUTER JOIN `cstatus` cstatus ON person.`marystatus` = cstatus.`statuscode`
+     LEFT OUTER JOIN `cnation` cnation ON person.`nation` = cnation.`nationcode`
+     LEFT OUTER JOIN `visitancpregnancy` visitancpregnancy ON person.`pcucodeperson` = visitancpregnancy.`pcucodeperson`
+     AND person.`pid` = visitancpregnancy.`pid`
+     LEFT OUTER JOIN `ctitle` ctitle ON person.`prename` = ctitle.`titlecode`
+WHERE
+     person.pcucodeperson = '$P!{p_pcucode}'
+     and person.pid = '$P!{p_pid}'
+order BY visitancpregnancy.`pregno` desc limit 1]]></queryString>
+
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="ppid" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="idc" class="java.lang.String"/>
+	<field name="birth" class="java.util.Date"/>
+	<field name="hnyear" class="java.lang.String"/>
+	<field name="hnomoi" class="java.lang.String"/>
+	<field name="mumoi" class="java.lang.String"/>
+	<field name="subdistname" class="java.lang.String"/>
+	<field name="distname" class="java.lang.String"/>
+	<field name="provname" class="java.lang.String"/>
+	<field name="age_ymd" class="java.lang.String"/>
+	<field name="person_sex" class="java.lang.String"/>
+	<field name="coccupa_occupaname" class="java.lang.String"/>
+	<field name="creligion_religionname" class="java.lang.String"/>
+	<field name="cstatus_statusname" class="java.lang.String"/>
+	<field name="cnation_nationname" class="java.lang.String"/>
+	<field name="allergic" class="java.lang.String"/>
+	<field name="visitancpregnancy_pregno" class="java.lang.Integer"/>
+	<field name="visitancpregnancy_firstdatecheck" class="java.sql.Date"/>
+	<field name="visitancpregnancy_lmp" class="java.util.Date"/>
+	<field name="visitancpregnancy_edc" class="java.util.Date"/>
+	<field name="visitancpregnancy_fpbefore" class="java.lang.String"/>
+	<field name="visitancpregnancy_firstabnormal" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="173"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="28"
+						y="29"
+						width="182"
+						height="20"
+						key="textField-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="29"
+						width="26"
+						height="20"
+						key="staticText-18"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<text><![CDATA[ชื่อ:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="468"
+						y="29"
+						width="67"
+						height="21"
+						key="textField-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["HN : "+$F{pid}+" "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="132"
+						width="534"
+						height="20"
+						key="textField-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Justified">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["บ้านเลขที่ : "+$F{hnomoi}+" หมู่ที่: " + $F{mumoi} +" ตำบล: "+$F{subdistname} +" อำเภอ: "+$F{distname}+"  จังหวัด: "+$F{provname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="337"
+						y="29"
+						width="132"
+						height="21"
+						key="textField-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Justified">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{idc}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="258"
+						y="29"
+						width="79"
+						height="21"
+						key="staticText-20"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<text><![CDATA[เลขที่บัตร ปชช:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="25"
+						key="staticText-21"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="20" isBold="true"/>
+					</textElement>
+				<text><![CDATA[บัตรอนามัยมารดา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="d MMMMM yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="39"
+						y="49"
+						width="102"
+						height="21"
+						key="textField-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Justified">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{birth}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="49"
+						width="37"
+						height="21"
+						key="staticText-22"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<text><![CDATA[วันเกิด:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="141"
+						y="50"
+						width="158"
+						height="19"
+						key="textField-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" อายุ: "+$F{age_ymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="310"
+						y="49"
+						width="125"
+						height="21"
+						key="textField-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["เพศ : "+$F{person_sex}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="70"
+						width="125"
+						height="21"
+						key="textField-15"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["สัญชาติ : "+$F{cnation_nationname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="141"
+						y="70"
+						width="125"
+						height="21"
+						key="textField-16"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["อาชีพ : "+$F{coccupa_occupaname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="266"
+						y="70"
+						width="125"
+						height="21"
+						key="textField-17"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ศาสนา : "+$F{creligion_religionname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="391"
+						y="70"
+						width="125"
+						height="21"
+						key="textField-18"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["สถานภาพสมรส : "+$F{cstatus_statusname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="113"
+						width="140"
+						height="21"
+						key="textField-25"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ชื่อ-สกุลสามี : "+$F{cnation_nationname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="141"
+						y="113"
+						width="125"
+						height="19"
+						key="textField-26"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" อายุ: "+$F{age_ymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="266"
+						y="113"
+						width="125"
+						height="21"
+						key="textField-27"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["อาชีพ : "+$F{coccupa_occupaname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="391"
+						y="113"
+						width="125"
+						height="21"
+						key="textField-28"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ศาสนา : "+$F{creligion_religionname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="91"
+						width="160"
+						height="21"
+						key="textField-29"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["กลุ่มเลือด "+$F{cnation_nationname}+" Rh"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="152"
+						width="217"
+						height="21"
+						key="textField-30"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ชื่อ-สกุลผู้ติดต่อได้ : "+$F{cnation_nationname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="218"
+						y="152"
+						width="217"
+						height="21"
+						key="textField-31"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["สถานที่ใกล้เคียง : "+$F{cnation_nationname}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="244"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="4"
+						width="93"
+						height="21"
+						key="textField-19"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ประวัติการแพ้ยา : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="26"
+						width="93"
+						height="16"
+						key="textField-20"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["โรคเรื้อรัง : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="53"
+						width="125"
+						height="15"
+						key="textField-21"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["โรคประจำตัวของญาติ : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="94"
+						y="4"
+						width="441"
+						height="21"
+						key="textField-23"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{allergic}==null?"-":$F{allergic}]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="12"
+						y="42"
+						width="515"
+						height="9"
+						key="subreport-1"/>
+					<subreportParameter  name="p_pcucode">
+						<subreportParameterExpression><![CDATA[$P{p_pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="p_pid">
+						<subreportParameterExpression><![CDATA[$P{p_pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "FamilyFolder_chronic_sub1.jasper"]]></subreportExpression>
+				</subreport>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="12"
+						y="70"
+						width="515"
+						height="9"
+						key="subreport-2"
+						positionType="Float"/>
+					<subreportParameter  name="p_pcucode">
+						<subreportParameterExpression><![CDATA[$P{p_pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="p_pid">
+						<subreportParameterExpression><![CDATA[$P{p_pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "FamilyFolder_chronic_sub2.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="111"
+						width="190"
+						height="17"
+						key="textField-24"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ประวัติการตั้งครรภ์และการคลอด  : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="82"
+						width="169"
+						height="15"
+						key="textField-32"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Tahoma" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ประวัติการรับวัคซีนบาดทะยัก : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="195"
+						width="103"
+						height="17"
+						key="textField-33"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ผลการตรวจเลือด  : "]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="178"
+						y="148"
+						width="140"
+						height="19"
+						key="staticText-23"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วิธีการคุมกำเนิดก่อนตั้งครรภ์นี้:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1"
+						y="169"
+						width="217"
+						height="21"
+						key="staticText-24"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วันแรกของการมีประจำเดือนครั้งสุดท้ายก่อนตั้งครรภ์นี้:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="292"
+						y="169"
+						width="99"
+						height="21"
+						key="staticText-25"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วันครบกำหนดคลอด:]]></text>
+				</staticText>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="12"
+						y="128"
+						width="515"
+						height="9"
+						key="subreport-3"
+						positionType="Float"/>
+					<subreportParameter  name="p_pcucode">
+						<subreportParameterExpression><![CDATA[$P{p_pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="p_pid">
+						<subreportParameterExpression><![CDATA[$P{p_pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "FamilyFolder_ancsub2.jasper"]]></subreportExpression>
+				</subreport>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="12"
+						y="99"
+						width="325"
+						height="9"
+						key="subreport-4"
+						positionType="Float"/>
+					<subreportParameter  name="p_pcucode">
+						<subreportParameterExpression><![CDATA[$P{p_pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="p_pid">
+						<subreportParameterExpression><![CDATA[$P{p_pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "FamilyFolder_ancsub1.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="318"
+						y="148"
+						width="132"
+						height="19"
+						key="textField"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{visitancpregnancy_fpbefore}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="217"
+						y="169"
+						width="67"
+						height="21"
+						key="textField"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{visitancpregnancy_lmp}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="380"
+						y="169"
+						width="67"
+						height="21"
+						key="textField-34"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{visitancpregnancy_edc}]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="12"
+						y="214"
+						width="515"
+						height="9"
+						key="subreport-5"
+						positionType="Float"/>
+					<subreportParameter  name="p_pcucode">
+						<subreportParameterExpression><![CDATA[$P{p_pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="p_pid">
+						<subreportParameterExpression><![CDATA[$P{p_pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "FamilyFolder_ancsub3.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="148"
+						width="177"
+						height="19"
+						key="textField-35"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["การตั้งครรภ์ครั้งล่าสุด ครรภ์ที่ "+$F{visitancpregnancy_pregno}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="d MMMMM yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="94"
+						y="5"
+						width="142"
+						height="14"
+						key="textField"
+						stretchType="RelativeToTallestObject"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="11" isPdfEmbedded ="true" pdfEncoding ="Identity-H"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="5"
+						width="93"
+						height="14"
+						key="staticText-12"
+						stretchType="RelativeToTallestObject"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="11" isPdfEmbedded ="true" pdfEncoding ="Identity-H"/>
+					</textElement>
+				<text><![CDATA[บัตรอนามัยมารดา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="327"
+						y="5"
+						width="170"
+						height="14"
+						key="textField-4"
+						stretchType="RelativeToTallestObject"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="11" isPdfEmbedded ="true" pdfEncoding ="Identity-H"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["หน้า " + $V{PAGE_NUMBER} + " / "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="497"
+						y="5"
+						width="36"
+						height="14"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-5"
+						stretchType="RelativeToTallestObject"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle" rotation="None" lineSpacing="Single">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="11" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="true" pdfEncoding ="Identity-H" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

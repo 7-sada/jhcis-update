@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="query_disease_list" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="769397dc-6ffd-4d45-9c79-adcae81d8cfb">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="p_startDate" class="java.util.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new Date()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_sqlDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA[" AND visit.visitdate BETWEEN '2009-10-01' AND '2009-10-31' "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_endDate" class="java.util.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new Date()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_reportOffice" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["หน่วยงาน :: ........................"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_sqlDisease" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND cdisease.diseasecode='E148' "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_sqlPcu" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT person.pid AS hn,
+     concat(ifnull(ctitle.`titlename`,''),person.fname," ",person.lname) AS personname,
+     count(visitdiag.visitno ) AS visitcount
+FROM
+     visit visit INNER JOIN visitdiag visitdiag ON visit.pcucode = visitdiag.pcucode
+     AND visit.visitno = visitdiag.visitno
+     INNER JOIN person person ON visit.pcucodeperson = person.pcucodeperson
+     AND person.pid = visit.pid
+     INNER JOIN cdisease cdisease ON visitdiag.diagcode = cdisease.diseasecode
+     LEFT OUTER JOIN `ctitle` ctitle ON person.`prename` = ctitle.`titlecode`
+WHERE 1=1 $P!{p_sqlDate} $P!{p_sqlDisease} $P!{p_sqlPcu}
+GROUP BY visitdiag.pcucode,visit.pid
+ORDER BY visitdiag.pcucode,visit.pid]]>
+	</queryString>
+	<field name="hn" class="java.lang.Integer"/>
+	<field name="personname" class="java.lang.String"/>
+	<field name="visitcount" class="java.lang.Long"/>
+	<variable name="reportOffice" class="java.lang.String">
+		<variableExpression><![CDATA[""]]></variableExpression>
+	</variable>
+	<variable name="v_totalvisit" class="java.lang.Long" calculation="Sum">
+		<variableExpression><![CDATA[$F{visitcount}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="25" splitType="Stretch">
+			<line direction="BottomUp">
+				<reportElement key="line-1" x="0" y="6" width="425" height="1" uuid="c683af22-4c35-4de7-8574-07632c75a31c"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-1" positionType="Float" x="344" y="7" width="73" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="79dfa1a1-53cf-4457-b54d-1596c8106a57"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[จำนวน(ครั้ง)]]></text>
+			</staticText>
+			<line direction="BottomUp">
+				<reportElement key="line-2" x="0" y="24" width="425" height="1" uuid="0d5ef1f1-5c87-47d9-adf3-ebd9b2dcf4a6"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-2" positionType="Float" x="75" y="6" width="21" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="fe434e59-18b6-4c67-8b80-55232882ae79"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[HN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" positionType="Float" x="13" y="7" width="43" height="18" forecolor="#006666" backcolor="#FFFFFF" uuid="2de20671-2e6b-4b4a-a28c-e92e44575bf6"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[ลำดับ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" positionType="Float" x="116" y="6" width="110" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="f8c42555-f688-4bd4-ad3e-ac88008d660e"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[ชื่อ-สกุล]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-2" x="116" y="1" width="228" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="66c38e27-b170-4c6d-bb0a-c9a7dc9ff0e3"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{personname}.toString()]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0" isBlankWhenNull="false">
+				<reportElement key="textField" x="344" y="1" width="52" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="cb9d59c2-bcdf-4045-9730-4f570ef6ad5f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitcount}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="14" y="1" width="24" height="18" uuid="1925fed9-12eb-4eaf-a75b-b9216d7c9960"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-1" x="75" y="1" width="32" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="f75056fd-f0f6-4146-996e-774a6462ca3d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hn}.toString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="19" splitType="Stretch">
+			<textField isStretchWithOverflow="true" evaluationTime="Report" pattern="#,##0" isBlankWhenNull="false">
+				<reportElement key="textField-2" x="58" y="0" width="42" height="18" uuid="a3f9e260-aeee-45a1-b63f-1c9f219d9516"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-5" positionType="Float" x="26" y="0" width="33" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="95e097da-28d1-4624-9cc0-becefed58615"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[รวม]]></text>
+			</staticText>
+			<textField pattern="#,##0" isBlankWhenNull="false">
+				<reportElement key="textField" x="296" y="0" width="100" height="18" uuid="42b3ff94-35f5-4007-abd3-15971c1ed2fc"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{v_totalvisit}]]></textFieldExpression>
+			</textField>
+			<line direction="BottomUp">
+				<reportElement key="line-3" x="0" y="1" width="425" height="1" uuid="9d345588-fb2d-4730-a9da-e60c5761a10a"/>
+			</line>
+			<line direction="BottomUp">
+				<reportElement key="line-4" x="0" y="18" width="425" height="1" uuid="01a93306-fa36-4844-b3af-11d36ff0ab1b"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-6" positionType="Float" x="109" y="0" width="43" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="b354903e-2f7c-4715-9990-27546201b970"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[คน]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="nutrition_low_over"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="org" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="tam" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="amp" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="prov" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="sdate" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="edate" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="startdate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-10-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="enddate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-12-31"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-01-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="nformu" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["02312"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="header_2" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="header_1" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="awh" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["aw"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT
+CONCAT(person.prename,person.fname,'  ',person.lname) AS fullname,
+vchild_60mon_weight_0.hno,
+visit.visitdate,
+DATE_FORMAT(visit.visitdate,"%y-%m-%d")AS svisitdate,
+person.birth,
+vchild_60mon_weight_0.agemonth,
+person.sex,
+vchild_60mon_weight_0.weight,
+vchild_60mon_weight_0.tall,
+vchild_60mon_weight_0.pid,
+vchild_60mon_weight_0.villno,
+vchild_60mon_weight_0.villcode,
+vchild_60mon_weight_0.villname
+FROM
+person
+Inner Join vchild_60mon_weight_0 ON person.pcucodeperson = vchild_60mon_weight_0.pcucodeperson AND person.pid = vchild_60mon_weight_0.pid
+Inner Join visit ON vchild_60mon_weight_0.pcucodeperson = visit.pcucodeperson AND vchild_60mon_weight_0.lastvn = visit.visitno
+Inner Join vnutrition_last_st2 ON visit.visitno = vnutrition_last_st2.lastvn
+
+WHERE
+visit.visitdate BETWEEN $P{startdate} AND $P{enddate}
+$P{pcucode}
+ORDER BY vchild_60mon_weight_0.villcode]]></queryString>
+
+	<field name="fullname" class="java.lang.String"/>
+	<field name="hno" class="java.lang.String"/>
+	<field name="visitdate" class="java.sql.Date"/>
+	<field name="svisitdate" class="java.lang.String"/>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="agemonth" class="java.lang.Long"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="weight" class="java.math.BigDecimal"/>
+	<field name="tall" class="java.math.BigDecimal"/>
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="villno" class="java.lang.Integer"/>
+	<field name="villcode" class="java.lang.String"/>
+	<field name="villname" class="java.lang.String"/>
+
+	<variable name="vcount" class="java.lang.Integer" resetType="Group" resetGroup="villno" calculation="Sum">
+		<variableExpression><![CDATA[(  $P{awh} == "aw" ? 
+	(
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักต่ำ") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักต่ำมาก") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักสูง") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักสูงมาก")
+	? new Integer(1) : new Integer(0) )
+	: 
+    	(  $P{awh} == "wh" ? 
+       		(
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ผอม") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างผอม") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างอ้วน") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="อ้วน") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="อ้วนมาก")
+		? new Integer(1) : new Integer(0) )
+       		: 
+       		(
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="เตี้ย") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างเตี้ย") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างสูง") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="สูงเกินเกณฑ์")
+		? new Integer(1) : new Integer(0) )
+    	)
+)]]></variableExpression>
+	</variable>
+
+		<group  name="villno" >
+			<groupExpression><![CDATA[$F{villcode}]]></groupExpression>
+			<groupHeader>
+			<band height="31"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="3"
+						y="4"
+						width="31"
+						height="21"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="16" isBold="true" isItalic="false"/>
+					</textElement>
+				<text><![CDATA[หมู่ที่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="4"
+						width="46"
+						height="21"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="18" isBold="true" isItalic="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{villno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="86"
+						y="4"
+						width="136"
+						height="21"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="18" isBold="true" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{villname}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="7"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="73"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="3"
+						y="3"
+						width="297"
+						height="21"
+						forecolor="#000066"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="18" isBold="true"/>
+					</textElement>
+				<text><![CDATA[รายชื่อเด็กที่รับการชั่งน้ำหนักและพบภาวะโภชนาการบกพร่อง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="430"
+						y="3"
+						width="99"
+						height="21"
+						forecolor="#000066"
+						key="staticText-3">
+							<printWhenExpression><![CDATA[(  $P{awh} == "aw" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+						</reportElement>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[คิดตามสูตร: อายุ / น้ำหนัก]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="29"
+						width="526"
+						height="21"
+						forecolor="#000066"
+						key="textField-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{header_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd MMMMM yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="52"
+						width="526"
+						height="21"
+						forecolor="#000066"
+						key="textField-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{header_2}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="430"
+						y="3"
+						width="99"
+						height="21"
+						forecolor="#CC0033"
+						key="staticText-4">
+							<printWhenExpression><![CDATA[(  $P{awh} == "ah" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+						</reportElement>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[คิดตามสูตร: อายุ / ส่วนสูง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="418"
+						y="3"
+						width="113"
+						height="21"
+						forecolor="#006633"
+						key="staticText-5">
+							<printWhenExpression><![CDATA[(  $P{awh} == "wh" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+						</reportElement>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[คิดตามสูตร: น้ำหนัก / ส่วนสูง]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="14"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="42"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="2"
+						width="535"
+						height="0"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="39"
+						width="535"
+						height="0"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="177"
+						y="7"
+						width="46"
+						height="16"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[บ้านเลขที่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="231"
+						y="7"
+						width="45"
+						height="30"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ตรวจล่าสุดงวดนั้น]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="284"
+						y="7"
+						width="53"
+						height="30"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[อายุนับถึงวันตรวจ (เดือน)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="347"
+						y="7"
+						width="38"
+						height="30"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[น้ำหนัก(กก.)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="399"
+						y="7"
+						width="31"
+						height="30"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ส่วนสูง(ซฒ.)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="441"
+						y="6"
+						width="75"
+						height="17"
+						forecolor="#000000"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ภาวะโภชนาการ]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="23"  isSplitAllowed="true" >
+				<printWhenExpression><![CDATA[(  $P{awh} == "aw" ? 
+	(
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักต่ำ") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักต่ำมาก") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักสูง") ||
+	( SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})=="น้ำหนักสูงมาก")
+	? Boolean.TRUE : Boolean.FALSE )
+	: 
+    	(  $P{awh} == "wh" ? 
+       		(
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ผอม") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างผอม") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างอ้วน") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="อ้วน") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})=="อ้วนมาก")
+		? Boolean.TRUE : Boolean.FALSE )
+       		: 
+       		(
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="เตี้ย") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างเตี้ย") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="ค่อนข้างสูง") ||
+		( SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})=="สูงเกินเกณฑ์")
+		? Boolean.TRUE : Boolean.FALSE )
+    	)
+)]]></printWhenExpression>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="49"
+						y="4"
+						width="127"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{fullname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="183"
+						y="4"
+						width="46"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{hno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="336"
+						y="4"
+						width="43"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{weight}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="382"
+						y="4"
+						width="44"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{tall}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="231"
+						y="4"
+						width="53"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{birth}.valueOf( $F{svisitdate} )]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="444"
+						y="4"
+						width="86"
+						height="18"
+						forecolor="#000066"
+						key="textField-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[(  $P{awh} == "aw" ? 
+SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex}) 
+: 
+    (  $P{awh} == "wh" ? 
+       SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex})  
+       : 
+       SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})
+    )
+)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="300"
+						y="4"
+						width="33"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Long"><![CDATA[$F{agemonth}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="8"
+						y="4"
+						width="41"
+						height="18"
+						forecolor="#000066"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{vcount}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="450"
+						y="6"
+						width="40"
+						height="12"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="493"
+						y="6"
+						width="36"
+						height="12"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="10" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="6"
+						width="209"
+						height="12"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

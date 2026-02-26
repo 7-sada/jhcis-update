@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptDentPart2" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-11-08"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-11-08"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select
+case 	when visitdiag.diagcode= 'Z01.2' then '1.ตรวจสุขภาพช่องปาก (ครั้ง)'
+	when visitdrug.drugcode in('2377030','2387030') then '2.Sealant (ครั้ง / ซี่)'
+	when visitdrug.drugcode in('2377020','2377021','2387020','2387021') then '3.ฟลูออไรด์ (ครั้ง) '
+	when visitdrug.drugcode in('2377040','2387040') then '4.PRR (ครั้ง / ซี่) '
+	when visitdrug.drugcode in('x') then '5.Plaque Control (ครั้ง)'
+	when visitdrug.drugcode in('2387010') then '6.ทำความสะอาดช่องปาก (ครั้ง)'
+else '7.อื่น ๆ ' end typework
+
+,count(distinct visitanc.pcucodeperson,visitanc.pid) as canc
+,count(concat(visitanc.pcucodeperson,visitanc.pid)) as ctanc
+
+,(select count(distinct visit.pcucodeperson,visit.pid) from person p1 where visit.pcucodeperson = p1.pcucodeperson and visit.pid = p1.pid and  getAgeYearNum(birth,curdate() ) <= 2  ) as cpgr02
+,(select count(vd1.tootharea) from visitdrugdental vd1,person
+               where visit.pcucode = vd1.pcucode and visit.visitno = vd1.visitno  and visit.pcucodeperson = person.pcucodeperson and visit.pid = person.pid
+		and  getAgeYearNum(birth,curdate() ) <= 2 ) as ctgr1
+
+,(select count(distinct visit.pcucodeperson,visit.pid) from person p2 where visit.pcucodeperson = p2.pcucodeperson and visit.pid = p2.pid and  getAgeYearNum(birth,curdate() )  between 3 and 5  ) as cpgr35
+,(select count(vd2.tootharea) from visitdrugdental vd2,person
+                                          where visit.pcucode = vd2.pcucode and visit.visitno = vd2.visitno  and visit.pcucodeperson = person.pcucodeperson and visit.pid = person.pid
+			and  getAgeYearNum(birth,curdate() ) between 3 and 5 ) as ctgr35
+
+,(select count(distinct visit.pcucodeperson,visit.pid) from person p3 where visit.pcucodeperson = p3.pcucodeperson and visit.pid = p3.pid and  getAgeYearNum(birth,curdate() ) between 6 and 14  ) as cpgr614
+,(select count(vd3.tootharea) from visitdrugdental vd3,person
+                                          where visit.pcucode = vd3.pcucode and visit.visitno = vd3.visitno  and visit.pcucodeperson = person.pcucodeperson and visit.pid = person.pid
+			and  getAgeYearNum(birth,curdate() ) between 6 and 14  ) as ctgr614
+
+from visit
+	join visitdrug on visit.pcucode = visitdrug.pcucode and visit.visitno = visitdrug.visitno
+	join visitdiag on visit.pcucode = visitdiag.pcucode  and visit.visitno = visitdiag.visitno
+	join visitanc  on visit.pcucode = visitanc.pcucode   and visit.visitno = visitanc.visitno
+
+where visitdate between $P{sdate} and $P{edate} $P!{pcucode}
+	and concat(visitdrug.pcucode,visitdrug.visitno) in (select distinct(concat(visitdrugdental.pcucode,visitdrugdental.visitno))  from visitdrugdental)
+
+
+group by typework]]>
+	</queryString>
+	<field name="canc" class="java.lang.Long"/>
+	<field name="ctanc" class="java.lang.Long"/>
+	<field name="cpgr02" class="java.lang.Long"/>
+	<field name="ctgr1" class="java.lang.Long"/>
+	<field name="cpgr35" class="java.lang.Long"/>
+	<field name="ctgr35" class="java.lang.Long"/>
+	<field name="cpgr614" class="java.lang.Long"/>
+	<field name="ctgr614" class="java.lang.Long"/>
+	<field name="typework" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="378" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<text><![CDATA[ส่วนที่ 2 ข้อมูลงานส่งเสริมทันสุขภาพและทันตกรรมป้องกัน (ประเภทงาน)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="378" y="0" width="100" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<text><![CDATA[หญิงมีครรภ์]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="478" y="0" width="100" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<text><![CDATA[เด็ก 0-2 ปี]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="578" y="0" width="100" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<text><![CDATA[เด็ก 3-5 ปี]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="678" y="0" width="100" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<text><![CDATA[เด็ก 6-14 ปี]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="378" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{typework}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="378" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{canc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="428" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ctanc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="478" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cpgr02}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="528" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ctgr1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="578" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cpgr35}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="628" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ctgr35}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="678" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cpgr614}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="728" y="0" width="50" height="30"/>
+				<box>
+					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ctgr614}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

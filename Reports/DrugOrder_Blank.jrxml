@@ -1,0 +1,776 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DrugOrder" pageWidth="399" pageHeight="720" orientation="Landscape" columnWidth="379" leftMargin="20" rightMargin="0" topMargin="20" bottomMargin="0" uuid="c5fd4333-bcbf-4998-b5bb-e75c1c22e907">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="300"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="Table Dataset 1" uuid="df3bef60-24f9-44b9-b031-724e4b49d5d2"/>
+	<parameter name="visitno" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new Integer(83886351)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="age" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="weight_hei" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pressure" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="temperature" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pulse" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="respri" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="healthsuggest1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="diage" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="rightname" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="rightno" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="symptom" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="diag" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="visitdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2009-02-20"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="address" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="hostname" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["14363"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:\\jhcis\\Reports"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="jtTimeEnd_DrugOrder_Prn" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="jtTimeStart" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pid" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+person.pcucodeperson,person.pid,
+     concat(ifnull(ct1.titlename,ifnull(person.`prename`,'...')),person.`fname`,'  ',person.`lname`)AS name,
+     concat(chospital.`hosname`,' ต.',ifnull(csubdistricth.`subdistname`,'-'),' อ.',ifnull(cdistricth.`distname`,'-'),
+                                ' จ.',ifnull(cprovinceh.`provname`,'-')) AS hostname,
+     concat(ifnull(pc.`hno`,'-'),' ม.',ifnull(convert(pc.`mu` using utf8),'-'),
+                                 ' ต.',ifnull(csd.`subdistname`,'-'),
+                                 ' อ.',ifnull(cd.`distname`,'-'),' จ.',ifnull(cw.`provname`,'-')) AS addr,
+     visit.`visitno` AS visit_visitno
+,if(visit.`incup`='2','ใบสั่งยา (...นอก CUP)','ใบสั่งยา') AS incup
+,visit.`pcucode` AS visit_pcucode
+,person.`idcard` AS person_idcard
+,visit.`username` AS visit_username
+,visit.`pid` AS visit_pid
+,curdate()as toDayDate
+,visit.visitdate as vsDate
+,visit.`timestart` AS visit_timestart
+,visit.`timeend` AS visit_timeend
+,ifnull(visit.`vitalcheck`,'..ไม่ระบุฯ') as vtc
+,Concat(ifnull(ct2.titlename,ifnull(`user`.`prename`,'...')),`user`.`fname`,'  ',if(`user`.`lname` is null or trim(`user`.`lname`)='','..',`user`.`lname`)) fullname
+,if(refer='00' or refer is null,'',concat('Case refer: ',referdesc)) as referc
+,ifnull(ch2.hosname,'..') as hmm
+,ifnull(ch3.hosname,'..') as hss
+,IFNULL(sugarnumdigit,'...') sg
+,concat('คำวินิจฉัยฯ:',IF(visit.`diagnote` is null OR TRIM(`diagnote`)='','-',TRIM(`diagnote`))) as diagnote
+,person.birth
+,DATE_FORMAT(person.birth,'%Y-%m-%d') as birththai
+,IF(pa.pid IS NULL,NULL,'!!! มีการแพ้ยาฯ โปรดระมัดระวังเรื่องการจ่ายยาฯ') alg
+FROM
+     `person` person
+left outer join ctitle ct1 on person.prename = ct1.titlecode
+     inner JOIN `visit` visit ON person.`pid` = visit.`pid` and person.pcucodeperson = visit.pcucodeperson
+     iNNER JOIN `chospital` chospital ON visit.`pcucode` = chospital.`hoscode`
+     left outer JOIN `csubdistrict` csubdistricth ON csubdistricth.subdistcode = chospital.subdistcode and chospital.distcode = csubdistricth.distcode and chospital.provcode = csubdistricth.provcode
+     left outer JOIN `cdistrict` cdistricth ON chospital.distcode = cdistricth.distcode and chospital.provcode = cdistricth.provcode
+     left outer JOIN `cprovince` cprovinceh ON chospital.provcode = cprovinceh.provcode
+
+     left outer join personaddresscontact pc on person.pcucodeperson = pc.pcucodeperson and person.pid = pc.pid
+     left outer JOIN `csubdistrict` csd ON csd.subdistcode = pc.subdistcode and csd.distcode = pc.distcode and csd.provcode = pc.provcode
+     left outer JOIN `cdistrict` cd ON cd.distcode = pc.distcode and cd.provcode = pc.provcode
+     left outer JOIN `cprovince` cw ON cw.provcode = pc.provcode
+
+     left outer JOIN `user` ON visit.username = `user`.`username` and `visit`.`pcucode` = `user`.`pcucode`
+     left join cpatientrefer on visit.refer = cpatientrefer.refercode
+     left join chospital ch2 on visit.hosmain = ch2.hoscode
+     left join chospital ch3 on visit.hossub = ch3.hoscode
+left join ctitle ct2 on `user`.prename = ct2.titlecode
+LEFT JOIN visitlabsugarblood bld ON visit.pcucode=bld.pcucode AND visit.visitno=bld.visitno
+LEFT JOIN (select pcucodeperson,pid from personalergic x WHERE x.pcucodeperson = $P{pcucode} AND x.pid = $P{pid}  LIMIT 1) AS pa
+ON person.pcucodeperson=pa.pcucodeperson AND person.pid=pa.pid
+WHERE visit.`visitno` = $P{visitno} and visit.pcucode = $P{pcucode}]]>
+	</queryString>
+	<field name="pcucodeperson" class="java.lang.String"/>
+	<field name="pid" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="hostname" class="java.lang.String"/>
+	<field name="addr" class="java.lang.String"/>
+	<field name="visit_visitno" class="java.lang.Integer"/>
+	<field name="incup" class="java.lang.String"/>
+	<field name="visit_pcucode" class="java.lang.String"/>
+	<field name="person_idcard" class="java.lang.String"/>
+	<field name="visit_username" class="java.lang.String"/>
+	<field name="visit_pid" class="java.lang.Integer"/>
+	<field name="toDayDate" class="java.sql.Date"/>
+	<field name="vsDate" class="java.sql.Date"/>
+	<field name="visit_timestart" class="java.sql.Time"/>
+	<field name="visit_timeend" class="java.sql.Time"/>
+	<field name="vtc" class="java.lang.String"/>
+	<field name="fullname" class="java.lang.String"/>
+	<field name="referc" class="java.lang.String"/>
+	<field name="hmm" class="java.lang.String"/>
+	<field name="hss" class="java.lang.String"/>
+	<field name="diagnote" class="java.lang.String"/>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="birththai" class="java.lang.String"/>
+	<field name="alg" class="java.lang.String"/>
+	<group name="hid" minHeightToStartNewPage="20" keepTogether="true">
+		<groupExpression><![CDATA[null]]></groupExpression>
+		<groupHeader>
+			<band height="36" splitType="Stretch">
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="342d0b0f-c717-4f2a-99a0-a2b110a27ca0" positionType="Float" isPrintRepeatedValues="false" x="5" y="0" width="370" height="14"/>
+					<textElement verticalAlignment="Bottom">
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{alg}]]></textFieldExpression>
+				</textField>
+				<subreport>
+					<reportElement uuid="76d85ff3-53e6-4a56-80ef-8eaeb0810308" positionType="Float" isPrintRepeatedValues="false" x="0" y="14" width="373" height="19"/>
+					<subreportParameter name="pcucode">
+						<subreportParameterExpression><![CDATA[$F{pcucodeperson}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="pid">
+						<subreportParameterExpression><![CDATA[$F{pid}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "\\DrugOrder_Sub_Alergy.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="100" splitType="Stretch">
+				<staticText>
+					<reportElement uuid="e27ae531-88e3-46ab-8f25-232217fa55bd" key="staticText-14" x="153" y="1" width="39" height="17"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ สุขศึกษา :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="4502123e-e560-453a-8362-32fb0a3d812b" key="staticText-15" x="1" y="17" width="90" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ จำนวนเงินตามใบสั่งยา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="655db59c-8d4a-44f6-807e-236e28ccff46" key="staticText-16" x="163" y="17" width="29" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ สิทธิ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="8978cbb4-ed85-4e9b-9c79-6025fd5a7cef" key="staticText-17" x="194" y="30" width="40" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ เลขที่บัตร]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="2cdca4e4-6b4a-42e9-86f4-a01546b70899" key="staticText-18" x="2" y="69" width="190" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ ลายมือชื่อผู้รับบริการ..................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="3e6751a9-25ec-4b8e-acd9-8046bbad2daa" key="staticText-21" x="2" y="57" width="60" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ เวลาบันทึกข้อมูล]]></text>
+				</staticText>
+				<textField pattern="HH.mm.ss" isBlankWhenNull="true">
+					<reportElement uuid="0935f16e-8e9d-42b3-b28f-bda2ac319f3b" key="textField" x="63" y="57" width="41" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{jtTimeStart}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="e1966b75-21d4-4bbc-beb1-bd51ebb4462d" key="textField" x="111" y="57" width="44" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{jtTimeEnd_DrugOrder_Prn}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement uuid="70c6d6fe-c6ec-4d46-8bb2-7c751fd6759c" key="staticText-22" x="103" y="57" width="9" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<text><![CDATA[-]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="a3f3e303-be8c-4a18-860d-24594242146d" key="staticText-23" x="154" y="58" width="156" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ (เฉพาะเวลาที่บันทึกข้อมูลไม่รวมเวลาที่รอคิว)]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="bd460842-795a-414e-be32-be3bd49276fd" key="textField" x="192" y="1" width="185" height="17"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="false" isItalic="false" isUnderline="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{healthsuggest1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="859d29f8-accb-46e4-9ba5-96d2aee02f03" key="textField" x="194" y="17" width="183" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{rightname}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="a25e85b5-87d6-4457-a727-4be6c1e1994e" key="textField" x="234" y="30" width="143" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{rightno}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="bff304b6-714a-41c0-ad29-3c475f5aad60" key="textField-1" x="194" y="69" width="183" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["ผู้พิมพ์ใบสั่งยา: "+$F{fullname}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="481a8a2b-6ade-41d9-ba08-391df43f7415" key="textField-9" x="2" y="30" width="190" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["รพ. หลัก: "+$F{hmm}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="34b50a96-c34e-4ebd-b24f-4438e879aa27" key="textField-12" x="2" y="44" width="347" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["รพ. รองฯ: "+$F{hss}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement uuid="909da853-e953-4f58-ab2b-8f3bb871d788" key="staticText-15" x="1" y="2" width="90" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[จำนวนเงินตามมูลค่า(ขาย)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f7570a9e-476b-4079-baef-48456e8dc10c" key="staticText-18" x="2" y="85" width="216" height="14"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ แพทย์ /เจ้าหน้าที่ผู้สั่งจ่ายยาฯ......................................]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="visitno">
+		<groupExpression><![CDATA[null]]></groupExpression>
+		<groupHeader>
+			<band height="24" splitType="Stretch">
+				<staticText>
+					<reportElement uuid="09cda054-2b3a-45d8-a1c0-68ccfecc465d" key="staticText-11" x="201" y="11" width="34" height="13"/>
+					<box>
+						<pen lineWidth="1.0"/>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[จำนวน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="d43e1942-e799-427f-8431-abcc4c89f449" key="staticText-12" x="235" y="11" width="35" height="13"/>
+					<box>
+						<pen lineWidth="1.0"/>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ หน่วย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="0898e3ca-8975-4550-8db6-ff23bdf05f03" key="staticText-13" x="270" y="11" width="108" height="13"/>
+					<box>
+						<pen lineWidth="1.0"/>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="9" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ วิธีการใช้ยา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="a9514567-7550-4659-9786-8a8698188f0c" key="staticText-10" x="3" y="11" width="198" height="13"/>
+					<box>
+						<pen lineWidth="1.0"/>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="9" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[ รายการยา -เวชภัณฑ์]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band splitType="Stretch"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="167" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="eb03b1e7-4f63-438d-901f-99f2f9c4a15d" key="textField-11" x="30" y="2" width="319" height="23"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="14" isBold="true" pdfFontName="Courier-Bold" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{incup}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="5193def7-bc7a-4ab9-ad3e-ec5019783a7d" key="staticText-2" x="1" y="49" width="52" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[สถานบริการ:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8830afa5-f43f-429c-aceb-cc5545fd50de" key="staticText-3" x="295" y="49" width="28" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ เลขที่ :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="517d164d-f840-4551-a3f3-fbb0bc5322f8" key="staticText-4" x="119" y="66" width="52" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ วันที่รับบริการ:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4acf75cc-5d82-4149-93ea-5ef5c90c2d3b" key="textField" x="0" y="83" width="142" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อ  สกุล:"+$F{name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="780e9754-b2bc-4dac-867b-e0e6a0d65b72" key="staticText-6" x="249" y="83" width="61" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[อายุถึงวันบริการ:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8dd72f21-0239-4a53-b3a0-97880b9ff7f1" key="staticText-8" x="253" y="66" width="50" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ เลขบัตร ปชช:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8a86e535-93f8-443e-b425-c93f591d5931" key="textField" x="302" y="66" width="75" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{person_idcard}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="95668f9c-e893-40a9-91f6-444520719190" key="staticText-24" x="1" y="66" width="58" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[เลขที่ทั่วไป(HN):]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f25bc3ca-5f41-4c80-aade-ee8a59b3f675" key="textField" x="59" y="66" width="60" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visit_pid}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="fdb4ee10-a56b-4ff3-85e3-d221ab2bec79" key="textField" x="310" y="83" width="66" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{age}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="8965eea4-57b2-4635-aeef-1fc855065894" key="textField" x="0" y="133" width="375" height="16" isRemoveLineWhenBlank="true"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{symptom}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement uuid="5342089f-ab1f-4c74-b238-263b469ba5f6" key="textField" x="171" y="66" width="80" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{vsDate}.valueOf( $P{visitdate} )]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c50cb370-1183-4711-b50e-9d699cc757ca" key="textField" x="324" y="49" width="53" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visit_visitno}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2406e4a5-78e5-462a-a055-44fd58b33519" key="textField" x="1" y="100" width="376" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ที่อยู่: "+$F{addr}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4121d4ac-2ce3-4535-b8d8-85d2e36074fa" key="textField" x="53" y="49" width="242" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hostname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="684d1c53-2520-4d41-a889-19c605a5a547" key="textField-2" positionType="Float" x="0" y="149" width="375" height="17" isRemoveLineWhenBlank="true"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ผลการตรวจ: "+$F{vtc}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="90e62856-fbbc-44e3-95d7-bcabf8853a29" key="textField" x="10" y="28" width="360" height="16"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{referc}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f5893026-58fa-4135-808f-5f254adb819b" key="textField-3" x="1" y="116" width="374" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pressure}+$P{weight_hei}+$P{temperature}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b7ef45b2-76c4-4395-9035-bd3ac929fc64" key="staticText-4" x="142" y="83" width="29" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันเกิด:]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement uuid="7eddec8a-807d-495e-81ff-989670ebeca4" key="textField" x="171" y="83" width="80" height="17"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{birth}.valueOf($F{birththai})]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="248" splitType="Stretch">
+			<line>
+				<reportElement uuid="5cf8717c-28b7-4212-a609-2ff9a69d477b" x="201" y="0" width="1" height="240"/>
+			</line>
+			<line>
+				<reportElement uuid="d364f951-701d-4463-91f4-1545e74d2a90" x="235" y="0" width="1" height="240"/>
+			</line>
+			<line>
+				<reportElement uuid="103d6591-3b1c-4968-b048-7fca975a8fe4" x="270" y="0" width="1" height="240"/>
+			</line>
+			<line>
+				<reportElement uuid="9ed52dbd-98c7-43ac-8bee-5e1f2d61e92a" x="3" y="0" width="1" height="240"/>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

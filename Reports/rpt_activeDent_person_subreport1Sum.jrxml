@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rpt_activeDent_person_subreport1" language="groovy" pageWidth="535" pageHeight="555" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select date_format(visitdate,'%Y-%m') ym
+,sum(case when (getAgeYearNum(birth,$P{edate}) <= 2 ) then 1 else 0 end) agr02
+,sum(case when (getAgeYearNum(birth,$P{edate}) between 3 and 5 ) then 1 else 0 end) agr35
+,sum(case when (getAgeYearNum(birth,$P{edate}) between 6 and 14 ) then 1 else 0 end) agr614
+,sum(case when (getAgeYearNum(birth,$P{edate}) between 15 and 59 ) then 1 else 0 end) agr1559
+,sum(case when (getAgeYearNum(birth,$P{edate}) > 59 ) then 1 else 0 end) as agr60up
+from person inner join visit on person.pcucodeperson = visit.pcucodeperson and person.pid = visit.pid
+where 1=1 and visitdate between  $P{sdate} and $P{edate}
+             $P!{pcucode}
+  and concat(visit.pcucode,visit.visitno)
+        in(select (concat(visitdrugdental.pcucode,visitdrugdental.visitno))
+          from visitdrugdental where visit.pcucode = visitdrugdental.pcucode and visit.visitno = visitdrugdental.visitno)
+group by ym]]>
+	</queryString>
+	<field name="agr02" class="java.math.BigDecimal"/>
+	<field name="agr35" class="java.math.BigDecimal"/>
+	<field name="agr614" class="java.math.BigDecimal"/>
+	<field name="agr1559" class="java.math.BigDecimal"/>
+	<field name="agr60up" class="java.math.BigDecimal"/>
+	<variable name="Sum_agr02" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{agr02}]]></variableExpression>
+	</variable>
+	<variable name="Sum_agr34" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{agr35}]]></variableExpression>
+	</variable>
+	<variable name="Sum_agr614" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{agr614}]]></variableExpression>
+	</variable>
+	<variable name="Sum_agr1559" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{agr1559}]]></variableExpression>
+	</variable>
+	<variable name="Sum_agr60up" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{agr60up}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="1" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="25" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="60" height="25" forecolor="#FF0000"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Sum_agr02}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="60" y="0" width="60" height="25" forecolor="#FF0000"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Sum_agr34}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="120" y="0" width="60" height="25" forecolor="#FF0000"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Sum_agr614}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="180" y="0" width="60" height="25" forecolor="#FF0000"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Sum_agr1559}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="240" y="0" width="60" height="25" forecolor="#FF0000"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Sum_agr60up}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

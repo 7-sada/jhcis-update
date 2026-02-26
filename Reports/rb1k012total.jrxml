@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rb1k012total" pageWidth="782" pageHeight="595" orientation="Landscape" columnWidth="724" leftMargin="29" rightMargin="29" topMargin="48" bottomMargin="48" uuid="f0e3d6bd-2e13-4b24-b597-eb95998342fa">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="243"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="pdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2010-03-26"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false">
+		<property name="sdate" value="&apos;2007-01-01"/>
+		<defaultValueExpression><![CDATA["2011-01-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2011-05-30"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="visitno" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:\\iReport-4.5.1\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT birth,vanc.datecheck as dateChkAnc
+,DATE_FORMAT(vanc.datecheck,"%Y-%m-%d") AS dateckeck
+,(select Min(anc.datecheck) from visitanc anc  where vanc.pid = anc.pid
+  and vanc.pcucodeperson = anc.pcucodeperson and vanc.pregno = anc.pregno ) as fda
+,DATE_FORMAT((select Min(anc.datecheck) from visitanc anc  where vanc.pid = anc.pid
+  and vanc.pcucodeperson = anc.pcucodeperson and vanc.pregno = anc.pregno ),"%Y-%m-%d") as fda2
+,v.visitdate
+,vancdel.datedeliver as datecare
+,vanc.visitno,vanc.pcucode
+,CONVERT(CONCAT(ifnull(titlename,ifnull(prename,'ไม่ระบุ') ),p.fname,' ',p.lname) USING utf8 )as personname
+,CONVERT(CONCAT(  DATE_FORMAT(datecheck,"%Y")-DATE_FORMAT(birth,"%Y") - (DATE_FORMAT(datecheck,"00-%m-%d")<DATE_FORMAT(birth,"00-%m-%d")), "/",
+	CASE SIGN(DATE_FORMAT(datecheck,"%m")-DATE_FORMAT(birth,"%m"))
+ 	 WHEN 0 THEN (12 - DATE_FORMAT(birth,"%m") - DATE_FORMAT(datecheck,"%m") -  (DATE_FORMAT(birth,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d")))
+ 	 WHEN -1 THEN (12 - DATE_FORMAT(birth,"%m") + DATE_FORMAT(datecheck,"%m") -  (DATE_FORMAT(datecheck,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d")))
+ 	 WHEN 1 THEN(DATE_FORMAT(datecheck,"%m") - DATE_FORMAT(birth,"%m") -  (DATE_FORMAT(datecheck,"00-00-%d") < DATE_FORMAT(birth,"00-00-%d"))) END,  "/",
+	CASE SIGN(DATE_FORMAT(datecheck,"%d") - DATE_FORMAT(birth,"%d"))
+ 	 WHEN 0 THEN( DATE_FORMAT(datecheck,"%d")-  DATE_FORMAT(birth,"%d") )
+	 WHEN -1 THEN (DATE_FORMAT(LAST_DAY(datecheck),"%d") + DATE_FORMAT(datecheck, "%d")  -  DATE_FORMAT(birth, "%d"))
+ 	 WHEN 1 THEN (DATE_FORMAT(datecheck,"%d") - DATE_FORMAT(birth,"%d") -  (DATE_FORMAT(datecheck,"%d") < DATE_FORMAT(birth,"%d")))  END  ) USING utf8) AS age_ymd
+
+,CONVERT(case when p.subdistcodemoi is null  then 'นอกเขต'
+              when p.hnomoi is null then concat(' หมู่ที่ ',  p.`mumoi` ,' ต.',  csubd.`subdistname` )
+              when p.mumoi is null then concat(p.`hnomoi`  ,' ต.',  csubd.`subdistname` )
+              else concat(p.`hnomoi` ,' หมู่ที่ ',  p.`mumoi` ,' ต.',  csubd.`subdistname` ) end   USING utf8)  as address
+,cd.distname,cpr.provname
+,case when  vanc.ttno35= 'tt_in_Scop' then 'ระยะฯ'
+      when (visitepi.visitno = vanc.visitno and visitepi.pcucode = vanc.pcucode
+       and visitepi.dateepi = vanc.datecheck )  then MAX(visitepi.vaccinecode)
+      else '-' end   as vacc
+,vanc.caries
+,case when vanc.gumfail=0 then 'ไม่พบ'
+      when vanc.gumfail=1 then 'พบ'  else '-' end as gumfail
+,case when vanc.tartar=0 then 'ไม่พบ'
+      when vanc.tartar=1 then 'พบ' else '-' end as tartar
+,(select Max(anc.ancno) from visitanc anc  where vanc.pid = anc.pid and vanc.pcucodeperson = anc.pcucodeperson and vanc.pregno = anc.pregno ) as ancno
+,p.idcard
+,v.rightno,v.rightcode
+,vancdel.operater,vancdel.deliverresult
+,chospital.`hosname` as hosname
+,CONVERT(concat(chospital.`hosname`,' ต.',csubdistricth.`subdistname`) USING utf8) AS hostname
+,cdistricth.`distname` as dnameh
+,cprovinceh.`provname` as pnameh
+,chospitalc.hosname as cupname
+,case when (select count(vv.pregno)as gn  from visitancmothercare vv where vancdel.pid = vv.pid and vancdel.pcucodeperson =vv.pcucodeperson and vv.pregno = vancdel.pregno  and vv.datecare >= vancdel.datedeliver group by vv.pid,vv.pcucodeperson ) is null then "ยังไม่ตรวจ" else "ตรวจแล้ว" end as dd
+from    visitanc vanc
+left join person p on vanc.pid = p.pid and vanc.pcucodeperson = p.pcucodeperson
+left join ctitle on p.prename = ctitle.titlecode
+left join visit v  on p.pid = v.pid and p.pcucodeperson = v.pcucodeperson
+left join visitepi on vanc.visitno = visitepi.visitno
+      and vanc.pcucode = visitepi.pcucode and vanc.datecheck = visitepi.dateepi
+#left join visitancdeliver vancdel on v.visitno = vancdel.visitno and v.pcucode  #= vancdel.pcucode and vanc.pregno = vancdel.pregno
+left join visitancdeliver vancdel on vanc.pcucodeperson=vancdel.pcucodeperson
+      and vanc.pid=vancdel.pid and vanc.pregno = vancdel.pregno
+left join csubdistrict csubd on p.subdistcodemoi = csubd.subdistcode
+      and p.distcodemoi = csubd.distcode and p.provcodemoi = csubd.provcode
+left join cdistrict cd on p.distcodemoi=cd.distcode and p.provcodemoi=cd.provcode
+left join cprovince cpr on p.provcodemoi = cpr.provcode
+left join chospital ON v.pcucode = chospital.hoscode
+left join csubdistrict csubdistricth
+       ON csubdistricth.subdistcode = chospital.subdistcode
+      and chospital.distcode = csubdistricth.distcode
+      and chospital.provcode = csubdistricth.provcode
+left join cdistrict cdistricth ON chospital.distcode=cdistricth.distcode
+      and chospital.provcode = cdistricth.provcode
+left join cprovince cprovinceh ON chospital.provcode = cprovinceh.provcode
+left join house on p.hcode = house.hcode and p.pcucodeperson = house.pcucode
+left join village on house.villcode=village.villcode and v.pcucode=village.pcucode
+left join chospital chospitalc ON village.cup = chospitalc.`hoscode`
+where   vanc.datecheck between $P{sdate} and $P{edate}
+	and (birth IS NOT NULL OR birth NOT LIKE '0000%')
+        and sex='2'
+        and (v.flagservice <'04' OR v.flagservice is null OR length(trim(v.flagservice))=0 )
+        $P!{pcucode}
+group by vanc.pid,vanc.pcucodeperson
+order by vanc.pcucode,vanc.datecheck]]>
+	</queryString>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="dateChkAnc" class="java.sql.Date"/>
+	<field name="dateckeck" class="java.lang.String"/>
+	<field name="fda" class="java.sql.Date"/>
+	<field name="fda2" class="java.lang.String"/>
+	<field name="visitdate" class="java.lang.String"/>
+	<field name="datecare" class="java.sql.Date"/>
+	<field name="visitno" class="java.lang.Integer"/>
+	<field name="pcucode" class="java.lang.String"/>
+	<field name="personname" class="java.lang.String"/>
+	<field name="age_ymd" class="java.lang.String"/>
+	<field name="address" class="java.lang.String"/>
+	<field name="distname" class="java.lang.String"/>
+	<field name="provname" class="java.lang.String"/>
+	<field name="vacc" class="java.lang.String"/>
+	<field name="caries" class="java.lang.Integer"/>
+	<field name="gumfail" class="java.lang.String"/>
+	<field name="tartar" class="java.lang.String"/>
+	<field name="ancno" class="java.lang.String"/>
+	<field name="idcard" class="java.lang.String"/>
+	<field name="rightno" class="java.lang.String"/>
+	<field name="rightcode" class="java.lang.String"/>
+	<field name="operater" class="java.lang.String"/>
+	<field name="deliverresult" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String"/>
+	<field name="hostname" class="java.lang.String"/>
+	<field name="dnameh" class="java.lang.String"/>
+	<field name="pnameh" class="java.lang.String"/>
+	<field name="cupname" class="java.lang.String"/>
+	<field name="dd" class="java.lang.String"/>
+	<group name="pcucode" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{hosname}]]></groupExpression>
+		<groupHeader>
+			<band splitType="Stretch"/>
+		</groupHeader>
+		<groupFooter>
+			<band splitType="Stretch"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="1" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="132" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="1b7b767d-5b23-4544-9d16-0ed0098b3040" key="staticText" x="20" y="70" width="39" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันที่
+รับบริการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="283dc57f-f896-4c6c-a004-4ebfa1956fb6" key="staticText" x="59" y="70" width="86" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ชื่อ - สกุล]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3278c3f2-7826-4c46-ab50-131893207094" key="staticText" x="145" y="70" width="35" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[อายุ
+(ป/ด/ว)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="19f85868-3d4d-4b8d-bdf3-b67feb569f61" key="staticText" x="180" y="70" width="45" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ที่อยู่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1b8f2a0f-409f-4d79-9372-df5dc344f34a" key="staticText" x="225" y="70" width="31" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วัคซีน
+(TT/DT)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8059dc56-f841-4d7e-a526-2da60119c2a0" key="staticText" x="256" y="70" width="40" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ตรวจฟัน
+ครั้งแรก]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8ce3262b-c5cb-4f1b-93d6-1a34456c10e4" key="staticText" x="296" y="101" width="29" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ฟันผุยังไม่อุด(ซี่)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="67a40904-a4b8-4a84-aca3-c9a49f54aa41" key="staticText" x="325" y="101" width="29" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[เหงือกอักเสบ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4f2c8130-0bc5-4a9d-9f9b-9acb58c6f7fd" key="staticText" x="354" y="101" width="29" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[หินน้ำลาย]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1b127cf9-e005-4a36-9186-48137f45d1b7" key="staticText" x="383" y="70" width="29" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ก่อนคลอด(ครั้งที่ 1,2,3,4 หรือ 5)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7d011cbb-6a34-45f6-9764-4aa455c67833" key="staticText" x="624" y="70" width="54" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[เลขที่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3a25ebab-3f54-41a3-97f1-3986f0288349" key="staticText" x="605" y="70" width="19" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[สิทธิ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b399aca0-f000-4d62-ac37-e04c46bde041" key="staticText" x="412" y="101" width="29" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ผู้ทำ
+คลอด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="364b4f2b-fe77-4a04-b341-6ee8181de13d" key="staticText" x="441" y="101" width="29" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ผลการคลอด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="305562f1-a4f1-4cf3-a35e-be64a75f9e39" key="staticText" x="0" y="70" width="20" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ลำ
+ดับ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3a211cec-ca80-4963-9944-ea312a43c9a7" key="staticText-2" x="0" y="1" width="724" height="27"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ทะเบียนผู้รับบริการอนามัยมารดา]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d9a932a6-f140-4cf7-9067-b8dbb576bbad" key="staticText-3" x="0" y="28" width="40" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[หน่วยงาน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3bc7458e-4c59-4548-bced-d088e973b4f8" key="staticText-6" x="0" y="49" width="40" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันที่พิมพ์]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0933da74-138b-460f-9786-4f8746f035fe" key="staticText-7" x="374" y="49" width="94" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันที่ตัดยอดทะเบียน  ]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="653404d2-945e-4b84-92c6-0ab52cbbdb6e" key="textField" x="468" y="49" width="114" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{datecare}.valueOf( $P{sdate} )]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="d32cb06d-f9a3-4c06-8042-5982b96689df" key="textField" x="40" y="49" width="247" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{datecare}.valueOf($P{pdate} )]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="55329128-82bd-4ea8-b4cf-7d907fccae59" key="textField" x="40" y="28" width="448" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="077dd04a-9978-4740-9b9f-952923e006b6" key="staticText-8" x="505" y="70" width="100" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ยาเวชภัณฑ์-จำนวน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fc73ae21-47bf-4b48-bd64-3a2943bb541f" key="staticText-9" x="678" y="70" width="46" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[CUP]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="697e5aa8-6ac2-424f-ac2d-a8d39e9cb6f4" key="staticText-10" x="470" y="70" width="35" height="62"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ตรวจ
+หลัง
+คลอด]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="a5814967-0d40-441b-a5ac-1ed116464083" key="textField-1" x="592" y="49" width="132" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{datecare}.valueOf( $P{edate} )]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="91926023-98f4-49ab-9b2f-13650cdd3965" key="staticText-11" x="582" y="49" width="10" height="21"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[-]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="31686e05-9fb4-44fb-84a4-76b3919efc63" key="staticText-12" x="296" y="70" width="87" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[สุขภาพปากและฟัน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="03b55b4f-1507-498c-9d77-90281a556e07" key="staticText-13" x="412" y="70" width="58" height="31"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[คลอด]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="24" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="aa97ac0a-7109-4f12-93c1-805d81a2af7d" key="textField-2" stretchType="RelativeToBandHeight" mode="Transparent" x="505" y="0" width="100" height="24"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="2627e26d-f080-4e46-bdf6-6c7e8246c8cf" key="textField" stretchType="RelativeToBandHeight" x="59" y="0" width="86" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{personname}+"\n( " +$F{idcard} +" )"]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="a633b710-1e04-4bec-bc87-80e2ee038c06" key="textField" stretchType="RelativeToBandHeight" x="145" y="0" width="35" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{age_ymd}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="d1e8bd31-16c4-482c-aaca-33bdaa4438b6" key="textField" stretchType="RelativeToBandHeight" x="180" y="0" width="45" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{address}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="d45a93d3-2ccc-43ca-8484-bf65dce9a116" key="textField" stretchType="RelativeToBandHeight" x="225" y="0" width="31" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{vacc}.replaceAll( "tt_in_Scop", "คุ้มครอง" )]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMM yy" isBlankWhenNull="true">
+				<reportElement uuid="038419c5-ee08-4099-a2a6-ba0d08f60737" key="textField" stretchType="RelativeToBandHeight" x="256" y="0" width="40" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{fda} == null ? null : $F{fda}.valueOf( $F{fda2} ))]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="d12401a6-511f-428e-84b1-ae102a420142" key="textField" stretchType="RelativeToBandHeight" x="296" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{caries}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="e066ca0a-90bb-4c8f-a22b-f495f04e72f9" key="textField" stretchType="RelativeToBandHeight" x="325" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{gumfail}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="25428b1d-f0b8-457b-820b-2bf1aaee4acc" key="textField" stretchType="RelativeToBandHeight" x="354" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tartar}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="5e39f7e9-40aa-4296-a78b-da277c7437ad" key="textField" stretchType="RelativeToBandHeight" x="383" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ancno}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="09c72887-181e-46ef-8d9a-9776e07a6c18" key="textField" stretchType="RelativeToBandHeight" x="624" y="0" width="54" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightno}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="1fe08266-a159-4ca3-af06-7940f3d303bd" key="textField" stretchType="RelativeToBandHeight" x="605" y="0" width="19" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightcode}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="afa47829-ee1f-4dcf-ab06-010efa0b3b94" key="textField" stretchType="RelativeToBandHeight" x="412" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{operater}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="afe70f46-eb06-4fd2-88e2-914da80dadc2" key="textField" stretchType="RelativeToBandHeight" x="441" y="0" width="29" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{deliverresult}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="2c70f24f-b153-432c-9e33-1ebbbca02c31" key="textField" stretchType="RelativeToBandHeight" x="0" y="0" width="20" height="24"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{pcucode_COUNT}+"."]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="729a6663-6b56-4de2-9028-1a8950972040" key="subreport-1" stretchType="RelativeToBandHeight" mode="Transparent" x="505" y="0" width="100" height="24"/>
+				<subreportParameter name="visitno">
+					<subreportParameterExpression><![CDATA[$F{visitno}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="pcucode">
+					<subreportParameterExpression><![CDATA[$F{pcucode}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="visitdate">
+					<subreportParameterExpression><![CDATA[$F{visitdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR}+ "rb1k012total_subreport2.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="98ac92b1-4990-43db-9551-1a1734152795" key="textField" stretchType="RelativeToBandHeight" x="678" y="0" width="46" height="24"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cupname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ef73a5e4-cff1-42de-95ab-836cdffd25a6" key="textField" stretchType="RelativeToBandHeight" x="470" y="0" width="35" height="24"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dd}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMM yy" isBlankWhenNull="true">
+				<reportElement uuid="63ec0b76-d117-4d76-a3ac-e074f6ac302d" key="textField" stretchType="RelativeToBandHeight" x="20" y="0" width="39" height="24" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateChkAnc}.equals( null )? null : $F{dateChkAnc}.valueOf( $F{dateckeck} )]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="49" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="47f30a6b-6767-4e32-86fb-dc04364c354c" key="textField" x="529" y="1" width="168" height="19" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" หน้า " + $V{PAGE_NUMBER} + " / "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="1f4f99a2-4ce2-4e58-886c-04417a0ebba7" key="textField" mode="Transparent" x="697" y="1" width="27" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b82fb30b-92c3-4d67-9dd9-bf1cbc3f3528" key="staticText-1" x="0" y="1" width="529" height="48" forecolor="#FF0033"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ: ช่องผู้ทำคลอด 1=จนท 2=ผดุงครรภืโบราณที่อบรมแล้ว 3=แพทย์ 4=พยาบาล 5=อื่น ๆ / ช่องผลการคลอด ท=แท้ง ต=ตาย(เกิดไร้ชีพ) ช=เกิดมีชีพ     ก=คลอดก่อนกำหนด อ=อื่น ๆ (เช่น แฝดตาย1 มีชีวิต 1 ฯลฯ)
+กรณีที่มีการคลอดให้บันทึกรายละเอียดการคลอดลงในฐานข้อมูลด้วย โดยคลิกปุ่มคำสั่ง "บันทึกข้อมูลเด็กแรกเกิด" ในเมนูการคลอด)]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="0ed51c1d-b9fe-4aea-8366-6c8669388619" key="textField-3" x="529" y="20" width="195" height="19" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รบ1ก01/2 (อนามัยมารดา) "]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

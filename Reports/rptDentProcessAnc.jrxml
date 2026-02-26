@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptDentPrecessAnc" language="groovy" pageWidth="1250" pageHeight="600" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\iReport-4.5.1\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-01-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-10-31"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select date_format(visit.visitdate,'%Y-%m') ymt
+,hosname
+,curdate() as cdate
+from visitanc
+     left join visit on visitanc.visitno = visit.visitno and visitanc.pcucode = visit.pcucode
+     left join visitdrug on visit.pcucode = visitdrug.pcucode and visit.visitno = visitdrug.visitno
+     left join cright on visit.rightcode = cright.rightcode
+     left join crightgroup  on cright.rightgroup = crightgroup.rightgroupcode
+     left join chospital on visit.pcucode = chospital.hoscode
+where  1=1
+and visitdate between $P{sdate} and  $P{edate}
+$P!{pcucode}
+group by timeservice]]>
+	</queryString>
+	<field name="ymt" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String"/>
+	<field name="cdate" class="java.sql.Date"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement x="481" y="0" width="41" height="30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[ของ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="522" y="0" width="438" height="30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="222" height="30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[รายงาน ระหว่างวันที่]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement x="222" y="0" width="100" height="30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cdate}.valueOf( $P{sdate} )]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement x="334" y="0" width="100" height="30"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cdate}.valueOf( $P{edate} )]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="145" splitType="Stretch">
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1132" height="28"/>
+				<subreportParameter name="SUBREPORT_DIR"/>
+				<subreportParameter name="pcucode">
+					<subreportParameterExpression><![CDATA[$P{pcucode}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="edate">
+					<subreportParameterExpression><![CDATA[$P{edate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="sdate">
+					<subreportParameterExpression><![CDATA[$P{sdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "rptDentAncToothCheck.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="120" width="1132" height="25"/>
+				<subreportParameter name="SUBREPORT_DIR"/>
+				<subreportParameter name="pcucode">
+					<subreportParameterExpression><![CDATA[$P{pcucode}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="edate">
+					<subreportParameterExpression><![CDATA[$P{edate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="sdate">
+					<subreportParameterExpression><![CDATA[$P{sdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "rptDentAnc.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

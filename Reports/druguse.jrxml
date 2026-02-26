@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="druguse" pageWidth="226" pageHeight="226" orientation="Landscape" columnWidth="220" leftMargin="5" rightMargin="1" topMargin="0" bottomMargin="2" uuid="d7ae8b84-b2b9-45ee-98a8-2ee5e5837ae3">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="2.6620000000000013"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="26"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="visitno" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[new Integer (32325)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["03388"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:\\iReport-2.0.0\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT distinct
+    ct.titlename AS person_prename,
+     person.`fname` AS person_fname,
+     person.`lname` AS person_lname,
+     person.`pid` AS person_pid,
+     visit.visitno,visit.pcucode,
+    IF(visit.visitdate IS NULL,'',concat(convert(DAY(visit.visitdate) using utf8),' ',
+   CASE WHEN MONTH(visit.visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(visit.visitdate)=2 THEN 'กุมภาพันธ์' WHEN MONTH(visit.visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(visit.visitdate)=4 THEN 'เมษายน' WHEN MONTH(visit.visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(visit.visitdate)=6 THEN 'มิถุนายน' WHEN MONTH(visit.visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(visit.visitdate)=8 THEN 'สิงหาคม' WHEN MONTH(visit.visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(visit.visitdate)=10 THEN 'ตุลาคม' WHEN MONTH(visit.visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(visit.visitdate)=12 THEN 'ธันวาคม' END,' ',YEAR(visit.visitdate)+543) )
+   as visitdate,
+     visit.`visitdate` AS visit_visitdate,
+     DATE_FORMAT(visit.visitdate,'%Y-%m-%d') as dv,
+     cdrug.`drugname` AS cdrug_drugname,
+     chospital.`hosname` AS chospital_hosname,
+     visitdrug.`unit` AS visitdrug_unit,
+     cdrugunitsell.`unitsellname` AS cdrugunitsell,
+     visitdrug.`realprice` AS visitdrug_realprice,
+     visitdrug.realprice * visitdrug.unit as mt,
+     visitdrug.`dose` AS visitdrug_dose
+,visit.symptoms
+,visit.pressure,visit.weight,visit.height,visit.username
+,cright.rightname
+#,doseprefix
+FROM
+     `person` person
+     INNER JOIN `visit` visit ON person.`pcucodeperson` = visit.`pcucodeperson` AND person.`pid` = visit.`pid`
+     Left Outer Join `visitdiag` visitdiag ON visit.`pcucode` = visitdiag.`pcucode` AND visit.`visitno` = visitdiag.`visitno`
+     INNER JOIN `visitdrug` visitdrug ON visit.`pcucode` = visitdrug.`pcucode` AND visit.`visitno` = visitdrug.`visitno`
+     Left Outer Join `chospital` chospital ON visit.pcucode = chospital.`hoscode`
+     INNER JOIN `cdrug` cdrug ON visitdrug.`drugcode` = cdrug.`drugcode`
+     INNER JOIN cright ON visit.rightcode = cright.rightcode
+LEFT JOIN ctitle ct on (person.prename = ct.titlecode)
+LEFT JOIN `cdrugunitsell` cdrugunitsell ON cdrug.`unitsell` = cdrugunitsell.`unitsellcode`
+
+WHERE  visit.visitno=$P{visitno} and visit.pcucode =$P{pcucode} and (cdrug.drugtype = '01' || cdrug.drugtype ='10')
+order by visit.visitdate,visit.visitno,visit.pcucode,visitdiag.diagcode]]>
+	</queryString>
+	<field name="person_prename" class="java.lang.String"/>
+	<field name="person_fname" class="java.lang.String"/>
+	<field name="person_lname" class="java.lang.String"/>
+	<field name="person_pid" class="java.lang.Integer"/>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pcucode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visit_visitdate" class="java.sql.Date"/>
+	<field name="dv" class="java.lang.String"/>
+	<field name="cdrug_drugname" class="java.lang.String"/>
+	<field name="chospital_hosname" class="java.lang.String"/>
+	<field name="visitdrug_unit" class="java.lang.Integer"/>
+	<field name="cdrugunitsell" class="java.lang.String"/>
+	<field name="visitdrug_realprice" class="java.math.BigDecimal"/>
+	<field name="mt" class="java.math.BigDecimal"/>
+	<field name="visitdrug_dose" class="java.lang.String"/>
+	<field name="symptoms" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pressure" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="weight" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="height" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="username" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rightname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="SUM_mt_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{mt}]]></variableExpression>
+		<initialValueExpression><![CDATA[new BigDecimal(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="SUM_mt_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{mt}]]></variableExpression>
+	</variable>
+	<group name="diag_group">
+		<groupExpression><![CDATA[$F{visitno}]]></groupExpression>
+		<groupHeader>
+			<band height="23">
+				<staticText>
+					<reportElement key="staticText" positionType="Float" stretchType="RelativeToBandHeight" x="1" y="0" width="23" height="23" forecolor="#000000" backcolor="#FFFFFF" uuid="122ae15d-70a8-40f2-90d7-bbc62b5a7332"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8"/>
+					</textElement>
+					<text><![CDATA[Diag :]]></text>
+				</staticText>
+				<subreport isUsingCache="true">
+					<reportElement key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="25" y="0" width="194" height="23" uuid="9772ced5-d676-47cc-936c-960d77eef24b"/>
+					<subreportParameter name="visitno">
+						<subreportParameterExpression><![CDATA[$F{visitno}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="pcucode">
+						<subreportParameterExpression><![CDATA[$F{pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "druguse_subreport0.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="73" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="1" y="19" width="218" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="ee928ca8-1cd9-41a6-bce4-f91298858f48"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันที่ "+$F{visitdate}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="36" width="219" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="89114bba-1b78-462e-b3eb-604ec1475755"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{person_prename}+" "+$F{person_fname}+" "+$F{person_lname}+" "+"HN"+
+" "+$F{person_pid}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="-1" y="53" width="220" height="20" uuid="60f3f94b-bcba-40e1-8948-72bd4657f2f2"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" สิทธิ์ " + $F{rightname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="d MMM yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" x="1" y="2" width="218" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="aeab7d2e-033a-480f-90d4-50d331ab070b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{chospital_hosname}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="37" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" stretchType="RelativeToBandHeight" x="13" y="0" width="155" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="bfb4e012-90a0-4930-bf31-21c39e1ba98c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cdrug_drugname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" stretchType="RelativeToBandHeight" x="1" y="16" width="218" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="38fd416f-f567-4738-b6bc-a210ad139196"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitdrug_dose}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-2" stretchType="RelativeToBandHeight" x="0" y="0" width="14" height="17" uuid="c89f8098-c607-4607-9b3c-62944d03cdbf"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="192" y="0" width="27" height="16" uuid="3bd7975c-57d0-4b10-8bf1-f372c011c491"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cdrugunitsell}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" stretchType="RelativeToBandHeight" x="168" y="0" width="24" height="16" forecolor="#000000" backcolor="#FFFFFF" uuid="c3c387e6-31a9-4b32-8299-18066a8f3585"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitdrug_unit}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

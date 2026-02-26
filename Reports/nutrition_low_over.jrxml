@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="nutrition_low_over" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="2bae9210-fccf-41d7-b8a0-511690583c9e">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="141"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="org" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tam" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="amp" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="prov" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="startdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2008-10-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="enddate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2008-12-31"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2008-01-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="nformu" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND person.pcucodeperson='"+"01913"+"'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="header_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="header_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="awh" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["aw"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+CONCAT(IFNULL(ctitle.titlename,IFNULL(person.prename,'...')),person.fname,'  ',person.lname) AS fullname,
+vchild_60mon_weight_0.hno,
+visit.visitdate,
+DATE_FORMAT(visit.visitdate,"%Y-%m-%d")AS svisitdate,
+person.birth,
+vchild_60mon_weight_0.agemonth,
+person.sex,
+vchild_60mon_weight_0.weight,
+vchild_60mon_weight_0.tall,
+vchild_60mon_weight_0.pid,
+vchild_60mon_weight_0.villno,
+vchild_60mon_weight_0.villcode,
+vchild_60mon_weight_0.villname
+FROM
+person
+Left Join vchild_60mon_weight_0 ON person.pcucodeperson = vchild_60mon_weight_0.pcucodeperson AND person.pid = vchild_60mon_weight_0.pid
+Inner Join visit ON vchild_60mon_weight_0.pcucodeperson = visit.pcucodeperson AND vchild_60mon_weight_0.lastvn = visit.visitno AND vchild_60mon_weight_0.pid = visit.pid
+left join ctitle on ctitle.titlecode=person.prename
+/*Inner Join vnutrition_last_st2 ON visit.visitno = vnutrition_last_st2.lastvn*/
+WHERE
+visit.visitdate BETWEEN $P{startdate} AND $P{enddate} $P!{pcucode}
+ORDER BY vchild_60mon_weight_0.villcode,visit.visitdate]]>
+	</queryString>
+	<field name="fullname" class="java.lang.String"/>
+	<field name="hno" class="java.lang.String"/>
+	<field name="visitdate" class="java.sql.Date"/>
+	<field name="svisitdate" class="java.sql.Timestamp"/>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="agemonth" class="java.lang.Long"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="weight" class="java.math.BigDecimal"/>
+	<field name="tall" class="java.math.BigDecimal"/>
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="villno" class="java.lang.Integer"/>
+	<field name="villcode" class="java.lang.String"/>
+	<field name="villname" class="java.lang.String"/>
+	<variable name="vcount" class="java.lang.Integer" resetType="Group" resetGroup="villno" calculation="Sum">
+		<variableExpression><![CDATA[(  $P{awh} == "aw" ?
+	(
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==1) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==2) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==4) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==5)
+	? new Integer(1) : new Integer(0) )
+	:
+    	(  $P{awh} == "wh" ?
+       		(
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==1) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==2) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==4) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==5) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==6)
+		? new Integer(1) : new Integer(0) )
+       		:
+       		(
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==1) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==2) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==4) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==5)
+		? new Integer(1) : new Integer(0) )
+    	)
+)]]></variableExpression>
+	</variable>
+	<group name="villno">
+		<groupExpression><![CDATA[$F{villcode}]]></groupExpression>
+		<groupHeader>
+			<band height="31" splitType="Stretch">
+				<staticText>
+					<reportElement uuid="e7a102b9-4afa-4d77-85a2-ab2d2cc3cb7f" key="staticText" x="3" y="4" width="31" height="21" forecolor="#000000"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Tahoma" size="10" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[หมู่ที่]]></text>
+				</staticText>
+				<textField pattern="" isBlankWhenNull="false">
+					<reportElement uuid="6e5dd867-d6a9-4fb7-b9c5-e3e26181dd57" key="textField" x="34" y="4" width="46" height="21" forecolor="#000000"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Tahoma" size="10" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{villno}]]></textFieldExpression>
+				</textField>
+				<textField pattern="" isBlankWhenNull="false">
+					<reportElement uuid="c0574a72-2dd7-4e6c-9572-f62482ff8a69" key="textField" x="86" y="4" width="304" height="21" forecolor="#000000"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Tahoma" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica-Bold" isPdfEmbedded="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{villname}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="7" splitType="Stretch"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="73" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="949e6157-ce76-4fd6-be72-d7b960fb4d2d" key="staticText" x="3" y="3" width="366" height="21" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[รายชื่อเด็กที่รับการชั่งน้ำหนักและพบภาวะโภชนาการบกพร่อง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b809069a-c6b5-43de-a6fb-a4960efa4a55" key="staticText-3" x="382" y="3" width="151" height="21" forecolor="#000066">
+					<printWhenExpression><![CDATA[(  $P{awh} == "aw" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[คิดตามสูตร: อายุ / น้ำหนัก]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="687f7851-76de-438c-ab76-d423c8becdec" key="textField-8" x="3" y="29" width="526" height="21" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="2d73a1e5-2519-492e-8a36-e7da12431d6a" key="textField-9" x="3" y="52" width="526" height="21" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_2}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="17bca331-b96c-468c-988b-266ab0b26454" key="staticText-4" x="379" y="3" width="154" height="21" forecolor="#0000CC">
+					<printWhenExpression><![CDATA[(  $P{awh} == "ah" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[คิดตามสูตร: อายุ / ส่วนสูง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a6f0408c-ac83-4d7e-8918-01bf2bf8927f" key="staticText-5" x="369" y="3" width="156" height="21" forecolor="#006633">
+					<printWhenExpression><![CDATA[(  $P{awh} == "wh" ? Boolean.TRUE : Boolean.FALSE )]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[คิดตามสูตร: น้ำหนัก / ส่วนสูง]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="14" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="45" splitType="Stretch">
+			<line direction="BottomUp">
+				<reportElement uuid="a7aa5d1f-99c6-4d59-864b-21886db2653b" key="line" x="0" y="2" width="535" height="1" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line direction="BottomUp">
+				<reportElement uuid="eaf38782-8938-4c4b-ac83-b4aa57cfa9e0" key="line" x="0" y="44" width="535" height="1" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<staticText>
+				<reportElement uuid="55abb522-a0ac-4f43-b17d-6ff461a0b891" key="staticText" x="166" y="3" width="57" height="40" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[บ้านเลขที่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="641b1cc4-0426-4857-8142-0830df58308c" key="staticText" x="227" y="3" width="53" height="40" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ตรวจล่าสุดงวดนั้น]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="982b8680-3815-41ff-b371-c2a8eb03f7c5" key="staticText" x="280" y="3" width="63" height="40" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[อายุนับถึงวันตรวจ (เดือน)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="442a0dc1-6796-4e7c-9af1-fc3079ee5a0e" key="staticText" x="345" y="3" width="43" height="40" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[น้ำหนัก(กก.)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7200d59a-fcc6-4ccc-8db0-b5081601bf47" key="staticText" x="390" y="3" width="40" height="40" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ส่วนสูง(ซม.)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="11ee8a57-6ea8-4bdf-bc46-62c8f4997f7f" key="staticText-1" x="439" y="3" width="91" height="41" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ภาวะโภชนาการ]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="23" splitType="Stretch">
+			<printWhenExpression><![CDATA[(
+$P{awh} == "aw" ?
+	(
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==1) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==2) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==4) ||
+	( SetupNu.nutAW_($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})==5)
+	? Boolean.TRUE : Boolean.FALSE )
+	:
+    	(  $P{awh} == "wh" ?
+       		(
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==1) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==2) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==4) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==5) ||
+		( SetupNu.nutWH_($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())==6)
+		? Boolean.TRUE : Boolean.FALSE )
+       		:
+       		(
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==1) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==2) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==4) ||
+		( SetupNu.nutAH_($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})==5)
+		? Boolean.TRUE : Boolean.FALSE )
+    	)
+)]]></printWhenExpression>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="16422ae8-7d9d-4ff2-9eb7-c3463139424b" key="textField" x="49" y="4" width="127" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fullname}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="3872837e-19c6-42fd-9633-bb24f8f04085" key="textField" x="179" y="4" width="46" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Tahoma" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hno}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00" isBlankWhenNull="true">
+				<reportElement uuid="d2338cf5-37d9-4f78-aedb-612c871e552b" key="textField" x="347" y="4" width="32" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Tahoma" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{weight}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00" isBlankWhenNull="true">
+				<reportElement uuid="bd83b070-6962-4ad3-b8e5-801876851b6c" key="textField" x="382" y="4" width="44" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Tahoma" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tall}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMM yy" isBlankWhenNull="true">
+				<reportElement uuid="658d4bde-1864-4a30-9842-69e272f32239" key="textField" x="229" y="4" width="65" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{svisitdate}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="1aaef631-269f-4e7f-92a0-f4cfd135c85b" key="textField-7" x="444" y="4" width="86" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(  $P{awh} == "aw" ?
+SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})
+:
+    (  $P{awh} == "wh" ?
+       SetupNu.UpdateNutritionStateAgeLessThen18WeightHeight($F{weight}.doubleValue(),$F{tall}.intValue(),$F{sex},$F{agemonth}.doubleValue())
+       :
+       SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{tall}.intValue(),$F{sex})
+    )
+)]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="6a62b145-cf0c-438f-a631-ad9715bcd28a" key="textField" x="301" y="4" width="36" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{agemonth}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2fd430ef-03dd-4adb-bbfe-b025cbff6a98" key="textField" x="8" y="4" width="41" height="18" forecolor="#000066"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{vcount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="8818341d-d48b-4af0-aff8-2dac1e74c4c2" key="textField" x="450" y="6" width="40" height="12" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="fd2c3dc6-647d-42c1-bb6d-a4b99ab7d365" key="textField" mode="Transparent" x="493" y="6" width="36" height="12" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="dd4b4e5a-c5be-4025-8174-1a3ec27c101c" key="textField" x="1" y="6" width="209" height="12" forecolor="#000000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

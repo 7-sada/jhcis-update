@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Graph_money1_2D" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="fd153e3f-6c0e-4240-912c-4b86a4d3bfde">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT q.yr+543 yar,CASE WHEN mnt=1 THEN 'มกราคม' WHEN mnt=2 THEN 'กุมภาพันธ์' WHEN mnt=3 THEN 'มีนาคม' WHEN mnt=4 THEN 'เมษายน'
+WHEN mnt=5 THEN 'พฤษภาคม' WHEN mnt=6 THEN 'มิถุนายน' WHEN mnt=7 THEN 'กรกฎาคม' WHEN mnt=8 THEN 'สิงหาคม' WHEN mnt=9 THEN 'กันยายน'
+WHEN mnt=10 THEN 'ตุลาคม' WHEN mnt=11 THEN 'พฤศจิกายน' WHEN mnt=12 THEN 'ธันวาคม'  ELSE 'x' END mntt
+,q.male,q.female
+FROM
+(
+SELECT YEAR(visitdate) yr,MONTH(visitdate) mnt
+,SUM(CASE WHEN sex='1' THEN IFNULL(v.money1,0) ELSE 0 END) male
+,SUM(CASE WHEN sex='2' THEN IFNULL(v.money1,0) ELSE 0 END) female
+FROM visit v JOIN person p ON v.pcucodeperson=p.pcucodeperson and v.pid=p.pid
+WHERE YEAR(visitdate)=2018
+GROUP BY MONTH(visitdate)
+) q ORDER BY q.mnt]]>
+	</queryString>
+	<field name="yar" class="java.lang.Long"/>
+	<field name="mntt" class="java.lang.String"/>
+	<field name="male" class="java.lang.Double"/>
+	<field name="female" class="java.lang.Double"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="32" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="283" splitType="Stretch">
+			<barChart>
+				<chart>
+					<reportElement uuid="945057e6-859a-4800-a3b3-2808b1eb1a19" x="0" y="0" width="555" height="283"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["m"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{mntt}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{male}]]></valueExpression>
+					</categorySeries>
+					<categorySeries>
+						<seriesExpression><![CDATA["f"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{mntt}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{female}]]></valueExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot>
+					<plot/>
+					<itemLabel/>
+					<categoryAxisFormat>
+						<axisFormat/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</barPlot>
+			</barChart>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Receipt_hos_subreport1" pageWidth="432" pageHeight="576" columnWidth="432" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="39c30b90-a73e-4d98-8819-a61acb2be425">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="visitno" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select vd.pcucode,vd.visitno,d.drugcode,d.drugname,
+(round(((1-ifnull(vd.noclaimprice,0))*vd.unit*vd.realprice),2)) as paid,
+(if(round((vd.unit*vd.realprice*vd.noclaimprice),2) is NULL,0,round((vd.unit*vd.realprice*vd.noclaimprice),2))) as noclaim
+from visitdrug vd
+left join cdrug d on (vd.drugcode = d.drugcode)
+where vd.visitno = $P{visitno}
+and  d.drugcode like "DF%" and d.drugtype = '91' ]]>
+	</queryString>
+	<field name="pcucode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="paid" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="noclaim" class="java.math.BigDecimal"/>
+	<variable name="SUB_NOCLLAIM" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{noclaim}]]></variableExpression>
+		<initialValueExpression><![CDATA[]]></initialValueExpression>
+	</variable>
+	<variable name="SUb_Paid" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{paid}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="26" y="1" width="201" height="19" uuid="d5e562c6-8607-4cf2-8b74-cf206b0edf1c"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$F{drugname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="227" y="1" width="85" height="19" uuid="52f212fc-f17a-4361-bfef-69c030b65852"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{noclaim}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="318" y="1" width="69" height="19" uuid="0e79d9ac-7c52-45d0-8930-350e28e39219"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{paid}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="4"/>
+	</summary>
+</jasperReport>

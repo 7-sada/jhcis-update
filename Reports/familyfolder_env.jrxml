@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="familyfolder_env"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="p_hcode" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["544"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["09372"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT h.hno,h.hcode,h.hid, substring(h.villcode,5,2) as moo,
+  IF(road IS NOT NULL,road,'-') AS road,
+  (SELECT IF(village.villname IS NOT NULL,village.villname,'-') AS villname FROM village WHERE village.villcode=h.villcode ) AS village,
+  (SELECT IF(csubdistrict.subdistname IS NOT NULL,csubdistrict.subdistname,'-') AS subdistname
+                            FROM csubdistrict WHERE csubdistrict.provcode=substring(h.villcode,1,2)
+                                                    AND csubdistrict.distcode=substring(h.villcode,3,2)
+                                                    AND csubdistrict.subdistcode= substring(h.villcode,5,2)) AS subdistrict,
+  (SELECT IF(cdistrict.distname IS NOT NULL,cdistrict.distname,'-') AS distname FROM cdistrict WHERE cdistrict.provcode=substring(h.villcode,1,2) AND cdistrict.distcode=substring(h.villcode,3,2)) AS district,
+  (SELECT IF(cprovince.provname IS NOT NULL,cprovince.provname,'-') AS provname FROM cprovince WHERE cprovince.provcode=substring(h.villcode,1,2)) AS province
+
+FROM house h
+
+WHERE h.pcucode=$P{p_pcucode} AND h.hcode = $P{p_hcode}]]></queryString>
+
+	<field name="hno" class="java.lang.String"/>
+	<field name="hcode" class="java.lang.Integer"/>
+	<field name="hid" class="java.lang.String"/>
+	<field name="moo" class="java.lang.String"/>
+	<field name="road" class="java.lang.String"/>
+	<field name="village" class="java.lang.String"/>
+	<field name="subdistrict" class="java.lang.String"/>
+	<field name="district" class="java.lang.String"/>
+	<field name="province" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="82"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="168"
+						y="5"
+						width="499"
+						height="21"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ข้อมูลสุขาภิบาลและอนามัยสิ่งแวดล้อม]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="31"
+						width="526"
+						height="30"
+						key="reportHeader-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["บ้านเลขที่ "+$F{hno}+"      หมู่ที่ "+$F{moo}+"      ถนน "+$F{road}+"      ตำบล "+$F{subdistrict}+"      อำเภอ "+$F{district}+"      จังหวัด "+$F{province}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="d MMMMM yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="83"
+						y="61"
+						width="142"
+						height="14"
+						key="headerReportDate-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="SansSerif" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="61"
+						width="83"
+						height="14"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[วันที่พิมพ์แฟ้มฯ]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="349"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

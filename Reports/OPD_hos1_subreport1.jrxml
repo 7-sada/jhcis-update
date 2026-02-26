@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPD_hos1_subreport1" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="ae95dbb1-5ab2-45bd-936a-d931020adde4">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="visitno" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[select p3.*,if(p3.pay_type = '1',p3.total,null) as cash,if(p3.pay_type in ('2','3'),p3.total,null) as credit
+from
+(select ifnull(v.temperature,'') as temperature,ifnull(v.height,'') as height,ifnull(v.weight,'') as weight
+,ifnull(v.pressure,'') as pressure,ifnull(v.pulse,'') as pulse,ifnull(v.respri,'') as breth,
+IF(v.visitdate IS NULL,'',concat(convert(DAY(v.visitdate) using utf8),' ',
+   CASE WHEN MONTH(v.visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(v.visitdate)=2 THEN 'กุมภาพันธ์' WHEN MONTH(v.visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(v.visitdate)=4 THEN 'เมษายน' WHEN MONTH(v.visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(v.visitdate)=6 THEN 'มิถุนายน' WHEN MONTH(v.visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(v.visitdate)=8 THEN 'สิงหาคม' WHEN MONTH(v.visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(v.visitdate)=10 THEN 'ตุลาคม' WHEN MONTH(v.visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(v.visitdate)=12 THEN 'ธันวาคม' END,' ',YEAR(v.visitdate)+543) )
+   as visitdate,ifnull(vdi.doctor,"") as doctor,if(ifnull(vdlab.lab,"") = 0,"",ifnull(vdlab.lab,"")) as doctorprice,if(vdlab.lab = 0,null,vdlab.lab) as dp,
+ifnull(vddrug.drug,0) as drug,(ifnull(vdlab.lab,0)+ifnull(vddrug.drug,0)) as total,
+ifnull(v.symptoms,'') as akan,ifnull(v.diagnote,'') as diagnote,v.visitno,p2.receiptno,p2.pay_type,
+ (case when p2.pay_type = '1' then 'เงินสด'
+ when p2.pay_type = '2' then 'VISA'
+ when p2.pay_type = '3' then 'Master Card'
+ else "" end) as PayType
+from visit v
+left join (select if(p1.noclaimprice = 1 or p1.realprice = 0,"",p1.doctor) as doctor,p1.visitno,p1.pcucode
+from
+(select vd.doctor1,u.fname as doctor,
+vd.realprice,noclaimprice,vd.visitno,vd.pcucode
+from visitdrug vd
+left join user u on (vd.doctor1 = u.username)
+where vd.visitno = $P{visitno}
+and vd.drugcode like 'DF%') as p1) as vdi
+on (vdi.pcucode = v.pcucode and vdi.visitno = v.visitno)
+left join
+(select (1-ifnull(noclaimprice,0))*vd.unit*vd.realprice as lab,vd.pcucode,vd.visitno
+from visitdrug vd
+where vd.visitno = $P{visitno}
+and vd.drugcode like 'DF%') as vdlab
+on (vdlab.visitno = v.visitno and vdlab.pcucode = v.pcucode)
+left join
+(select sum(((1-ifnull(noclaimprice,0))*v.unit*v.realprice)) as drug,v.pcucode,v.visitno
+from visitdrug v
+join cdrug d on (v.drugcode = d.drugcode)
+and d.drugcode not like 'DF%'
+and v.visitno = $P{visitno}
+group by v.visitno ) vddrug
+on (v.visitno = vddrug.visitno and v.pcucode = vddrug.pcucode)
+join
+(select p1.receiptno,p1.visitno,p1.prn,p1.pay_type
+from (
+select v2.receiptno,v2.visitno,v2.prn,v1.pay_type
+from
+(select max(receiptno)as receiptno ,vr.visitno,max(vr.datetime_prn) as prn
+from visitreceiptno vr
+where vr.visitno = $P{visitno}
+group by vr.visitno) v2
+join visitreceiptno v1 on (v2.receiptno = v1.receiptno and v2.visitno = v1.visitno  and v2.prn = v1.datetime_prn)
+) as p1) as p2
+on (v.visitno and p2.visitno)
+where v.visitno = $P{visitno}) as p3]]>
+	</queryString>
+	<field name="temperature" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="height" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="weight" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pressure" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pulse" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="breth" class="java.lang.String"/>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="doctor" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="doctorprice" class="java.lang.String"/>
+	<field name="dp" class="java.math.BigDecimal"/>
+	<field name="drug" class="java.math.BigDecimal"/>
+	<field name="total" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="akan" class="java.lang.String"/>
+	<field name="diagnote" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="receiptno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pay_type" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="PayType" class="java.lang.String"/>
+	<field name="cash" class="java.math.BigDecimal"/>
+	<field name="credit" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="42">
+			<textField>
+				<reportElement x="6" y="0" width="287" height="36" uuid="32348611-2459-41e2-a850-63c987a01f4d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="22"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันที่ "+$F{visitdate}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="122" splitType="Stretch">
+			<textField>
+				<reportElement x="8" y="0" width="119" height="26" uuid="8d93f614-aaa5-4842-9add-c3d06c7f543c"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["แพทย์:  "+ $F{doctor}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="127" y="0" width="75" height="26" uuid="d1070e68-7810-4c4c-8fd1-78cc460eb6a3"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อุณหภูมิ : "+ $F{temperature}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="202" y="0" width="70" height="26" uuid="07ef2e7f-ee5f-4bf8-b252-a7161b761dc3"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ส่วนสูง: "+ $F{height}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="272" y="0" width="65" height="26" uuid="cf663f2b-acce-4613-9fbd-895ff35a703c"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["น้ำหนัก: "+ $F{weight}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="337" y="0" width="218" height="26" uuid="ae3d141b-66ff-401d-86e7-bc08dfb8fda6"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ความดัน: "+ $F{pressure}+"  "+"ชีพจร: "+$F{pulse}+"  "+"การหายใจ: "+$F{breth}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="8" y="26" width="119" height="26" uuid="59ed021c-fddf-4778-8f0f-9b9201a0d8d8"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขที่ใบเสร็จ:  "+ $F{receiptno}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00">
+				<reportElement x="127" y="26" width="32" height="26" uuid="fb86a096-e198-4bd5-a582-7bbb4508ef39"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ค่ายา : "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="202" y="26" width="46" height="26" uuid="0600eb87-140a-4172-8b6d-9f0ff2daf719"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ค่าตรวจ:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="337" y="26" width="67" height="26" uuid="6f4ad6a6-af3a-4060-9d85-710149eacc01"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ส่วนลด % : "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="159" y="26" width="43" height="26" uuid="7cdcad10-72a5-4142-80b8-0ad2df481a8e"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drug}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="248" y="26" width="89" height="26" uuid="9d64d8cd-6df7-43dc-afa0-2f59198652f7"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dp}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="404" y="26" width="140" height="26" uuid="c7e87f7e-ea1d-4a72-b6f9-dd88223e4eda"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["   ส่วนลด :"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="8" y="52" width="56" height="26" uuid="7886cc2c-75bd-43b7-b5ab-cbb91302f3fe"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รวมเงิน:  "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="64" y="52" width="51" height="26" uuid="7baa6164-4c49-4319-b383-f41b6d3ae115"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="404" y="52" width="56" height="26" uuid="67a2b268-8e52-47fd-89a0-7c06c13bb86f"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["    เงินสด :  "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="460" y="52" width="51" height="26" uuid="22f4d3a0-9f50-4c46-94b4-30a4f7563653"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cash}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="127" y="52" width="40" height="26" uuid="7833e4d0-39d8-4eaa-b3e1-7317dbb54f60"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เครดิต:  "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="226" y="52" width="111" height="26" uuid="b2982043-2c37-4516-a538-cc561e1792fb"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ประเภทบัตร: "+$F{PayType}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="337" y="52" width="67" height="26" uuid="63b00651-3b58-414f-b65f-c19abb34a25b"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["จ่ายค้าง:  "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="8" y="78" width="119" height="26" uuid="496f0495-373e-4d9e-abaf-76be8988c1d8"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หมายเหตุแพทย์:  "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="127" y="78" width="48" height="26" uuid="e9db1b72-99a7-4925-957e-ba7552b895e4"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อาการ :  "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="337" y="78" width="42" height="26" uuid="594effe5-b43f-484e-8b42-535d51993fbb"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วินิจฉัย:"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="175" y="78" width="162" height="26" uuid="241eff09-2765-41eb-b343-a23da4aa7dfc"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{akan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="379" y="78" width="176" height="26" uuid="fcab20b5-702c-4eee-b98f-c69d23969c4a"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{diagnote}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="168" y="52" width="51" height="26" uuid="1dc44f61-a8e8-4488-8b86-809c369646c7"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{credit}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+</jasperReport>

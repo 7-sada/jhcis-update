@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DrugOrder_Sub_Alergy" pageWidth="415" pageHeight="510" columnWidth="404" leftMargin="4" rightMargin="7" topMargin="2" bottomMargin="2" uuid="6c31d7ce-ce0c-4eda-a7d2-d53cebf32b80">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["06654"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pid" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["6"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT IF(h.drugcode IS NULL,NULL,@i:=@i+1) AS rowno
+,h.allergic ,h.pcucodeperson ,h.pid ,h.drugcode ,h.drugname
+FROM
+(	select if(p1.allergic IS NULL OR TRIM(p1.allergic)= '','..ไม่ระบุฯ',p1.allergic) allergic,p2.pcucodeperson,p2.pid,p2.drugcode
+,IF(p2.drugcode IS NULL,NULL,concat(if(d.drugname is null or trim(d.drugname)='','',trim(d.drugname)),'-'
+,CASE WHEN levelalergic='1' THEN '1:ไม่ร้ายแรง' WHEN levelalergic='2' THEN '2:ร้ายแรงเสียชีวิต' WHEN levelalergic='3' THEN '3:ร้ายแรงอันตรายถึงชีวิต'
+WHEN levelalergic='4' THEN '4:ต้องรักษาใน รพ.' WHEN levelalergic='5' THEN '5:ทำให้ต้องรักษานานขึ้น' WHEN levelalergic='6' THEN '6:ร้ายแรงถึงพิการ'
+WHEN levelalergic='7' THEN '7:ร้ายแรงผิดปกติแต่เกิด' WHEN levelalergic='8' THEN '8:ร้ายแรง อื่นๆ' ELSE '..ไม่ระบุความรุนแรง' END)) drugname
+	from person p1
+left join personalergic p2 on p1.pcucodeperson=p2.pcucodeperson AND p1.pid=p2.pid
+left join cdrug d on p2.drugcode = d.drugcode
+	where p1.pcucodeperson = $P{pcucode} and p1.pid = $P{pid}
+	ORDER BY if(levelalergic in('2','3'),0,if(levelalergic='1',9,levelalergic))
+) AS h ,(SELECT @i:=0) AS foo]]>
+	</queryString>
+	<field name="allergic" class="java.lang.String"/>
+	<field name="pcucodeperson" class="java.lang.String"/>
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="drugcode" class="java.lang.String"/>
+	<field name="drugname" class="java.lang.String"/>
+	<field name="rowno" class="java.lang.Number"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="19" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="textField" isPrintRepeatedValues="false" x="0" y="0" width="406" height="19" forecolor="#990000" uuid="07500e31-822c-47fc-b73a-7c6ce8dd7cd1"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8" isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อาหารที่แพ้: "+$F{allergic}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-19" isPrintRepeatedValues="false" x="0" y="0" width="36" height="15" isPrintInFirstWholeBand="true" forecolor="#990000" uuid="53293c24-dafb-4d02-ae0b-2b75d553109b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Tahoma" size="8" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[ยาที่แพ้:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" isPrintRepeatedValues="false" x="36" y="0" width="11" height="15" uuid="4a2b66b5-8c91-4fe9-b217-d0409e330854"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rowno}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" isPrintRepeatedValues="false" x="49" y="0" width="361" height="15" uuid="8fb948fe-5d6b-41c5-a00d-dcba38a22eba"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drugname}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

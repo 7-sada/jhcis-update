@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MedicalCertify" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="0a61803f-aa40-410a-aae0-f774c6c6d83c">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="VN" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["124532"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\jhcis\\reports\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HCC" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["00996"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="H1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="H2" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[select
+concat(ifnull(`tt1`.titlename,ifnull(person.prename,'..')), ifnull(person.fname,''), '  ', ifnull(person.lname,'')) as fullname,visit.pid pid ,
+concat(' อายุ ',getageymd(person.birth,visit.visitdate)) aymd,
+concat(ifnull(`tt2`.titlename,ifnull(`user`.prename,'..')), ifnull(`user`.fname,''), '  ', ifnull(`user`.lname,'') ) as docname,
+ifnull(`user`.noofoccupation,'...ไม่ระบุฯ') as noofoccupation, visitdoctorcer.doctorexplain as doctorexplain
+,visit.visitdate as vdate
+,date_format(visit.visitdate,'%Y-%m-%d') as vdate_f
+,visitdoctorcer.datestartstop as dateStopStart
+,date_format(visitdoctorcer.datestartstop,'%Y-%m-%d') as dateStopStart_f
+,visitdoctorcer.daystopwork
+,date_add(visitdoctorcer.datestartstop, INTERVAL (visitdoctorcer.daystopwork - 1) day) as dateStopEnd
+,date_format(date_add(visitdoctorcer.datestartstop, INTERVAL (visitdoctorcer.daystopwork - 1) day),'%Y-%m-%d') as dateStopEnd_f,
+visit.visitno as visitno
+from visitdoctorcer
+inner join visit on visit.pcucode=visitdoctorcer.pcucode and visit.visitno=visitdoctorcer.visitno
+inner join person on person.pcucodeperson=visit.pcucodeperson and person.pid=visit.pid
+left join `user` on `user`.username=visit.username
+left join `ctitle` tt1 on `person`.`prename` = `tt1`.`titlecode`
+left join `ctitle` tt2 on `user`.`prename` = `tt2`.`titlecode`
+where visit.pcucode='$P!{HCC}' and visit.visitno=$P!{VN}]]>
+	</queryString>
+	<field name="fullname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="aymd" class="java.lang.String"/>
+	<field name="docname" class="java.lang.String"/>
+	<field name="noofoccupation" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="doctorexplain" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vdate" class="java.sql.Date"/>
+	<field name="vdate_f" class="java.lang.String"/>
+	<field name="dateStopStart" class="java.sql.Date"/>
+	<field name="dateStopStart_f" class="java.lang.String"/>
+	<field name="daystopwork" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateStopEnd" class="java.sql.Date"/>
+	<field name="dateStopEnd_f" class="java.lang.String"/>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="127" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-23" x="208" y="90" width="150" height="35" uuid="557dd33e-10ee-4759-9d8b-42f4f3b7d4bf"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="20" isBold="true" isUnderline="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ใบรับรองแพทย์]]></text>
+			</staticText>
+			<image>
+				<reportElement x="2" y="0" width="533" height="125" uuid="5c6cc1d8-0729-4a26-8512-64375ad53199"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR}+"\\logo.jpg"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="292" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="textField-3" positionType="Float" x="2" y="136" width="532" height="24" uuid="fb0b2bd3-5048-4d42-a155-cb56640517dd"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ได้ตรวจร่างกายของ   "+$F{fullname}+"        HN  "+$F{pid}+" "+$F{aymd}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-5" positionType="Float" x="2" y="159" width="532" height="24" uuid="2f37d80d-9374-47c4-9105-e44bce31e116"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isStrikeThrough="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ปรากฎว่า  "+$F{doctorexplain}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-6" positionType="Float" x="44" y="90" width="490" height="24" uuid="518a33b0-2696-4f4d-b1bf-9141eec959da"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ข้าพเจ้า  "+$F{docname}+"  แพทย์ปริญญาแผนปัจจุบัน ชั้น 1 สาขาเวชกรรม "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-17" positionType="Float" x="2" y="182" width="213" height="24" isPrintWhenDetailOverflows="true" uuid="0361f4a0-2ebc-49d0-874a-098a02cbb342"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เห็นว่าควรให้หยุดพักผ่อนเป็นจำนวน  "+$F{daystopwork}+" วัน ตั้งแต่ "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Report" pattern="วันที่  d  MMMMM   พ.ศ. yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" positionType="Float" x="269" y="47" width="265" height="24" uuid="997a7c04-f63b-4db4-912d-d047caba180f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{vdate}.valueOf($F{vdate_f})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-22" positionType="Float" x="2" y="113" width="532" height="24" uuid="14a0f2d6-ad89-42be-b7dd-8108db4f0965"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขทะเบียนใบประกอบโรคศิลป์  "+$F{noofoccupation}]]></textFieldExpression>
+			</textField>
+			<textField pattern="วันที่ d  MMMMM พ.ศ.yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-23" positionType="Float" x="216" y="182" width="142" height="24" uuid="418d2ad3-3a20-42d6-ba83-2aedced704af"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateStopStart}.valueOf($F{dateStopStart_f})]]></textFieldExpression>
+			</textField>
+			<textField pattern="ถึง วันที่ d MMMMM พ.ศ.yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-24" positionType="Float" x="380" y="182" width="155" height="24" uuid="0d106efa-0bcf-4984-a5f3-13ee130a844d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateStopEnd}.valueOf($F{dateStopEnd_f})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-25" positionType="Float" x="269" y="6" width="265" height="19" uuid="0d6f51ba-2cee-475e-853b-2183d01e5ec5"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{H1}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-26" positionType="Float" x="269" y="26" width="265" height="19" uuid="075741d6-c94a-40b1-9e1e-1c2e2fed4a87"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{H2}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement isPrintRepeatedValues="false" x="358" y="182" width="22" height="24" uuid="19f13d81-d4b6-4697-8fe7-9a6f58ed5818"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ถึง]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="157" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-9" x="191" y="131" width="286" height="26" uuid="2fa25896-6e38-4b0d-bbda-82e25d2ce7cb"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["แพทย์ผู้ตรวจ"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-11" x="190" y="107" width="287" height="23" uuid="3867be93-d2fd-4bb2-8859-88a40890a025"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["( "+$F{docname}+" )"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-18" x="192" y="77" width="286" height="26" uuid="27ef7e87-0316-484c-8db6-6d1162231f94"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["..................................................................."]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

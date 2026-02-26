@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FamilyFolder_delivery_sub1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="p_pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["06096"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pid" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["11"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["D:\\myireport\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT
+     date_format(visitancpregnancy.`edc`,'%Y-%m-%d')AS visitancpregnancy_edc,
+     date_format(visitancpregnancy.`lmp`,'%Y-%m-%d')AS visitancpregnancy_lmp,
+     date_format(visitancdeliver.`datedeliver`,'%Y-%m-%d')AS visitancdeliver_datedeliver,
+     floor(datediff(datedeliver,lmp)/7)AS pregagewks,
+     datediff(datedeliver,lmp)%7 AS pregagedays,
+     visitancdeliver.`operater` AS visitancdeliver_operater,
+     visitancdeliver.`delivertime` AS visitancdeliver_delivertime,
+     CASE visitancdeliver.`deliverresult` WHEN 'ช'THEN 'ปกติ(เกิดมีชีพ)'WHEN 'ท'THEN 'แท้ง'WHEN 'ต'THEN 'เกิดไร้ชีพ)'END AS visitancdeliver_deliverresult,
+     visitancdeliver.`deliverend` AS visitancdeliver_deliverend,
+     CASE visitancdeliver.`delivertype` WHEN '1' THEN 'ปกติ' WHEN '2' THEN 'ผ่า' WHEN '3' THEN 'ดูด' WHEN '4' THEN 'คีบ' END AS visitancdeliver_delivertype,
+     CASE visitancdeliver.`deliverplace` WHEN '1'THEN 'ในสถานบริการ'WHEN '2'THEN 'นอกสถานบริการ'END AS visitancdeliver_deliverplace,
+     visitancdeliver.`dateappointcare` AS visitancdeliver_dateappointcare,
+     visitancdeliver.`signabnormalanc` AS visitancdeliver_signabnormalanc,
+     visitancdeliver.`signabnormaldeliver` AS visitancdeliver_signabnormaldeliver,
+     visitancdeliver.`hosservice` AS visitancdeliver_hosservice,
+     visitancpregnancy.`pregno` AS visitancpregnancy_pregno,
+     hosname,
+     visitancdeliverchild.`childposition` AS visitancdeliverchild_childposition,
+     CASE visitancdeliverchild.`delivertype` WHEN '1' THEN 'ปกติ' WHEN '2' THEN 'ผ่า' WHEN '3' THEN 'ดูด' WHEN '4' THEN 'คีบ' END AS visitancdeliverchild_delivertype,
+     CASE visitancdeliverchild.`deliverresult` WHEN 'ช'THEN 'ปกติ(เกิดมีชีพ)'WHEN 'ท'THEN 'แท้ง'WHEN 'ต'THEN 'เกิดไร้ชีพ)'END AS visitancdeliverchild_deliverresult,
+     visitancdeliverchild.`weight` AS visitancdeliverchild_weight,
+     visitancdeliverchild.`tall` AS visitancdeliverchild_tall,
+     visitancdeliverchild.`headcycle` AS visitancdeliverchild_headcycle,
+     visitancdeliverchild.`a1` AS visitancdeliverchild_a1,
+     visitancdeliverchild.`p1` AS visitancdeliverchild_p1,
+     visitancdeliverchild.`g1` AS visitancdeliverchild_g1,
+     visitancdeliverchild.`x1` AS visitancdeliverchild_x1,
+     visitancdeliverchild.`r1` AS visitancdeliverchild_r1,
+     visitancdeliverchild.`a5` AS visitancdeliverchild_a5,
+     visitancdeliverchild.`p5` AS visitancdeliverchild_p5,
+     visitancdeliverchild.`g5` AS visitancdeliverchild_g5,
+     visitancdeliverchild.`x5` AS visitancdeliverchild_x5,
+     visitancdeliverchild.`r5` AS visitancdeliverchild_r5,
+     visitancdeliverchild.`deliverplace` AS visitancdeliverchild_deliverplace,
+     visitancdeliverchild.`asphyxia` AS visitancdeliverchild_asphyxia,
+     visitancdeliverchild.`childhealth` AS visitancdeliverchild_childhealth,
+     visitancdeliverchild.`vitamink` AS visitancdeliverchild_vitamink,
+     person.`sex` AS person_sex,
+     visitancdeliverchild.`pcucodechild` AS visitancdeliverchild_pcucodechild,
+     visitancdeliverchild.`pidchild` AS visitancdeliverchild_pidchild
+FROM
+     `visitancpregnancy` visitancpregnancy INNER JOIN `visitancdeliver` visitancdeliver ON visitancpregnancy.`pcucodeperson` = visitancdeliver.`pcucodeperson`
+     AND visitancpregnancy.`pid` = visitancdeliver.`pid`
+     AND visitancpregnancy.`pregno` = visitancdeliver.`pregno`
+     LEFT OUTER JOIN `chospital` chospital ON visitancdeliver.`hosservice` = chospital.`hoscode`
+     INNER JOIN `visitancdeliverchild` visitancdeliverchild ON visitancdeliver.`pcucodeperson` = visitancdeliverchild.`pcucodeperson`
+     AND visitancdeliver.`pid` = visitancdeliverchild.`pid`
+     AND visitancdeliver.`pregno` = visitancdeliverchild.`pregno`
+     INNER JOIN `person` person ON visitancdeliverchild.`pcucodechild` = person.`pcucodeperson`
+     AND person.`pid` = visitancdeliverchild.`pidchild`
+WHERE
+     visitancpregnancy.pcucodeperson = '$P!{p_pcucode}'
+ AND visitancpregnancy.pid = '$P!{p_pid}'
+ORDER BY
+     visitancdeliver.`pregno` ASC]]></queryString>
+
+	<field name="visitancdeliverchild_weight" class="java.lang.Double"/>
+	<field name="visitancdeliverchild_tall" class="java.lang.Double"/>
+	<field name="visitancdeliverchild_headcycle" class="java.lang.Double"/>
+	<field name="visitancpregnancy_pregno" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_a1" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_p1" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_g1" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_x1" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_r1" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_a5" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_p5" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_g5" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_x5" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_deliverplace" class="java.lang.Integer"/>
+	<field name="visitancdeliverchild_pidchild" class="java.lang.Integer"/>
+	<field name="pregagewks" class="java.lang.Long"/>
+	<field name="pregagedays" class="java.lang.Long"/>
+	<field name="visitancpregnancy_edc" class="java.lang.String"/>
+	<field name="visitancpregnancy_lmp" class="java.lang.String"/>
+	<field name="visitancdeliver_datedeliver" class="java.lang.String"/>
+	<field name="visitancdeliver_operater" class="java.lang.String"/>
+	<field name="visitancdeliver_deliverresult" class="java.lang.String"/>
+	<field name="visitancdeliver_deliverend" class="java.lang.String"/>
+	<field name="visitancdeliver_delivertype" class="java.lang.String"/>
+	<field name="visitancdeliver_deliverplace" class="java.lang.String"/>
+	<field name="visitancdeliver_signabnormalanc" class="java.lang.String"/>
+	<field name="visitancdeliver_signabnormaldeliver" class="java.lang.String"/>
+	<field name="visitancdeliver_hosservice" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String"/>
+	<field name="visitancdeliverchild_childposition" class="java.lang.String"/>
+	<field name="visitancdeliverchild_delivertype" class="java.lang.String"/>
+	<field name="visitancdeliverchild_deliverresult" class="java.lang.String"/>
+	<field name="visitancdeliverchild_r5" class="java.lang.String"/>
+	<field name="visitancdeliverchild_asphyxia" class="java.lang.String"/>
+	<field name="visitancdeliverchild_childhealth" class="java.lang.String"/>
+	<field name="visitancdeliverchild_vitamink" class="java.lang.String"/>
+	<field name="person_sex" class="java.lang.String"/>
+	<field name="visitancdeliverchild_pcucodechild" class="java.lang.String"/>
+	<field name="visitancdeliver_dateappointcare" class="java.sql.Date"/>
+	<field name="visitancdeliver_delivertime" class="java.sql.Time"/>
+
+
+		<group  name="baby" >
+			<groupExpression><![CDATA[$F{visitancdeliverchild_pcucodechild}+$F{visitancdeliverchild_pidchild}]]></groupExpression>
+			<groupHeader>
+			<band height="72"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="229"
+						y="5"
+						width="225"
+						height="22"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[สถานที่คลอด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="10"
+						y="5"
+						width="48"
+						height="22"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ครรภ์ที่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="58"
+						y="5"
+						width="88"
+						height="22"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[อายุครรภ์]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="146"
+						y="5"
+						width="78"
+						height="22"
+						key="staticText-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ผลการคลอด]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="3"
+						y="25"
+						width="531"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="146"
+						y="27"
+						width="83"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{visitancdeliver_deliverresult}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="10"
+						y="27"
+						width="43"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{visitancpregnancy_pregno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="58"
+						y="27"
+						width="88"
+						height="18"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{pregagewks}.toString()+" สัปดาห์ "+$F{pregagedays}.toString() +" วัน"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="229"
+						y="27"
+						width="294"
+						height="18"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{visitancdeliver_deliverplace}+" "+$F{hosname}==null?"":$F{hosname}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="87"
+						y="50"
+						width="66"
+						height="22"
+						key="staticText-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วิธีคลอด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="224"
+						y="50"
+						width="54"
+						height="22"
+						key="staticText-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[เพศทารก]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="278"
+						y="50"
+						width="61"
+						height="22"
+						key="staticText-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[น้ำหนัก(กรัม,)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="339"
+						y="50"
+						width="34"
+						height="22"
+						key="staticText-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ยาว(ซม)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="373"
+						y="50"
+						width="59"
+						height="22"
+						key="staticText-15"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[รอบศีรษะ(ซม)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="432"
+						y="50"
+						width="35"
+						height="22"
+						key="staticText-16"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[Apgar1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="467"
+						y="50"
+						width="33"
+						height="22"
+						key="staticText-17"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[Apgar2]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="46"
+						y="50"
+						width="25"
+						height="22"
+						key="staticText-18"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ลำดับที่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="158"
+						y="50"
+						width="58"
+						height="22"
+						key="staticText-19"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ผลการคลอด]]></text>
+				</staticText>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="false" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="278"
+						y="0"
+						width="46"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{visitancdeliverchild_weight}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="339"
+						y="0"
+						width="25"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{visitancdeliverchild_tall}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="385"
+						y="0"
+						width="34"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{visitancdeliverchild_headcycle}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="235"
+						y="0"
+						width="32"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{person_sex}.equals( "1" )?"ชาย":"หญิง"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="87"
+						y="0"
+						width="66"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{visitancdeliverchild_delivertype}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="43"
+						y="0"
+						width="19"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{baby_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="439"
+						y="0"
+						width="20"
+						height="18"
+						key="textField-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[new java.lang.Integer(  
+($F{visitancdeliverchild_a1}.intValue()) 
++($F{visitancdeliverchild_p1}.intValue()) 
++($F{visitancdeliverchild_g1}.intValue()) 
++($F{visitancdeliverchild_x1}.intValue()) 
+)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="467"
+						y="0"
+						width="25"
+						height="18"
+						key="textField-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[new java.lang.Integer(  
+($F{visitancdeliverchild_a5}.intValue()) 
++($F{visitancdeliverchild_p5}.intValue()) 
++($F{visitancdeliverchild_g5}.intValue()) 
++($F{visitancdeliverchild_x5}.intValue()) 
+)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="158"
+						y="0"
+						width="66"
+						height="18"
+						key="textField-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{visitancdeliverchild_deliverresult}==null?"-":$F{visitancdeliverchild_deliverresult}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

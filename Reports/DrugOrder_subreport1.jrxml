@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DrugOrder_subreport1" pageWidth="535" pageHeight="802" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="6a4cd0da-54d7-4f94-add0-6c2bdf6250a4">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="visitno" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT
+     concat(if(dxtype is null or trim(dxtype)='','( )',concat('(',dxtype,')')),'-',diseasecode,' - ',cdisease.`diseasenamethai`) AS cdisease_diseasenamethai
+FROM
+`visitdiag` visitdiag
+     INNER JOIN `cdisease` cdisease ON visitdiag.`diagcode` = cdisease.`diseasecode`
+
+WHERE
+     visitdiag.`visitno` = $P{visitno} AND Lcase(left(diagcode,1))<>'z' and visitdiag.pcucode = $P{pcucode}
+order by visitdiag.dxtype]]>
+	</queryString>
+	<field name="cdisease_diseasenamethai" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="15" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="535" height="15" forecolor="#0000FF" uuid="3cd5cd1c-87b0-40e5-894d-de00de54f941"/>
+				<textElement>
+					<font fontName="Tahoma" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[วินิจฉัย: ค่าในวงเล็บหน้ารหัสโรค(ถ้ามีฯ) => 01 คือ Principle Dx ,04 คือ Other ,05 คือ External Cause]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="17" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="0" y="0" width="535" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="fea3e4cc-50c7-426e-8cee-a06d1dc3d5f4"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}+". "+ $F{cdisease_diseasenamethai}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

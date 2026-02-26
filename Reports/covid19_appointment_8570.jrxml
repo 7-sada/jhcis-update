@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="covid19_appointment_8570" pageWidth="240" pageHeight="198" orientation="Landscape" columnWidth="212" leftMargin="14" rightMargin="14" topMargin="14" bottomMargin="14" uuid="bda8716e-35c3-487f-b169-85966e77b690">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="2.5937424601000028"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="offAddress" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="person" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="_pid" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select ch.hosname as hosname1
+,va.pid
+,p.prename
+,IFNULL(ct1.titlename,'คุณ') as titlename
+,p.fname
+,IFNULL(p.lname,'') AS lname
+,va.vaccinecode
+,if(va.vaccinecode = 'COVID19-1',
+'นัดฉีดวัคซีน  Covid-19 เข็มที่ 1',
+if(va.vaccinecode = 'COVID19-2',
+'นัดฉีดวัคซีน  Covid-19 เข็มที่ 2','นัดฉีดวัคซีน  Covid-19 เข็มที่ 3')
+) as apporeason
+,va.dateappoint
+,date_format(va.dateappoint,'%d') as dd_appo,
+(case when date_format(va.dateappoint,'%m') = '01' then 'ม.ค.'
+when date_format(va.dateappoint,'%m') = '02' then 'ก.พ.'
+when date_format(va.dateappoint,'%m') = '03' then 'มี.ค.'
+when date_format(va.dateappoint,'%m') = '04' then 'เม.ษ.'
+when date_format(va.dateappoint,'%m') = '05' then 'พ.ค.'
+when date_format(va.dateappoint,'%m') = '06' then 'มิ.ย.'
+when date_format(va.dateappoint,'%m') = '07' then 'ก.ค.'
+when date_format(va.dateappoint,'%m') = '08' then 'ส.ค.'
+when date_format(va.dateappoint,'%m') = '09' then 'ก.ย.'
+when date_format(va.dateappoint,'%m') = '10' then 'ต.ค.'
+when date_format(va.dateappoint,'%m') = '11' then 'พ.ย.'
+when date_format(va.dateappoint,'%m') = '12' then 'ธ.ค.'
+else 'n/a' end) as mm_appo
+,substring((date_format(va.dateappoint,'%Y')+543),3,2) as yy_appo
+,IFNULL(va.hoscodeappoint,'ไม่ระบุ') as hoscodeappoint
+,IFNULL(h.hosname,'ไม่ระบุ') as hosname_appo
+,IFNULL(va.userappoint,'ไม่ระบุ') as userappoint
+,u.prename
+,IFNULL(ct.titlename,'ไม่ระบุ') as titilapp
+,IFNULL(u.fname,'ไม่ระบุ') as nameappo
+,IFNULL(u.lname,'ไม่ระบุ') as lnameapp
+,IFNULL(va.manufacturer,'ไม่ระบุ') as manufacturer
+,IFNULL(va.preparebeforeinj,'ไม่ระบุ') as preparebeforeinj
+,IFNULL(vm.manufac_name,'ไม่ระบุ') as manufac_name
+from visitepiappoint va
+left join ccovid19_vaccinemanufac vm on(va.manufacturer = vm.manufac_vcodeprefix)
+left join person p on (va.pid = p.pid and va.pcucodeperson = p.pcucodeperson)
+left join ctitle ct1 on (p.prename = ct1.titlecode)
+left join chospital h on (va.hoscodeappoint = h.hoscode)
+left join chospital ch on (va.pcucodeperson = ch.hoscode)
+left join user u on (va.userappoint = u.username)
+left join ctitle ct on (u.prename = ct.titlecode)
+where ucase(va.vaccinecode) in  ('COVID19-1','COVID19-2','COVID19-3')
+and va.pid =  $P{_pid}
+order by va.dateappoint]]>
+	</queryString>
+	<field name="hosname1" class="java.lang.String"/>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="prename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="titlename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vaccinecode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="apporeason" class="java.lang.String"/>
+	<field name="dateappoint" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dd_appo" class="java.lang.String"/>
+	<field name="mm_appo" class="java.lang.String"/>
+	<field name="yy_appo" class="java.lang.Object"/>
+	<field name="hoscodeappoint" class="java.lang.String">
+		<fieldDescription><![CDATA[สถานบริการที่นัดฉีดวัคซีนโควิด-19(และวัคซีนอื่นๆ)]]></fieldDescription>
+	</field>
+	<field name="hosname_appo" class="java.lang.String"/>
+	<field name="userappoint" class="java.lang.String">
+		<fieldDescription><![CDATA[แพทย์ หรือ จนท. ผู้นัดฯ]]></fieldDescription>
+	</field>
+	<field name="titilapp" class="java.lang.String"/>
+	<field name="nameappo" class="java.lang.String"/>
+	<field name="lnameapp" class="java.lang.String"/>
+	<field name="manufacturer" class="java.lang.String">
+		<fieldDescription><![CDATA[รหัสบริษัทฯ Ref. ccovid19_vaccinemanufac]]></fieldDescription>
+	</field>
+	<field name="preparebeforeinj" class="java.lang.String">
+		<fieldDescription><![CDATA[ข้อปฏิบัติก่อนมารับการฉีดวัคซีนฯ]]></fieldDescription>
+	</field>
+	<field name="manufac_name" class="java.lang.String">
+		<fieldDescription><![CDATA[ชื่อบริษัทผู้ผลิต]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="126" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="0" width="212" height="13" uuid="a23da065-946b-4127-b718-3eb7ad2039a0"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["บัตร"+$F{apporeason}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="13" width="212" height="13" uuid="efea64c2-4e54-43f6-9474-fca7e76a0da3"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รพ.ที่ออกใบนัด : "+$F{hosname1}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="วดป ที่นัด  dd MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="26" width="212" height="13" uuid="b6adead7-bb94-458d-a884-ca85a3d3eb86"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["HN : "+$F{pid}+" ชื่อ-สกุล :"+$F{titlename}+$F{fname}+" "+$F{lname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="วดป ที่นัด  dd MMMMM yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="41" width="212" height="13" uuid="132244a4-b01e-465d-8a57-b22aeea2103f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วดป.ที่นัด "+$F{dd_appo}+" "+$F{mm_appo}+" "+$F{yy_appo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="67" width="212" height="13" uuid="500634ea-8493-419a-8dc9-05a28b258bfe"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รพ.ที่นัด : "+$F{hosname_appo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="80" width="212" height="13" uuid="67605ae1-0956-4e34-9e74-a66cc1ce32f7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["สิ่งที่ต้องปฏิบัติ:"+$F{preparebeforeinj}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="93" width="212" height="13" uuid="7589c38b-cfe2-440d-9525-671da66cbe56"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ผู้นัด : "+$F{titilapp}+$F{nameappo}+" "+$F{lnameapp}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" positionType="Float" x="0" y="54" width="212" height="13" uuid="833fdf5f-075b-4b40-b14f-2177681257ba"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วัคซีนที่นัดฉีด : "+$F{manufac_name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

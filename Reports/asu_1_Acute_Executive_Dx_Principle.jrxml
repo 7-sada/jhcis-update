@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="asu_1_Acute_Executive_Dx_Show" pageWidth="863" pageHeight="595" orientation="Landscape" columnWidth="823" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="73d96595-31b2-493f-a13a-a0c3807476c4">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="offAddress" class="java.lang.String"/>
+	<parameter name="p_d1" class="java.lang.String"/>
+	<parameter name="p_d2" class="java.lang.String"/>
+	<parameter name="p_dBetween" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT q1.*,q2.d24,IFNULL(q2.dn,'.. ไม่ใช้ยาปฏิชีวนะ ..') dn
+FROM
+(SELECT IF(dxtype='01','โรคหลัก' ,CONCAT('มิใช่โรคหลัก( ',dxtype,')')) dxt
+,v.pcucode ,v.visitno,v.pid HN
+,DATE_FORMAT(visitdate, "%Y-%m-%d") as vd,v.visitdate
+,d1.diagcode ICD10,diseasename
+FROM visitdiag d1 JOIN visit v ON d1.pcucode=v.pcucode AND d1.visitno=v.visitno
+JOIN _tmp_asu_acute_uri d2 ON d1.diagcode=d2.icd10acui
+JOIN cdisease cd ON d1.diagcode=cd.diseasecode
+WHERE LCASE(LEFT(d2.icd10acui,1)) IN('a','k')
+  AND dxtype='01'
+  AND v.visitdate BETWEEN $P{p_d1} AND $P{p_d2}
+ORDER BY dxtype,(v.visitdate),v.visitno) AS q1
+LEFT JOIN
+(SELECT v.pcucode,v.visitno,ifnull(drugcode24,'-') d24 ,drugname dn FROM visitdrug d1
+JOIN visit v ON d1.pcucode=v.pcucode AND d1.visitno=v.visitno
+JOIN cdrug d2 ON d1.drugcode=d2.drugcode
+WHERE v.visitdate BETWEEN $P{p_d1} AND $P{p_d2}
+  AND d2.antibio='1') AS q2
+ON q1.pcucode=q2.pcucode AND q1.visitno=q2.visitno]]>
+	</queryString>
+	<field name="dxt" class="java.lang.String"/>
+	<field name="pcucode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="HN" class="java.lang.Integer"/>
+	<field name="visitdate" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vd" class="java.lang.String"/>
+	<field name="ICD10" class="java.lang.String"/>
+	<field name="diseasename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="d24" class="java.lang.String"/>
+	<field name="dn" class="java.lang.String"/>
+	<variable name="sumTotA" class="java.lang.Long" calculation="Count">
+		<variableExpression><![CDATA[$F{HN}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="66" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ba2b2695-1fac-4b8e-b3c8-8a20c1be2a38" key="textField-1" x="0" y="0" width="555" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{offAddress}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="c835a6e6-409c-4785-b7e4-26fb2988700d" key="textField" x="488" y="36" width="255" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="59a9b01e-8a65-4d52-93b5-3214f8c5d83b" key="staticText-1" x="0" y="18" width="743" height="19"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[รายงานการการวินิจฉัยโรคกลุ่มโรค Acute Diarrhea ที่ได้รับหรือไม่ได้ได้รับยาปฏิชีวนะ: [เฉพาะที่ระบุเป็นโรคหลัก (Principle Dx)]]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a4bc3248-68d9-42b9-a359-a8a96687da59" key="textField-1" x="0" y="36" width="356" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{p_dBetween}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="7020a3bf-8b29-4a0a-b74d-fa60c3ed31c7" key="staticText-1" x="356" y="36" width="129" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[วันที่ประมวลผลรายงาน: ]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="e0bf4398-0919-4766-8b12-ac12e60f53b8" x="0" y="55" width="636" height="4"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="16" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="34" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="d79a1e4a-653b-487d-b601-17fe9ddb6b7f" mode="Transparent" x="0" y="0" width="88" height="32" forecolor="#FFFFFF" backcolor="#CCFFCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[โรคหลัก / หรือมิใช่โรคหลัก]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3e39f233-6d7d-4307-a0d1-2e5281dec457" x="88" y="16" width="58" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[HN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="77fcd5fd-e844-4c34-9b83-bf55aa4f5e5d" x="146" y="16" width="79" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[วันที่รับบริการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="119aac23-ebff-4249-a664-3496d77ae70d" x="225" y="16" width="51" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[ICD 10]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d182993a-f9cc-40ed-aaba-ca9844fc14db" x="623" y="16" width="189" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[ชื่อยา]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3adffc8f-961a-4c22-9653-98f169f9b097" x="487" y="16" width="136" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[รหัสยา 24 หลัก]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5487072e-12bd-4cfa-958c-47ee9d8390df" x="277" y="16" width="208" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<text><![CDATA[ชื่อโรค]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="036766a6-2af2-41ef-94e1-1c3934a52df5" x="0" y="33" width="812" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="71964d6b-899a-401c-aa01-36aaf39e4bac" x="487" y="1" width="1" height="32"/>
+			</line>
+			<line>
+				<reportElement uuid="c3459bf6-12cb-4ef0-b944-978a0c5f3195" mode="Transparent" x="0" y="0" width="636" height="2"/>
+			</line>
+			<line>
+				<reportElement uuid="dc518c98-4a0f-4b0f-b876-eca7805b8f05" x="88" y="0" width="1" height="32"/>
+			</line>
+			<line>
+				<reportElement uuid="20631ea9-8403-4b04-b02d-44e703ca6c52" x="89" y="17" width="723" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="79a34b93-f124-4ebd-a6d6-309a7a754a73" x="225" y="2" width="1" height="32"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField>
+				<reportElement uuid="9de7f1d4-0fbf-4679-b8aa-e7cb68ff7cb3" mode="Transparent" x="0" y="0" width="88" height="18" forecolor="#FFFFFF" backcolor="#CCFFCC"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dxt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="d96d1b89-e207-4d27-8a29-9566c901ace1" isPrintRepeatedValues="false" x="90" y="0" width="57" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{HN}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="545387cb-2f56-451a-a9ea-0b5c98070385" x="146" y="0" width="79" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitdate}.valueOf($F{vd})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="bd9d506c-15a1-4188-a49b-6970883c98bb" x="225" y="0" width="51" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ICD10}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a2b5f90e-1843-46e2-af12-df079d4b3756" x="487" y="0" width="136" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d24}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8009b942-65fe-4eba-b2e2-597d51bfe05b" x="277" y="0" width="208" height="18"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{diseasename}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="5dca38c8-7ca8-4d61-88ae-d349cc05f1ad" x="623" y="0" width="188" height="18"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dn}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement uuid="6db5d967-6b83-4039-96b3-848914c98fc7" x="487" y="1" width="1" height="18"/>
+			</line>
+			<line>
+				<reportElement uuid="fd269acb-4254-4940-81e9-898eb1e03fc5" x="0" y="18" width="812" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="2cd93301-48be-4e8d-be53-52fa5962b037" x="88" y="0" width="1" height="18"/>
+			</line>
+			<line>
+				<reportElement uuid="c7f41409-0dd9-48ba-a4fc-ed80e109c4d4" x="225" y="1" width="1" height="18"/>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="15" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="14" splitType="Stretch"/>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="15"/>
+	</lastPageFooter>
+	<summary>
+		<band height="29" splitType="Stretch">
+			<textField pattern="#,##0">
+				<reportElement uuid="e4902a5c-4cb3-479a-8384-d21642e853e8" x="90" y="0" width="57" height="20" forecolor="#0000CC"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$V{sumTotA}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="73a67433-1b6d-42ce-b14d-f3c8ff5083e2" x="16" y="0" width="73" height="20" forecolor="#0000CC"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[รวม:]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

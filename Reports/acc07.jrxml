@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="acc07" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="1f3de371-b562-4038-988c-078c0db5c571">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="datespec" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2012-04-04"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["C:\\jhcis\\Reports\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["15009"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="repn" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["..."]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT person.pid, concat( ifnull(titlename,ifnull(person.prename,'...')) ," ", fname," ", lname) fname,
+birth ,DATE_FORMAT(birth,'%Y-%m-%d') as d , CONVERT(CONCAT(getAgeYearNum(person.birth,CAST('2012-04-03' AS DATE)),' ปี ',
+getAgeMonthNum(person.birth,CAST('2012-04-03' AS DATE)),' เดือน ',
+getAgeDayNum(person.birth,CAST('2012-04-03' AS DATE)),' วัน ') USING utf8) AS age_ymd,if(deliverresult='ท',
+CONVERT(CONCAT(visitanc.pregno,'(แท้ง)') USING utf8),convert(visitancpregnancy.pregno USING utf8)) as abort,
+lmp,
+
+DATE_ADD(lmp, INTERVAL 40 week ) as edc , round(DATEDIFF(cast($P{datespec} as date),lmp) /7) as pregage,
+hnomoi,mumoi,villname
+FROM person  left join ctitle on person.prename = titlecode
+left join visitanc on (person.pid = visitanc.pid  and person.pcucodeperson = visitanc.pcucodeperson)
+left join visitancpregnancy on (visitancpregnancy.pid = person.pid and
+                                visitancpregnancy.pcucodeperson = person.pcucodeperson )
+join house on (person.hcode = house.hcode and person.pcucodeperson = house.pcucode )
+join village on (house.villcode = village.villcode and house.pcucode = village.pcucode )
+left join visitancdeliver on visitancpregnancy.pcucodeperson = visitancdeliver.pcucodeperson AND
+                             visitancpregnancy.pid = visitancdeliver.pid AND
+                             visitancpregnancy.pregno = visitancdeliver.pregno
+WHERE person.pcucodeperson ='15009'  and (DATEDIFF("2012-04-03",lmp) between 0 and 280)
+                                     and Right(house.villcode,2)<> '00'
+                                     and 1=1
+                                     and person.pid NOT IN (SELECT persondeath.pid
+                                                            FROM persondeath
+                                                            WHERE person.pid = persondeath.pid and
+                                                                  person.pcucodeperson = persondeath.pcucodeperson and
+(persondeath.deaddate IS NULL OR persondeath.deaddate<='2012-04-03'))   GROUP BY person.pid]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="fname" class="java.lang.String"/>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="d" class="java.lang.String"/>
+	<field name="age_ymd" class="java.lang.String"/>
+	<field name="abort" class="java.lang.String"/>
+	<field name="lmp" class="java.sql.Date"/>
+	<field name="edc" class="java.sql.Date"/>
+	<field name="pregage" class="java.math.BigDecimal"/>
+	<field name="hnomoi" class="java.lang.String"/>
+	<field name="mumoi" class="java.lang.String"/>
+	<field name="villname" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="50" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="aec4d28e-6598-4746-ac39-f52ae02105ff" key="textField-1" x="266" y="10" width="138" height="27"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รายงาน( "+$P{repn}+" )"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="50" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="42" splitType="Stretch">
+			<subreport isUsingCache="true">
+				<reportElement uuid="b8226839-b409-471e-a1e4-ba2a10557aef" key="subreport-1" x="27" y="6" width="542" height="28"/>
+				<subreportParameter name="pcucode">
+					<subreportParameterExpression><![CDATA[$P{pcucode}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "officeaddress_1line.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="5cc3a271-774f-4aa9-90c1-65b93f17f2c9" key="textField" x="14" y="2" width="55" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{pid}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="203a92a5-c198-4c7f-a421-4a11eaa92772" key="textField" x="75" y="2" width="138" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{fname}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd-MMM-yyyy" isBlankWhenNull="false">
+				<reportElement uuid="4153e242-2829-41a4-b351-ab4de5d81b8b" key="textField" x="343" y="2" width="122" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement/>
+				<textFieldExpression><![CDATA[SetupNu.getDateThaiMonth($F{birth},"d MMM yyyy")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="d8c4992e-bc4e-4f08-83fa-5499ce176d1f" key="textField" x="470" y="2" width="68" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{age_ymd}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="48765301-1246-4765-af53-d5eb7993b6c4" key="textField" x="544" y="2" width="54" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{lmp}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="2c8b1be3-fe53-4c1a-8a06-66b70e371605" key="textField" x="222" y="2" width="100" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{birth}.valueOf($F{d})]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="30" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="50" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="e627c7d6-ce1e-4d25-bb38-7fa08f141299" x="242" y="14" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[XXXXX..]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="50" splitType="Stretch"/>
+	</lastPageFooter>
+	<summary>
+		<band height="50" splitType="Stretch"/>
+	</summary>
+</jasperReport>

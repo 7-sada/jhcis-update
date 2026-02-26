@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="acc07"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="datespec" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2012-04-04"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["C:\\jhcis\\Reports\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["15009"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT person.pid, concat( ifnull(titlename,ifnull(person.prename,'...')) ," ", fname," ", lname) fname,
+DATE_FORMAT(birth,'%Y-%m-%d'), CONVERT(CONCAT(getAgeYearNum(person.birth,CAST('2012-04-03' AS DATE)),' ปี ',     
+getAgeMonthNum(person.birth,CAST('2012-04-03' AS DATE)),' เดือน ',     
+getAgeDayNum(person.birth,CAST('2012-04-03' AS DATE)),' วัน ') USING utf8) AS age_ymd,if(deliverresult='ท',
+CONVERT(CONCAT(visitanc.pregno,'(แท้ง)') USING utf8),convert(visitancpregnancy.pregno USING utf8)) as abort, 
+lmp,
+
+DATE_ADD(lmp, INTERVAL 40 week ) as edc , round(DATEDIFF(cast($P{datespec} as date),lmp) /7) as pregage,  
+hnomoi,mumoi,villname  
+FROM person  left join ctitle on person.prename = titlecode  
+left join visitanc on (person.pid = visitanc.pid  and person.pcucodeperson = visitanc.pcucodeperson)  
+left join visitancpregnancy on (visitancpregnancy.pid = person.pid and 
+                                visitancpregnancy.pcucodeperson = person.pcucodeperson ) 
+join house on (person.hcode = house.hcode and person.pcucodeperson = house.pcucode )  
+join village on (house.villcode = village.villcode and house.pcucode = village.pcucode )  
+left join visitancdeliver on visitancpregnancy.pcucodeperson = visitancdeliver.pcucodeperson AND 
+                             visitancpregnancy.pid = visitancdeliver.pid AND 
+                             visitancpregnancy.pregno = visitancdeliver.pregno  
+WHERE person.pcucodeperson ='15009'  and (DATEDIFF("2012-04-03",lmp) between 0 and 280)  
+                                     and Right(house.villcode,2)<> '00'  
+                                     and 1=1  
+                                     and person.pid NOT IN (SELECT persondeath.pid 
+                                                            FROM persondeath 
+                                                            WHERE person.pid = persondeath.pid and 
+                                                                  person.pcucodeperson = persondeath.pcucodeperson and 
+(persondeath.deaddate IS NULL OR persondeath.deaddate<='2012-04-03'))   GROUP BY person.pid]]></queryString>
+
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="fname" class="java.lang.String"/>
+	<field name="DATE_FORMAT(birth,'%Y-%m-%d')" class="java.lang.String"/>
+	<field name="age_ymd" class="java.lang.String"/>
+	<field name="abort" class="java.lang.String"/>
+	<field name="lmp" class="java.sql.Date"/>
+	<field name="edc" class="java.sql.Date"/>
+	<field name="pregage" class="java.math.BigDecimal"/>
+	<field name="hnomoi" class="java.lang.String"/>
+	<field name="mumoi" class="java.lang.String"/>
+	<field name="villname" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="42"  isSplitAllowed="true" >
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="27"
+						y="6"
+						width="542"
+						height="28"
+						key="subreport-1"/>
+					<subreportParameter  name="pcucode">
+						<subreportParameterExpression><![CDATA[$P{pcucode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "officeaddress_1line.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="14"
+						y="2"
+						width="55"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{pid}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="75"
+						y="2"
+						width="138"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{fname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="220"
+						y="2"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DATE_FORMAT(birth,'%Y-%m-%d')}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="325"
+						y="2"
+						width="68"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{age_ymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="398"
+						y="2"
+						width="79"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{lmp}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Drug_NHSO2_Exclude" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="814" leftMargin="14" rightMargin="14" topMargin="20" bottomMargin="20" uuid="dbb86f61-f9c7-468d-9377-ab4e00e71343">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="DrugDetail" uuid="5625acb4-a15f-412c-92ce-061b2746e8b4">
+		<parameter name="sdate" class="java.lang.String" isForPrompting="false"/>
+		<parameter name="edate" class="java.lang.String" isForPrompting="false"/>
+		<queryString>
+			<![CDATA[select IF(v.visitdate IS NULL,'ไม่ระบุ',concat(convert(DAY(v.visitdate) using utf8),' ',
+   CASE WHEN MONTH(v.visitdate)=1 THEN 'มค.'
+   WHEN MONTH(v.visitdate)=2 THEN 'กพ.' WHEN MONTH(v.visitdate)=3 THEN 'มีค.'
+   WHEN MONTH(v.visitdate)=4 THEN 'เมย.' WHEN MONTH(v.visitdate)=5 THEN 'พค.'
+   WHEN MONTH(v.visitdate)=6 THEN 'มิย.' WHEN MONTH(v.visitdate)=7 THEN 'กค.'
+   WHEN MONTH(v.visitdate)=8 THEN 'สค' WHEN MONTH(v.visitdate)=9 THEN 'กย.'
+   WHEN MONTH(v.visitdate)=10 THEN 'ตค.' WHEN MONTH(v.visitdate)=11 THEN 'พย.'
+   WHEN MONTH(v.visitdate)=12 THEN 'ธค.' END,' ',right((year(visitdate)+543),2)))
+   as visitdate,
+vd.visitno,v.pid as HN,concat(ifnull(titlename,ifnull(p.prename,'...')) ,' ', fname,' ', lname) as name,
+p.idcard,ifnull(vd.clinic,"อายุรกรรม") as clinic,concat(d.drugname,"/",d.drugcode) as name_drugcode,r.rightname,ifnull(vd.doctor1,vd.doctor2) as doctorName,
+vd.unit as Qty,cs.unitsellname as unitname,IF(v.visitdate IS NULL,'ไม่ระบุ',concat(convert(DAY(v.visitdate) using utf8),' ',
+   CASE WHEN MONTH(v.visitdate)=1 THEN 'มค.'
+   WHEN MONTH(v.visitdate)=2 THEN 'กพ.' WHEN MONTH(v.visitdate)=3 THEN 'มีค.'
+   WHEN MONTH(v.visitdate)=4 THEN 'เมย.' WHEN MONTH(v.visitdate)=5 THEN 'พค.'
+   WHEN MONTH(v.visitdate)=6 THEN 'มิย.' WHEN MONTH(v.visitdate)=7 THEN 'กค.'
+   WHEN MONTH(v.visitdate)=8 THEN 'สค.' WHEN MONTH(v.visitdate)=9 THEN 'กย.'
+   WHEN MONTH(v.visitdate)=10 THEN 'ตค.' WHEN MONTH(v.visitdate)=11 THEN 'พย.'
+   WHEN MONTH(v.visitdate)=12 THEN 'ธค.' END,' ',right((year(visitdate)+543),2)) ) as Entry_date,
+(vd.realprice*vd.unit) as Amt
+from visitdrug vd
+join visit v on (vd.pcucode=v.pcucode and vd.visitno = v.visitno)
+LEFT join cright r on (v.rightcode = r.rightcode)
+join cdrug  d on (vd.drugcode = d.drugcode)
+LEFT JOIN cdrugunitsell cs on (d.unitsell = cs.unitsellcode)
+join person p on (v.pcucodeperson= p.pcucodeperson AND v.pid = p.pid)
+left join ctitle t on (p.prename = t.titlecode)
+where d.drugcode24 = '124846000003972121781506'
+and v.visitdate between $P{sdate} and $P{edate}]]>
+		</queryString>
+		<field name="visitdate" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="visitno" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="HN" class="java.lang.Integer"/>
+		<field name="name" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="idcard" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="clinic" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="name_drugcode" class="java.lang.String"/>
+		<field name="rightname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="doctorName" class="java.lang.String"/>
+		<field name="Qty" class="java.lang.Integer"/>
+		<field name="unitname" class="java.lang.String"/>
+		<field name="Entry_date" class="java.lang.String"/>
+		<field name="Amt" class="java.math.BigDecimal"/>
+	</subDataset>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<summary>
+		<band height="112" splitType="Stretch">
+			<componentElement>
+				<reportElement uuid="02721add-1cc3-4ad2-bd92-2e9620d59098" key="table" style="table" x="0" y="0" width="802" height="112"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="DrugDetail" uuid="a200b380-9705-4c69-83e5-a834b10a3af1">
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="30" uuid="87c32d4c-c737-418d-b782-8fc709ed0f13">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="ed542f21-02d8-4cee-9f65-896b77ea99a7" x="0" y="0" width="30" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[No.]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="2ba8f882-79c4-44ea-b9e7-a8aef92c2f1a" x="0" y="0" width="30" height="20"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="a87dad31-7a93-4b71-82ed-588999b362c6">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="50530337-f5d9-4e67-b237-e4557ef3bb7d" x="0" y="0" width="40" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<text><![CDATA[Visit Date]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="48b648f2-3417-4fb3-9c9c-efa1fdf20fad" x="0" y="0" width="40" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Bottom">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{visitdate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="bde567b5-e7d5-4cf5-8a39-50ad85e9712d">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="2d656206-0fa5-48cd-a034-799c9563b439" x="0" y="0" width="50" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<text><![CDATA[VN/AN]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="173a4a03-9b54-4f63-929a-744473792760" x="0" y="0" width="50" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{visitno}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="410d4d75-825f-4477-8271-21e8af2da3cc">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="ed138412-e6f8-4ad8-845f-2d2789af059d" x="0" y="0" width="40" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<text><![CDATA[HN]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="9ad182f0-19e0-4092-b6d4-0f17036225cd" x="0" y="0" width="40" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14" pdfEncoding="Identity-H"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{HN}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="2e3f4ba1-aa96-43b7-9242-c3943b4fbe98">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="d03643ab-4b02-490b-bfac-b55d52c54ed5" x="0" y="0" width="80" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Name]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="3cb87f47-fc05-4f82-8d4c-5744869586ef" x="0" y="0" width="80" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="8c04ace5-87df-4f94-abc6-2d9d3cdbc9eb">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="3b520938-a90d-407d-a06c-85806243165f" x="0" y="0" width="70" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[ID Card]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="e87d7a5f-af3b-49dc-aa6a-84e6ed344330" x="0" y="0" width="70" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{idcard}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="b199f17e-2a3a-4fa4-a436-4efa3fca463d">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="e3f9b02f-8ba7-48ac-8a27-cd4eb186733e" x="0" y="0" width="80" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Clinic/Ward]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="82f71e27-d6dd-4d8b-9cba-41d9f0aa3e4c" x="0" y="0" width="80" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{clinic}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="c78a9a04-e40a-4a80-99e8-b09eb5386cde">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="79e63564-c5dc-4145-8e3b-4328aa7e48fa" x="0" y="0" width="90" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[ชื่อ/รหัสยา]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="db0f4adc-0e04-49f0-9e8b-f5a40e93a991" x="0" y="0" width="90" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{name_drugcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="8bd22414-2db3-493e-8d22-d99f26f5d8ab">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="e5ffdcad-b27b-4ee7-bc3c-5b3fad3fc8ca" x="0" y="0" width="90" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[สิทธิ์]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="f2553b9f-0c0e-45d6-b005-4575f7a58593" x="0" y="0" width="90" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{rightname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="fbf4db02-caa0-42f7-a3ae-d5c5c633f68c">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="137c85db-6f75-43be-8dd9-ae8236fdca9b" x="0" y="0" width="90" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[แพทย์]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="3e5acfc9-0db7-4da0-a313-14ffbc45321a" x="0" y="0" width="90" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{doctorName}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="6afa9fbf-266c-4039-9339-07e88eea3fb0">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="5bf8f7fd-8cac-40c0-94c0-0b68954e8147" x="0" y="0" width="40" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Qty]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="36a0aeeb-e45e-4387-97a1-01ba39df55e8" x="0" y="0" width="40" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Qty}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="30" uuid="463345c8-a278-4e59-8168-8c8a96efb4ba">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="458e2c9f-c4a0-4f5f-aba2-794806b7872c" x="0" y="0" width="30" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Unit]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="620bdc87-6558-40e9-8938-d66ab060166e" x="0" y="0" width="30" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{unitname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="7af5d317-88c3-4779-a9db-666e39a1105a">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="0f941f92-4c9b-4ffd-aeb1-7c3afc8a529a" x="0" y="0" width="40" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Entry_date]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement uuid="9362211d-eb53-48b2-b534-227290742d0c" x="0" y="0" width="40" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Entry_date}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="99f2fa17-41a5-402f-a60d-df466ad3275f">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement uuid="1322e254-387c-4b5c-bc8c-74a0a1f6c02f" x="0" y="0" width="50" height="30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<text><![CDATA[Amt]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+								<reportElement uuid="26fa7e2f-5e4f-4797-9703-59c66bf475cd" x="0" y="0" width="50" height="20"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Amt}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

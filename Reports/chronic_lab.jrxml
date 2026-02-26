@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="chronic_lab" pageWidth="212" pageHeight="141" orientation="Landscape" columnWidth="212" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a98c8f46-22b4-419d-908a-927c30e3bef9">
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="SEQ" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT concat(ctitle.titlename,p.fname)as 'name',p.lname,getAgeYearNum(p.birth,v.visitdate)as age,
+DATE_FORMAT(v.visitdate,'%Y-%m-%d')as visitdate,v.visitno,v.pid
+,max(case when vc.labcode= 'CH99' then vc.labresultdigit Else null end) as HbA1C
+,max(case when vc.labcode= 'CH07' then vc.labresultdigit Else null end) as Chol
+,max(case when vc.labcode= 'CH09' then vc.labresultdigit Else null end) as Cr
+,max(case when vc.labcode= 'CH25' then vc.labresultdigit Else null end)as TG
+,max(case when vc.labcode= 'CH04' then vc.labresultdigit Else null end) as BUN
+,max(case when vc.labcode= 'CH14' then vc.labresultdigit Else null end) as HDL
+,max(case when vc.labcode= 'CH17' then vc.labresultdigit Else null end) as LDL
+,max(case when vc.labcode= 'CH22' then vc.labresultdigit Else null end) as Na
+,max(case when vc.labcode= 'CH19' then vc.labresultdigit Else null end) as K
+,max(case when vc.labcode= 'CH05' then vc.labresultdigit Else null end) as Cl
+,max(case when vc.labcode= 'CH28' then vc.labresultdigit Else null end) as CO2
+,max(case when vc.labcode= 'CHeGFR' then vc.labresultdigit Else null end) as eGFR
+,max(case when vc.labcode='MS01020201'then vc.labresultdigit Else null end) as MAU
+,vs.sugarnumdigit as FBS,max(case when  vc.labcode='MS01020202'and vc.labresultdigit = '0' then '-ve'when  vc.labcode='MS01020202' and vc.labresultdigit is not null and vc.labresultdigit = '1' then 'trace' when  vc.labcode='MS01020202' and vc.labresultdigit is not null and vc.labresultdigit ='2' then vc.labresulttext Else null end) as 'Urine Protien'
+from visit as v
+     INNER JOIN person p on v.pcucodeperson=p.pcucodeperson and v.pid=p.pid
+     INNER JOIN ctitle on p.prename=ctitle.titlecode
+     left JOIN visitlabchcyhembmsse as vc on v. pcucode=vc.pcucode and v.visitno=vc.visitno
+     left JOIN visitlabsugarblood as vs on v.pcucode=vs.pcucode and v.visitno=vs.visitno
+     left JOIN visitlabsugarurine as vp on v.pcucode=vp.pcucode and v.visitno=vp.visitNo
+WHERE v.visitno=$P{SEQ}
+
+GROUP BY v.visitno]]>
+	</queryString>
+	<field name="name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="age" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="HbA1C" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="Chol" class="java.lang.Double"/>
+	<field name="Cr" class="java.lang.Double"/>
+	<field name="TG" class="java.lang.Double"/>
+	<field name="BUN" class="java.lang.Double"/>
+	<field name="HDL" class="java.lang.Double"/>
+	<field name="LDL" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="Na" class="java.lang.Double"/>
+	<field name="K" class="java.lang.Double"/>
+	<field name="Cl" class="java.lang.Double"/>
+	<field name="CO2" class="java.lang.Double"/>
+	<field name="eGFR" class="java.lang.Double"/>
+	<field name="MAU" class="java.lang.Double"/>
+	<field name="FBS" class="java.lang.Double"/>
+	<field name="Urine Protien" class="java.lang.String"/>
+	<group name="pid">
+		<groupExpression><![CDATA[$F{pid}]]></groupExpression>
+	</group>
+	<group name="visitno">
+		<groupExpression><![CDATA[$F{visitno}]]></groupExpression>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="141" splitType="Stretch">
+			<rectangle>
+				<reportElement uuid="4856d20d-c4cb-4497-b68e-90ad888ba156" x="104" y="111" width="49" height="20"/>
+			</rectangle>
+			<staticText>
+				<reportElement uuid="0992a5a4-5fb0-4d5e-9c75-667d2f992490" x="104" y="111" width="49" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<text><![CDATA[MAU]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement uuid="9a9a04f7-2d10-4da8-8057-6879c83db5c5" x="153" y="111" width="50" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="afdbc3fc-1f26-4359-9ba7-d33db5c85ebf" x="9" y="111" width="62" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="806db32d-fab8-4308-9408-788519c42eb9" x="71" y="111" width="33" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="83f978ac-1833-449b-94be-69cfbee6c5d2" x="9" y="53" width="27" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="97df96c7-28da-4a75-9711-e21d19a0c804" x="9" y="82" width="27" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="6d6be017-af87-49fe-9202-95c395be02b2" x="36" y="53" width="20" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="f4578e98-fcc4-4519-a7e8-dfa0054c186d" x="36" y="82" width="20" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="9b5529e2-d703-499f-a8bf-0b0cf7fe72a9" x="56" y="53" width="24" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="e05c81df-36d1-4a33-9dd0-b37a948a144b" x="79" y="53" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="faf4d553-fb50-429d-a9ad-2a1497b55846" x="56" y="67" width="23" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="c4722930-1233-484b-ae6b-f424ef376d3d" x="79" y="67" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="c5f35a78-98d1-48b4-b740-70876fbd27fc" x="56" y="82" width="23" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="ff41a455-38b2-4333-9925-971254ca449c" x="79" y="82" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="a637abde-9a91-4e7b-925c-40c0ef87fd18" x="56" y="96" width="23" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="d237cfa8-af21-417e-87c6-b049bd7f6446" x="79" y="96" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="603eac3f-1f23-4eb9-9d9e-1b3d8b06c5e6" x="104" y="53" width="24" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="03f4a60e-df35-468c-9d6c-25a820f2ed02" x="128" y="53" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="783659b2-ec17-4987-87e8-d9263ad60e18" x="104" y="67" width="24" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="a6dfa689-515c-4128-9bcf-cbd232d2980a" x="128" y="67" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="59582d1d-67e0-4299-abb8-52b7749b1327" x="104" y="82" width="24" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="642dcde9-1fbf-445a-9fef-70c2332bb025" x="128" y="82" width="25" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="6376198d-b780-4f3d-95ad-42301ce06940" x="153" y="53" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="b5b3f44b-676b-464b-9abf-af203cd22ea1" x="178" y="53" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="a5b881c5-7e5c-4fac-9882-15e6287a11e8" x="153" y="67" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="06d293f3-860b-4b0b-8fd6-20db0b36b30d" x="178" y="67" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="1bdf9130-e611-44c6-903a-9d42b2d7bc0b" x="153" y="82" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="1be17c7b-a0c9-4ade-9a5e-c63f29df53f9" x="178" y="82" width="25" height="14"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="3af503f8-5f1c-48f5-baca-543f0fa48705" x="153" y="96" width="25" height="15"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="ab97f299-075d-4d43-9a13-842c08ad1f13" x="178" y="96" width="25" height="15"/>
+			</rectangle>
+			<textField>
+				<reportElement uuid="dbb83d9a-d25f-4818-bbcd-7a187f67e6ef" x="9" y="4" width="74" height="15"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อ  "+$F{name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="bde55d1b-abfe-4d54-8527-36b0ab2aa28d" x="83" y="4" width="88" height="15"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["นามสกุล "+$F{lname}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="1d934da4-04a3-4d55-8e02-bfd9c74d87aa" x="171" y="4" width="41" height="15"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อายุ "+$F{age}+" ปี"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="e389673c-e035-4434-b27e-eaa998ab721d" x="9" y="38" width="203" height="15"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[คำแนะนำ       อาหาร     ออกกำลังกาย      2Q         ยา]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement uuid="ad85e7ec-96ce-4a83-99e7-66a0ef905dcd" x="46" y="40" width="10" height="11"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="3d71cbfe-67f5-4abe-819f-6a582635177e" x="83" y="39" width="10" height="10"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="757d8f10-3a22-494c-9af5-69967f260bbb" x="141" y="39" width="11" height="11"/>
+			</rectangle>
+			<rectangle>
+				<reportElement uuid="9723e4ff-c3a2-4a24-9a6a-3b2d6656b034" x="171" y="39" width="11" height="11"/>
+			</rectangle>
+			<staticText>
+				<reportElement uuid="e3ed194b-4703-49c7-af8f-fe6d456d0785" x="9" y="52" width="27" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[FBS]]></text>
+			</staticText>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement uuid="ab5a535b-3259-4614-967f-74a64f0d3762" x="36" y="52" width="20" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{FBS}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="2d6856a8-16f7-48c6-bc5b-332a88d8297b" x="9" y="111" width="62" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Urine Protien]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="3b874b75-6c1f-4e58-9869-1b88551fd135" x="71" y="111" width="32" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Urine Protien}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="4c13de34-22e8-400f-b6ac-a804771e99cc" x="9" y="81" width="27" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[HbA1C]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2814ba58-1fa3-4746-becc-c5b850bf1a79" x="36" y="81" width="20" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{HbA1C}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="f141e025-0bff-4b34-868b-3ca623cb022a" x="55" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Chol]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="78d9a690-b5a6-4fec-a482-2a8ca7565b5b" x="79" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Chol}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="1a6ca445-6166-47ec-909d-f8bb9f549bdf" x="55" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TG]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a7501ec7-007b-4bfe-a1b6-63ccec68e04d" x="79" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{TG}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b487ce37-ef0b-41de-9b1d-ec98385c6ed2" x="55" y="81" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[HDL]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="527d18d4-9bf0-4fdb-9c7a-24495dcab49c" x="79" y="81" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{HDL}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b969ebf0-c54c-4cb5-95a2-140a1e8f304c" x="55" y="95" width="25" height="16"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LDL]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="f5a79d20-5642-4c8a-a0e0-70450d66cbbf" x="79" y="95" width="25" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LDL}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="1e45be99-db7b-4a67-a5a6-fdc6180ee306" x="103" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[BUN]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="bb01f88d-ea0c-4427-8962-9fbe49d71178" x="128" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{BUN}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="69337956-4022-42c6-a197-abafa7aaad04" x="103" y="81" width="25" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[eGFR]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0e2159d7-0b9a-4d26-aa0c-2e55a2dafe4b" x="128" y="81" width="25" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{eGFR}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="61dfc4ed-4ab3-442d-9ab4-2000f99cf532" x="153" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Na]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0d1d4665-f1c7-470b-ad53-a76a8a3c63e0" x="178" y="52" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Na}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="73b6a3f4-afd2-4591-b165-436750f40daa" x="153" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[K]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="ab91c1f7-7694-471a-9246-86ad97052ebf" x="178" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{K}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="09f5bc80-f745-4277-a254-b73b21a3424a" x="153" y="81" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cl]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="62f54b95-79e4-4e08-9eb1-55141337e07c" x="178" y="81" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Cl}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="fdab7dfb-3fa7-4ce8-856f-a3f35bec98b3" x="153" y="96" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[CO2]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c69b67d6-9f41-4abb-82e3-4ff128ef1edd" x="178" y="96" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CO2}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="893a1bb7-9561-428e-8512-fb1ae29c7863" x="103" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cr]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="aa861f36-ead7-4c15-93f2-742f39fb35ce" x="128" y="66" width="25" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Cr}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="60c892f0-1d42-4081-a2dc-f613bd3a1784" x="36" y="19" width="65" height="20"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<text><![CDATA[วันที่ตรวจLAB]]></text>
+			</staticText>
+			<textField pattern="dd MMMMM yyyy">
+				<reportElement uuid="f9459c3c-a705-4442-a15e-eca50df95e91" x="103" y="19" width="100" height="20"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.getDateFromText($F{visitdate})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b04cb9f2-50c0-4efb-bc7e-c8894d85ef22" x="153" y="111" width="50" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MAU}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

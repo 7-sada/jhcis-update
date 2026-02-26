@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LonglifeAdultDT" pageWidth="2880" pageHeight="1190" orientation="Landscape" columnWidth="2840" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryWithPageHeaderAndFooter="true" uuid="7650b107-922a-46a5-80e1-b43b850de63b">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="Crosstab Data Text" hAlign="Center"/>
+	<subDataset name="DataAdult" uuid="0c1fe898-caa4-431d-884c-2ab5e5824d27">
+		<parameter name="sdate" class="java.lang.String"/>
+		<parameter name="edate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select aa.vaccinecode,A.fullname,A.age,
+(case when right(A.villcode,2) = '00' then A.villname
+else concat('หมู่ที่ ',' ',right(A.villcode,2),' ',A.villname)
+end) as villname,A.dateepi
+from
+(SELECT p1.pcucodeperson,
+p1.pid, concat(ifnull(titlename,ifnull(p1.prename,'...')) ," ", fname," ", lname) as fullname,
+getAgeYearNum(p1.birth,now()) as Age,p1.mumoi,h.villcode,
+p4.villname,v.vaccinecode,group_concat(date_format(DATE_ADD(v.dateepi,INTERVAL 543 YEAR),'%d/%m/%Y')) as dateepi,
+vd.datedeliver,
+TRUNCATE(((datediff(v.dateepi,vp.lmp))/7),0) as weekPrag ,
+vp.lmp,vp.edc
+from person p1
+join ctitle p2 on p1.prename = p2.titlecode
+left join house h on (p1.hcode = h.hcode and p1.pcucodeperson = h.pcucode)
+left join village p4 on (h.villcode = p4.villcode and h.pcucode = p4.pcucode)
+join visitepi v on (p1.pid = v.pid and p1.pcucodeperson = v.pcucodeperson)
+join visitancpregnancy vp on (v.pid = vp.pid and v.pcucodeperson = vp.pcucodeperson)
+left join visitancdeliver vd on (vp.pid = vd.pid and vp.pregno = vd.pregno)
+where (v.vaccinecode like '%dt%' or v.vaccinecode like '%flu%' or v.vaccinecode like '%TT%' )
+and v.dateepi between $P!{sdate} and $P!{edate}
+and v.dateepi between vp.lmp and IFNULL(vd.datedeliver,vp.edc)
+group by p1.pid,v.vaccinecode
+order by h.villcode,v.dateepi)A
+right join (select  distinct(vaccinecode)
+             from visitepi where vaccinecode like '%dt%' or vaccinecode like '%TT%' or vaccinecode like '%flu%') aa
+on A.vaccinecode = aa.vaccinecode
+order by 4,1]]>
+		</queryString>
+		<field name="vaccinecode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fullname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="age" class="java.lang.Long">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="villname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dateepi" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<group name="mumoi">
+			<groupExpression><![CDATA[]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<parameter name="header_1" class="java.lang.String"/>
+	<parameter name="header_2" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="88" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="1150" height="29" forecolor="#000000" uuid="135e9d36-ae7e-4c77-865b-56228cd7b728"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Angsana New" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ทะเบียนติดตามความครอบคลุมการได้รับวัคซีน dT ,TT และ Influenza ในหญิงตั้งครรรภ์]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="63" width="348" height="25" forecolor="#000000" uuid="1a6f964e-564a-4cd5-94bc-51165952504d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd-MMM-yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="799" y="63" width="94" height="25" uuid="9dffd738-7bc6-4024-b601-296baf6b011f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" x="684" y="63" width="115" height="25" uuid="b253ba03-f7e8-405f-8810-9088a7b0455a"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[วันที่ประมวลผลรายงาน: ]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="42" width="555" height="21" forecolor="#000000" uuid="5d15ff10-fd39-45ed-9ed6-8641f27f685a"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_1}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="68">
+			<staticText>
+				<reportElement x="0" y="0" width="621" height="59" uuid="abc203ce-ae5b-4246-85fe-018691b478ae"/>
+				<textElement>
+					<font fontName="Angsana New" size="14"/>
+				</textElement>
+				<text><![CDATA[-- วัคซีน dt หมายถึง วัคซืน DT,DT1,DT2,DT3,DT4,DTANC1,DTANC2,DTANC3,DTANC4,DTANC5,dtC,DTP1,DTP2,DTP3,DTP4,DTP5,DTS1,DTS2,DTS4
+-- วัคซีน TT หมายถึง วัคซีน TT,TT1,TT3,TT4
+-- วัคซีน FLU หมายถึง วัคซีน Influenza
+]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="99">
+			<crosstab>
+				<reportElement x="0" y="0" width="2840" height="99" uuid="a83552c6-4cc0-4a84-9f7c-c9c245cc90f4"/>
+				<crosstabDataset>
+					<dataset>
+						<datasetRun subDataset="DataAdult" uuid="813e5df3-94ef-4bb1-811f-7914fcc6db2a">
+							<datasetParameter name="sdate">
+								<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="edate">
+								<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+				</crosstabDataset>
+				<crosstabHeaderCell>
+					<cellContents>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="0" y="0" width="70" height="30" backcolor="#F0F8FF" uuid="56aff1d0-1121-496a-ad9e-a63dd8105a59"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Angsana New" size="14"/>
+							</textElement>
+							<text><![CDATA[ที่อยู่]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="70" y="0" width="117" height="30" backcolor="#F0F8FF" uuid="efa2c575-cbc7-431c-bb11-fbeff143c3f5"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Angsana New" size="14"/>
+							</textElement>
+							<text><![CDATA[ชื่อ-สกุล]]></text>
+						</staticText>
+						<staticText>
+							<reportElement style="Crosstab Data Text" mode="Opaque" x="187" y="0" width="50" height="30" backcolor="#F0F8FF" uuid="40e2896c-6a4b-4255-97c3-58cc8e144947"/>
+							<box>
+								<topPen lineWidth="0.5"/>
+								<leftPen lineWidth="0.5"/>
+								<bottomPen lineWidth="0.5"/>
+								<rightPen lineWidth="0.5"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Angsana New" size="14"/>
+							</textElement>
+							<text><![CDATA[อายุ (ปี)]]></text>
+						</staticText>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="villname" width="70">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{villname}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="70" height="25" uuid="f9180eb9-1537-4bf7-93ed-42cde62830ef"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{villname}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="fullname" width="117">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{fullname}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="117" height="25" uuid="1b5b389d-72df-459f-83b2-7d2f52825aa8"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{fullname}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="age" width="50">
+					<bucket class="java.lang.Long">
+						<bucketExpression><![CDATA[$F{age}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+								<reportElement style="Crosstab Data Text" mode="Transparent" x="0" y="0" width="50" height="25" forecolor="#000000" backcolor="#FFFFFF" uuid="43f22395-b47c-4da1-af0c-0c75b16a71b2"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+									<leftPen lineWidth="0.5"/>
+									<bottomPen lineWidth="0.0"/>
+									<rightPen lineWidth="0.5"/>
+								</box>
+								<textElement verticalAlignment="Middle" rotation="None" markup="none">
+									<font fontName="Angsana New" size="14" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+									<paragraph lineSpacing="Single"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{age}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="vaccinecode" height="30">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{vaccinecode}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents backcolor="#F0F8FF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+							</box>
+							<textField>
+								<reportElement style="Crosstab Data Text" x="0" y="0" width="70" height="30" uuid="4763ef64-3da9-405f-b229-063b1f02a1c0"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Angsana New" size="14"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{vaccinecode}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents/>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="dateepiMeasure" class="java.lang.String">
+					<measureExpression><![CDATA[$F{dateepi}]]></measureExpression>
+				</measure>
+				<crosstabCell width="70" height="25">
+					<cellContents>
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="70" height="25" uuid="b1c2ea23-ee96-4142-b1ab-24f73660b8fe"/>
+							<textElement verticalAlignment="Middle">
+								<font fontName="Angsana New" size="14"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="villname">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="e8a858f6-2d2e-4a7d-bf19-4b4187f48665"/>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="50" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="0a167787-62d4-4bc2-864a-613e3301e740"/>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="villname" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#005FB3" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="4ee433c0-7f8c-4e43-9dfb-d0f72488e97b"/>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="fullname">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="72af85d5-5612-4276-bf40-34c388eb0c7f"/>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="fullname" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement style="Crosstab Data Text" x="0" y="0" width="50" height="25" uuid="28e34fbd-37cd-49f5-9573-be503ab23d84"/>
+							<textFieldExpression><![CDATA[$V{dateepiMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="age">
+					<cellContents backcolor="#BFFFFF" mode="Opaque"/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="age" columnTotalGroup="vaccinecode">
+					<cellContents backcolor="#BFFFFF" mode="Opaque"/>
+				</crosstabCell>
+			</crosstab>
+		</band>
+	</summary>
+</jasperReport>

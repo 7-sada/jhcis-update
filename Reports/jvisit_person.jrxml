@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="jvisit_person" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="d9ed5ee6-6f35-403e-9bfc-d4854779266c">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="208"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Program Files (x86)\\jhcis\\reports\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["08989"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="visitno" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["91997"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[##
+SELECT
+concat(ifnull(c1.titlename,ifnull(prename,'...')),fname,'   ',lname) AS fullname,
+person.idcard,
+getageymd(person.birth,visit.visitdate) AS age,
+visithomehealthindividual.visitno,
+chomehealthtype.homehealthmeaning,
+visithomehealthindividual.patientsign,
+visithomehealthindividual.homehealthresult,
+visithomehealthindividual.homehealthdetail,
+visithomehealthindividual.homehealthplan,
+IF(visithomehealthindividual.dateappoint IS NULL,'ไม่ระบุ',
+concat(convert(DAY(visithomehealthindividual.dateappoint) using utf8),' ',
+   CASE WHEN MONTH(visithomehealthindividual.dateappoint)=1 THEN 'มกราคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=2 THEN 'กุมภาพันธ์'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=3 THEN 'มีนาคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=4 THEN 'เมษายน'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=6 THEN 'มิถุนายน'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=8 THEN 'สิงหาคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=9 THEN 'กันยายน'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=10 THEN 'ตุลาคม'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(visithomehealthindividual.dateappoint)=12 THEN 'ธันวาคม' END,' ',
+   YEAR(visithomehealthindividual.dateappoint)+543)) as dateappointth,
+date_format(visithomehealthindividual.dateappoint,'%Y-%m-%d') AS dateappoint1,
+IF(visit.visitdate IS NULL,'ไม่ระบุ',concat(convert(DAY(visit.visitdate) using utf8),' ',
+   CASE WHEN MONTH(visit.visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(visit.visitdate)=2 THEN 'กุมภาพันธ์'
+   WHEN MONTH(visit.visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(visit.visitdate)=4 THEN 'เมษายน'
+   WHEN MONTH(visit.visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(visit.visitdate)=6 THEN 'มิถุนายน'
+   WHEN MONTH(visit.visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(visit.visitdate)=8 THEN 'สิงหาคม'
+   WHEN MONTH(visit.visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(visit.visitdate)=10 THEN 'ตุลาคม'
+   WHEN MONTH(visit.visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(visit.visitdate)=12 THEN 'ธันวาคม' END,' ',YEAR(visitdate)+543) )
+   as visitdateth,
+
+date_format(visit.visitdate,'%d-%m-%Y') AS visitdate1,
+concat('เลขที่: ',ifnull(hnomoi,'...'),' ถนน: ',ifnull(roadmoi,'...'), '  หมู่ที่.',ifnull(mumoi,'...'),'  ต.',ifnull(csd.subdistname,'...'), ' อ.',ifnull(cd.distname,'...'), ' จ.',ifnull(cw.provname,'...') ) as addr
+FROM
+person
+LEFT JOIN ctitle AS c1 ON person.prename = c1.titlecode
+LEFT OUTER JOIN csubdistrict AS csubdistricth ON person.subdistcodemoi = csubdistricth.subdistcode AND person.distcodemoi = csubdistricth.distcode AND person.provcodemoi = csubdistricth.provcode
+LEFT OUTER JOIN cdistrict AS cdistricth ON person.distcodemoi = cdistricth.distcode AND person.provcodemoi = cdistricth.provcode
+LEFT OUTER JOIN cprovince AS cprovinceh ON person.provcodemoi = cprovinceh.provcode
+LEFT OUTER JOIN cstatus ON person.marystatus = cstatus.statuscode
+LEFT OUTER JOIN cnation ON person.origin = cnation.nationcode
+LEFT OUTER JOIN creligion ON person.religion = creligion.religioncode
+LEFT OUTER JOIN coccupa ON person.occupa = coccupa.occupacode
+LEFT OUTER JOIN csubdistrict AS csd ON csd.subdistcode = person.subdistcodemoi AND csd.distcode = person.distcodemoi AND csd.provcode = person.provcodemoi
+LEFT OUTER JOIN cdistrict AS cd ON cd.distcode = person.distcodemoi AND cd.provcode = person.provcodemoi
+LEFT OUTER JOIN cprovince AS cw ON cw.provcode = person.provcodemoi
+LEFT OUTER JOIN personaddresscontact ON person.pcucodeperson = personaddresscontact.pcucodeperson AND person.pid = personaddresscontact.pid
+LEFT OUTER JOIN csubdistrict AS csd2 ON csd2.subdistcode = personaddresscontact.subdistcode AND csd2.distcode = personaddresscontact.distcode AND csd2.provcode = personaddresscontact.provcode
+LEFT OUTER JOIN cdistrict AS cd2 ON cd2.distcode = personaddresscontact.distcode AND cd2.provcode = personaddresscontact.provcode
+LEFT OUTER JOIN cprovince AS cw2 ON cw2.provcode = personaddresscontact.provcode
+LEFT JOIN cright ON person.rightcode = cright.rightcode
+LEFT JOIN chospital ON person.hosmain = chospital.hoscode
+INNER JOIN visit ON person.pcucodeperson = visit.pcucodeperson AND person.pid = visit.pid
+INNER JOIN visithomehealthindividual ON visithomehealthindividual.pcucode = visit.pcucode AND visithomehealthindividual.visitno = visit.visitno
+INNER JOIN chomehealthtype ON chomehealthtype.homehealthcode = visithomehealthindividual.homehealthtype
+##
+WHERE
+visit.visitno =  $P!{visitno}
+AND visit.pcucode = $P!{pcucode}]]>
+	</queryString>
+	<field name="fullname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="age" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="homehealthmeaning" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="patientsign" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="homehealthresult" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="homehealthdetail" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="homehealthplan" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateappointth" class="java.lang.String"/>
+	<field name="dateappoint1" class="java.lang.String"/>
+	<field name="visitdateth" class="java.lang.String"/>
+	<field name="visitdate1" class="java.lang.String"/>
+	<field name="addr" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="66" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="63" y="33" width="160" height="25" forecolor="#0066CC" uuid="93b92e13-3cac-438d-9ed9-daa37a1ecccd"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="22" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ข้อมูลเยี่ยมบ้าน (รายคน)]]></text>
+			</staticText>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" x="0" y="0" width="535" height="23" uuid="16261273-1569-4295-a21a-09cfea6f028c"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="pcucode">
+					<subreportParameterExpression><![CDATA[$P{pcucode}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR}+"\\OfficeAddress1Line_Sarabun.jasper"]]></subreportExpression>
+			</subreport>
+			<textField>
+				<reportElement x="286" y="38" width="100" height="20" uuid="e4b5514e-0cd0-42c1-a30f-d89dc5f93ff6"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{visitdateth}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="238" y="38" width="48" height="20" uuid="2d05a773-0d50-4e31-a84c-ed9f8584d8fb"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[วันที่เยี่ยม]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="38" width="48" height="20" uuid="c8495dc3-8a09-45b2-8b98-69178bf80023"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[วันที่นัด]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="434" y="38" width="100" height="20" uuid="2a5121a0-f13c-45ee-8fff-1556ae734547"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateappointth}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="1" y="63" width="533" height="1" forecolor="#CCCCCC" uuid="53d48504-5250-44d4-883d-30cbca1b779b"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="308" splitType="Stretch">
+			<staticText>
+				<reportElement x="358" y="2" width="87" height="20" uuid="83429c7f-93fc-4597-abc6-bc59ce2faa98"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[เลขบัตรประชาชน]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="445" y="2" width="90" height="20" uuid="fcbde2a7-3e80-4805-80e2-6ddbb840842d"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{idcard}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="2" y="29" width="25" height="20" uuid="41ea527a-ddbf-494e-8cd9-25cf6f1f3cc7"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ที่อยู่]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="28" y="29" width="507" height="20" uuid="9937fb46-1617-4811-8dca-9dc31bd9aa9b"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{addr}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="58" width="107" height="28" uuid="88987216-58be-414e-88ef-19daf960b904"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ประเภทการเยี่ยม]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="108" y="58" width="427" height="28" uuid="f7ab3d82-6c59-48f7-996c-4e1af946157e"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{homehealthmeaning}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="232" width="107" height="73" uuid="879cbcaa-c3d9-41f3-be87-a86e185f4a16"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ปัญหาที่พบ
+(การประเมินผล)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="108" y="232" width="427" height="73" uuid="3761225d-10f1-47c2-b3fc-9d980a8f3493"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{homehealthresult}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="159" width="107" height="73" uuid="53b52d10-d87d-4760-99cb-d81ca59de535"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[การพยาบาล/คำแนะนำ
+(รายละเอียดการเยี่ยม)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="108" y="159" width="427" height="73" uuid="80f1a562-973a-49c0-8ee5-ff5768b745b3"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{homehealthdetail}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="28" y="2" width="174" height="20" uuid="6537339a-8423-469c-b3b8-bdc60ddf5eb4"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fullname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="212" y="2" width="26" height="20" uuid="6dce4293-579a-47ab-b732-010d760b76ab"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[อายุ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="238" y="2" width="120" height="20" uuid="01956429-bf44-4c87-ae86-7c43c804cca9"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="2" y="2" width="25" height="20" uuid="9df68039-5332-46c0-be45-805e72bc835b"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ชื่อ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="86" width="107" height="73" uuid="788772bd-6510-4c92-9959-546b7acb6fb8"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[สภาพผู้รับบริการ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="108" y="86" width="427" height="73" uuid="0d4e5028-5c2a-439a-90a7-769ae1a55cf7"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patientsign}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<lastPageFooter>
+		<band splitType="Stretch"/>
+	</lastPageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

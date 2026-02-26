@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rstudent_list" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="9fe3cd5d-41c8-44e0-b0a1-3003d24dcdc1">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<parameterDescription><![CDATA[AND villageschool.pcucode='01856']]></parameterDescription>
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="persondeath" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND CONCAT(person.pid,person.pcucodeperson) not in (SELECT CONCAT(persondeath.pid,persondeath.pcucodeperson) FROM persondeath) "]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[(SELECT cschoolclass.classcode,
+if(villageschool.schoolname is null,'ไม่ระบุฯ',villageschool.schoolname) as schoolname,
+if(cschoolclass.classname is null,'ไม่ระบุฯ',cschoolclass.classname) as classname,
+person.sex,
+concat(ifnull(ifnull(ctitle.titlename,person.prename),'-'),person.fname) as fname,
+person.lname,
+person.hnomoi,
+person.mumoi,
+DATE_FORMAT(person.birth,'%Y-%m-%d') as birth,
+if(studenthealthnutrition.dateservice is not null,
+concat((year(dateservice)-year(`person`.`birth`)-(right(dateservice,5)<right(`person`.`birth`,5))),' - ',
+(if (day(dateservice) <day(`person`.`birth`),(if (right(dateservice,5)<right(`person`.`birth`,5),(12+ month(dateservice))-month(`person`.`birth`),month(dateservice)-month(`person`.`birth`)))-1 ,(if (right(dateservice,5)<right(`person`.`birth`,5),(12+ month(dateservice))-month(`person`.`birth`),month(dateservice)-month(`person`.`birth`))))) ,' - ',
+(if (day(dateservice) < day(`person`.`birth`),(30+ day(dateservice))-day(`person`.`birth`),day(dateservice)-day(`person`.`birth`)))),
+null) as age,
+if(studenthealthnutrition.dateservice is not null,getagemonth(person.birth,studenthealthnutrition.dateservice),null) as agemonth,
+if((SELECT MAX(studenthealthnutrition.dateservice) FROM studenthealthnutrition WHERE (personstudent.pcucodeperson = studenthealthnutrition.pcucodeperson AND personstudent.pid = studenthealthnutrition.pid ) ),studenthealthnutrition.weight,null) as weight,
+DATE_FORMAT(studenthealthnutrition.dateservice,'%Y-%m-%d') as dateservice
+FROM
+personstudent
+Left Outer Join studenthealthnutrition ON personstudent.pcucodeperson = studenthealthnutrition.pcucodeperson AND personstudent.pid = studenthealthnutrition.pid
+Left Outer Join villageschool ON personstudent.pcucode = villageschool.pcucode AND personstudent.villcode = villageschool.villcode AND personstudent.schoolno = villageschool.schoolno
+Left Outer Join cschoolclass ON personstudent.classeducate = cschoolclass.classcode
+Left Outer Join person ON personstudent.pcucodeperson = person.pcucodeperson AND personstudent.pid = person.pid
+Left Outer Join ctitle ON person.prename = ctitle.titlecode
+WHERE
+ dateservice = (SELECT MAX(dateservice) FROM studenthealthnutrition WHERE personstudent.pcucodeperson = studenthealthnutrition.pcucodeperson AND personstudent.pid = studenthealthnutrition.pid AND studenthealthnutrition.weight is not null)
+$P!{pcucode}
+$P!{persondeath}
+)
+UNION
+(SELECT cschoolclass.classcode,
+if(villageschool.schoolname is null,'ไม่ระบุฯ',villageschool.schoolname) as schoolname,
+if(cschoolclass.classname is null,'ไม่ระบุฯ',cschoolclass.classname) as classname,
+person.sex,
+concat(ifnull(ifnull(ctitle.titlename,person.prename),'-'),person.fname) as fname,
+person.lname,
+person.hnomoi,
+person.mumoi,
+DATE_FORMAT(person.birth,'%Y-%m-%d') as birth,
+concat((year(current_date)-year(`person`.`birth`)-(right(current_date,5)<right(`person`.`birth`,5))),'-',
+(if (day(current_date) <day(`person`.`birth`),(if (right(current_date,5)<right(`person`.`birth`,5),(12+ month(current_date))-month(`person`.`birth`),month(current_date)-month(`person`.`birth`)))-1 ,(if (right(current_date,5)<right(`person`.`birth`,5),(12+ month(current_date))-month(`person`.`birth`),month(current_date)-month(`person`.`birth`))))) ,'-',
+(if (day(current_date) < day(`person`.`birth`),((day(last_day(current_date())))+ day(current_date))-day(`person`.`birth`),day(current_date)-day(`person`.`birth`)))) as age,
+null as agemonth,
+null as weight,
+null as dateservice
+FROM
+personstudent
+Left Outer Join villageschool ON personstudent.pcucode = villageschool.pcucode AND personstudent.villcode = villageschool.villcode AND personstudent.schoolno = villageschool.schoolno
+Left Outer Join cschoolclass ON personstudent.classeducate = cschoolclass.classcode
+Left Outer Join person ON personstudent.pcucodeperson = person.pcucodeperson AND personstudent.pid = person.pid
+Left Outer Join ctitle ON person.prename = ctitle.titlecode
+WHERE
+ CONCAT(personstudent.pcucodeperson,personstudent.pid) not in (SELECT CONCAT(studenthealthnutrition.pcucodeperson,studenthealthnutrition.pid) FROM studenthealthnutrition WHERE  studenthealthnutrition.weight IS NOT NULL $P!{pcucode})
+$P!{pcucode}
+$P!{persondeath}
+)
+ORDER BY schoolname,classcode,sex,mumoi,hnomoi]]>
+	</queryString>
+	<field name="classcode" class="java.lang.Integer"/>
+	<field name="schoolname" class="java.lang.String"/>
+	<field name="classname" class="java.lang.String"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="fname" class="java.lang.String"/>
+	<field name="lname" class="java.lang.String"/>
+	<field name="hnomoi" class="java.lang.String"/>
+	<field name="mumoi" class="java.lang.String"/>
+	<field name="birth" class="java.util.Date"/>
+	<field name="age" class="java.lang.String"/>
+	<field name="agemonth" class="java.lang.Long"/>
+	<field name="weight" class="java.lang.Double"/>
+	<field name="dateservice" class="java.util.Date"/>
+	<group name="schoolname" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{schoolname}]]></groupExpression>
+		<groupHeader>
+			<band height="23" splitType="Stretch">
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="48dc8ba7-8e2b-44bb-87b5-856409edd159" key="textField" x="50" y="0" width="455" height="22"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" isUnderline="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{schoolname}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement uuid="ccf637d1-66b5-4f49-9aa7-08945efe22dc" key="staticText-11" x="0" y="0" width="50" height="22"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Tahoma" isUnderline="true"/>
+					</textElement>
+					<text><![CDATA[โรงเรียน :]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="21" splitType="Stretch">
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="64be6b38-fdf4-49c8-a317-6bfa56b7239f" key="textField" x="0" y="2" width="25" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{schoolname_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="f4501b15-02f3-4690-9554-520320d264b1" key="textField" x="29" y="2" width="497" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(รวมทั้งหมดของโรงเรียน"+$F{schoolname}+")"]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="eac93716-60bf-46a8-9c53-b2608f068f73" key="line-2" x="0" y="1" width="535" height="1"/>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="classname">
+		<groupExpression><![CDATA[$F{classname}]]></groupExpression>
+		<groupHeader>
+			<band height="19" splitType="Stretch">
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="3c442682-17e0-4a19-9c8a-d4f08e992864" key="textField" x="9" y="-1" width="547" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="true" isUnderline="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{classname}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="23" splitType="Stretch">
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="7c87aecc-a155-4655-b2be-0c4fc7a8c5ab" key="textField" x="0" y="3" width="25" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isUnderline="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{classname_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="7baa33d9-7f80-4051-b601-b00a57f144d7" key="textField" x="28" y="3" width="497" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(รวมทั้งหมดของชั้นเรียน"+$F{classname}+")"]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="7a07116b-da65-4208-b73f-906baed5b143" key="line-1" x="0" y="2" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="c6924164-428d-482c-9bbe-94b7f016d821" key="line-3" x="0" y="22" width="535" height="1"/>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="sex">
+		<groupExpression><![CDATA[$F{sex}]]></groupExpression>
+		<groupHeader>
+			<band height="18" splitType="Stretch">
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="4d3f3ff9-cd61-4d64-83b3-9394a13dfc4a" key="textField" x="18" y="0" width="499" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="true" isUnderline="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($F{sex}.equals( "1" )?"ชาย":"หญิง")]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band splitType="Stretch"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="f7560dfc-2337-4fae-b9e8-a805dd087c3d" key="staticText-1" x="0" y="0" width="382" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Tahoma" size="14" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[รายชื่อนักเรียน จำแนกตามโรงเรียน / ชั้นเรียน / เพศ (ชาย / หญิง)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="89e3f610-5da8-4b60-b904-8837b152f43a" key="staticText-2" x="382" y="0" width="80" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[วันที่ออกรายงาน :]]></text>
+			</staticText>
+			<textField pattern="d MMM yyyy" isBlankWhenNull="false">
+				<reportElement uuid="b388b873-a986-42f6-82ee-a56f87025d52" key="textField-1" x="462" y="0" width="73" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="e9e90a6b-ad39-45f6-8b39-0bfbc8383bc6" key="staticText-3" x="0" y="0" width="137" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[ชื่อ-สกุล]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ab381a42-9aee-4054-8c69-a0b0c9bec14f" key="staticText-4" x="137" y="0" width="37" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[บ้านเลขที่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ba0072e9-c5bf-482c-b943-8b290d730f91" key="staticText-5" x="174" y="0" width="22" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[หมู่ที่]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d04a74a5-8569-4682-964c-4ba4ca593524" key="staticText-6" x="196" y="0" width="49" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[ว-ด-ป เกิด]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="49afdaae-dd47-485f-a3d5-f671d86ae7fb" key="staticText-7" x="245" y="0" width="48" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[อายุ (ป-ด-ว)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="13e58c2e-d9cb-43c3-9053-91f3808a24fd" key="staticText-8" x="293" y="0" width="60" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[โภชนาการ
+(อายุ-นน)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="125a7ca1-0010-45e0-9a11-6418eade3ab4" key="staticText-9" x="517" y="0" width="51" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[วันที่ตรวจวัด(ล่าสุด)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2daaef6c-6f1f-4098-813a-94e4ad3a8878" key="staticText-8" x="353" y="0" width="60" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[โภชนาการ
+(อายุ-สส)]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8464ffc4-a928-44ad-b1aa-07c6f39e2745" key="textField" x="25" y="0" width="59" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="2cfc4ab1-23ad-4595-8be4-4baf9f5d45cc" key="textField" x="84" y="0" width="53" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{lname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="310c9db6-09ef-42eb-bae6-5e2a0ca613d8" key="textField" x="137" y="0" width="37" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hnomoi}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="722a7376-e641-41d9-920e-d7b50603522b" key="textField" x="174" y="0" width="22" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{mumoi}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMM yyyy" isBlankWhenNull="true">
+				<reportElement uuid="445cb287-7709-4572-ace6-ed687796dcfd" key="textField" x="196" y="0" width="49" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{birth}]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMM yyyy" isBlankWhenNull="true">
+				<reportElement uuid="fb0c286e-9f0b-499d-bc84-c6a1251db5a6" key="textField" x="511" y="0" width="57" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateservice}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="afa0a4fe-39df-4f4e-92f6-60dc66e0e17b" key="textField" x="4" y="0" width="18" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{sex_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="16b3be38-9bac-4b54-83e8-504e82b87791" key="textField" x="245" y="0" width="48" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="eb0f466a-a4a5-44c0-b809-f12ba45a1971" key="textField-4" x="293" y="0" width="60" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[( $F{weight} == null   ? "ยังไม่เคยชั่งน้ำหนัก"
+: SetupNu.UpdateNutritionStateAgeLessThen18AgeWeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})
+)]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="8e596c75-507e-4354-bcf2-03055947265d" key="textField-4" x="353" y="0" width="60" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[( $F{weight} == null   ? "ยังไม่เคยชั่งน้ำหนัก"
+: SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{weight}.doubleValue(),$F{sex})
+)]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="1" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="37" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="bfc523d9-e135-4496-a687-bf2985ef52ee" key="staticText-10" x="0" y="0" width="223" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[รายชื่อนักเรียน จำแนกตามโรงเรียน / ชั้นเรียน / เพศ (ชาย / หญิง)]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="6aa84722-9728-424e-87f0-89792b4a6401" key="textField-2" x="381" y="0" width="130" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="3d1733e9-91c2-4ae6-8ff2-4b1fb2bb00a2" key="textField-3" x="511" y="0" width="24" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="877ed7c3-e777-4468-9d1a-8a92ebc64454" key="staticText-12" x="0" y="21" width="535" height="14" forecolor="#990000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ : อายุคำนวณถึงวันที่ตรวจล่าสุด กรณียังไม่เคยชั่งน้ำหนักจะคำนวณถึงวันที่ออกรายงาน]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="eff6ade1-4c2e-48fc-8e3e-1f4a3242806d" key="staticText-14" x="0" y="1" width="223" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[รายชื่อนักเรียน จำแนกตามโรงเรียน / ชั้นเรียน / เพศ (ชาย / หญิง)]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="2aa6da59-a886-46c1-a2a4-d9377f088405" key="textField-5" x="381" y="1" width="130" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="d343638f-6853-4eb6-b07c-da9c42d838d1" key="textField-6" x="511" y="1" width="24" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</lastPageFooter>
+	<summary>
+		<band splitType="Stretch">
+			<staticText>
+				<reportElement uuid="03c6537f-5475-4a7e-8e22-e62f84b6e44d" key="staticText-13" x="0" y="-13" width="535" height="13" forecolor="#CCCCCC"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[rstudent_list.jasper : 3 Feb 2012]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

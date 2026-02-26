@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="_____XXXX_report4" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e3fb5277-236e-48d9-b24e-ccf3ad9308db">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT
+`person`.`pid`,
+Concat(ifnull(titlename,ifnull(`person`.`prename`,'...')),`person`.`fname`,'  ',`person`.
+`lname`,'(HN:',convert(visit.pid using utf8),') อายุ-ปดว:',getAgeYearNum(birth,visitdate),'-',getAgeMonthNum(birth,visitdate),'-',getAgeDayNum(birth,visitdate)) as pati
+,IF(visitdate IS NULL,'',concat(convert(DAY(visitdate) using utf8),' ',
+   CASE WHEN MONTH(visitdate)=1 THEN 'มกราคม'
+   WHEN MONTH(visitdate)=2 THEN 'กุมภาพันธ์' WHEN MONTH(visitdate)=3 THEN 'มีนาคม'
+   WHEN MONTH(visitdate)=4 THEN 'เมษายน' WHEN MONTH(visitdate)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(visitdate)=6 THEN 'มิถุนายน' WHEN MONTH(visitdate)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(visitdate)=8 THEN 'สิงหาคม' WHEN MONTH(visitdate)=9 THEN 'กันยายน'
+   WHEN MONTH(visitdate)=10 THEN 'ตุลาคม' WHEN MONTH(visitdate)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(visitdate)=12 THEN 'ธันวาคม' END,' ',YEAR(visitdate)+543) )
+   as visitdate
+,date_format(`visit`.`visitdate`,'%Y-%m-%d') as vsd,
+Concat('ยา: ',`cdrug`.`drugname`) as drugn,
+Concat(CAST(`visitdrug`.`unit` As Char), ' ', ifnull(IFNULL(`unitsellname`,unitsell),'หน่วย')) as unt,
+Concat('วิธีใช้: ',`visitdrug`.`dose`) as used,
+Concat(`chospital`.`hosname`,' จ.',`cprovince`.`provname`) as hos,
+concat('คำเตือน: ',IF(cdrug.drugcaution IS NULL,'-',LEFT(cdrug.drugcaution,120)),'...') as caution,
+concat('สรรพคุณ: ',IF(cdrug.drugproperties IS NULL,'-',LEFT(cdrug.drugproperties,100)),'...') as drugproperties,
+cdrug.drugcode
+#,cdrug.dateexpire as dateexpire
+# OR DATEDIFF(dateexpire,visitdate)<0
+,IF(cdrug.dateexpire IS NULL OR DAY(cdrug.dateexpire)='0'  OR DATEDIFF(cdrug.dateexpire,visitdate)<0
+  ,'',concat(convert(DAY(cdrug.dateexpire) using utf8),' ',
+CASE WHEN MONTH(cdrug.dateexpire)=1 THEN 'มกราคม'
+   WHEN MONTH(cdrug.dateexpire)=2 THEN 'กุมภาพันธ์' WHEN MONTH(cdrug.dateexpire)=3 THEN 'มีนาคม'
+   WHEN MONTH(cdrug.dateexpire)=4 THEN 'เมษายน' WHEN MONTH(cdrug.dateexpire)=5 THEN 'พฤษภาคม'
+   WHEN MONTH(cdrug.dateexpire)=6 THEN 'มิถุนายน' WHEN MONTH(cdrug.dateexpire)=7 THEN 'กรกฎาคม'
+   WHEN MONTH(cdrug.dateexpire)=8 THEN 'สิงหาคม' WHEN MONTH(cdrug.dateexpire)=9 THEN 'กันยายน'
+   WHEN MONTH(cdrug.dateexpire)=10 THEN 'ตุลาคม' WHEN MONTH(cdrug.dateexpire)=11 THEN 'พฤศจิกายน'
+   WHEN MONTH(cdrug.dateexpire)=12 THEN 'ธันวาคม'
+   END,' ',YEAR(cdrug.dateexpire)+543)) as dateexpire
+
+,IFNULL(`office`.`tel`,'') as tel
+,IFNULL(drugnamethai,'..ไม่ระบุชื่อยาภาษาไทยไว้ฯ') dnTh
+FROM
+`visit`
+Inner Join `person` ON `person`.`pid` = `visit`.`pid` and person.pcucodeperson = visit.pcucodeperson
+left join ctitle on person.prename = titlecode
+Inner Join `visitdrug` ON `visit`.`visitno` = `visitdrug`.`visitno` and visit.pcucode = visitdrug.pcucode
+Inner Join `cdrug` ON `visitdrug`.`drugcode` = `cdrug`.`drugcode`
+left join cdrugunitsell on unitsell = unitsellcode
+,`office`
+Inner Join `chospital` ON `office`.`offid` = `chospital`.`hoscode`
+Inner Join `cprovince` ON `chospital`.`provcode` = `cprovince`.`provcode`
+
+where
+	visit.visitno = '78829'
+        and visitdrug.dose is not null
+        and trim(visitdrug.dose)<>""
+]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pati" class="java.lang.String"/>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vsd" class="java.lang.String"/>
+	<field name="drugn" class="java.lang.String"/>
+	<field name="unt" class="java.lang.String"/>
+	<field name="used" class="java.lang.String"/>
+	<field name="hos" class="java.lang.String"/>
+	<field name="caution" class="java.lang.String"/>
+	<field name="drugproperties" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateexpire" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tel" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dnTh" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<staticText>
+				<reportElement x="198" y="2" width="100" height="20" uuid="f31d6b0f-91e8-418b-90d6-5997106e2efc"/>
+				<text><![CDATA[visitdate]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="414" y="2" width="100" height="20" uuid="4cc1acb2-d16d-4567-bd93-6d901fe3f9af"/>
+				<text><![CDATA[dnTh]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="125" splitType="Stretch">
+			<textField>
+				<reportElement x="198" y="60" width="100" height="20" uuid="7c25242a-66c2-4332-a1b7-19a872ee44a5"/>
+				<textFieldExpression><![CDATA[$F{visitdate}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="414" y="55" width="100" height="20" uuid="40367b1f-3204-4721-bb61-7c6af4406478"/>
+				<textFieldExpression><![CDATA[$F{dnTh}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

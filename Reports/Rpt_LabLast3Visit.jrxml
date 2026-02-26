@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Rpt_LabLast3Visit" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="9d85c009-a042-480f-8c7d-4b019aa4fb37">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="Crosstab Data Text" hAlign="Center"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="New Dataset 1" uuid="c7636604-fcd7-4b2a-99f9-f477522fa9ac">
+		<parameter name="pcucode" class="java.lang.String">
+			<defaultValueExpression><![CDATA["77511"]]></defaultValueExpression>
+		</parameter>
+		<parameter name="pid" class="java.lang.String">
+			<defaultValueExpression><![CDATA["96"]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[select A.labcode,A.labname,date_add(A.date1 , interval 543 year) as date1,A.value1,
+date_add(A.date2 , interval 543 year) as date2,A.value2,
+date_add(A.date3 , interval 543 year) as date3,A.value3
+from
+(
+(select (case when vb.typetesting = 1 then 'DTX'
+when vb.typetesting = 2 then 'FBS'
+else 'n/a' end) as labcode,'' as labname,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1) as date1,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1) as value1,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1 offset 1) as date2,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1 offset 1) as value2,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1 offset 2) as date3,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '1' order by v1.visitdate desc limit 1 offset 2) as value3
+from visitlabsugarblood vb
+join visit v on (vb.pcucode = v.pcucode and vb.visitno = v.visitno)
+where v.pid = $P{pid}
+and vb.typetesting = '1'
+group by v.pid)
+union all
+(select (case when vb.typetesting = '1' then 'DTX'
+when vb.typetesting = '2' then 'FBS'
+else 'n/a' end) as labcode, '' as labname,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1) as date1,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1) as value1,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1 offset 1) as date2,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1 offset 1) as value2,
+(select v1.visitdate from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1 offset 2) as date3,
+(select vb1.sugarnumdigit from visitlabsugarblood vb1 join visit v1 on (vb1.pcucode = v1.pcucode and vb1.visitno = v1.visitno)
+where v1.pid = v.pid and vb1.typetesting = '2' order by v1.visitdate desc limit 1 offset 2) as value3
+from visitlabsugarblood vb
+join visit v on (vb.pcucode = v.pcucode and vb.visitno = v.visitno)
+where v.pid = $P{pid}
+and vb.typetesting = '2'
+group by v.pid)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH04'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH07'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH09'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH14'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH17'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH25'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CH99'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'CHeGFR'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'HE010110000'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'HE010120000'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'MS01020201'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'MS01020202'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'MSUPCR'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'HE01010000'
+group by v.labcode)
+union all
+(select
+v.labcode,cl.labname,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as date1,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1) as value1,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as date2,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 1) as value2,
+(select datecheck from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as date3,
+(select labresultdigit from visitlabchcyhembmsse where labcode=v.labcode and pid=v.pid and pcucode=v.pcucode order by datecheck desc limit 1 offset 2) as value3
+from visitlabchcyhembmsse  as v
+join clabchcyhembmsse as cl on (v.labcode = cl.labcode)
+where v.pcucodeperson =$P{pcucode}
+and v.pid = $P{pid}
+and v.labcode = 'HE01020000'
+group by v.labcode)
+union all
+(select p1.labcode,'' as labname,p1.date1,
+(case when p1.value1 = '1' then 'Opthalmoscope ปกติ'
+when p1.value1 = '2' then 'Fundus camera ปกติ'
+when p1.value1 = '3' then 'Opthalmoscope ผิดปกติ'
+when p1.value1 = '4' then 'Fundus camera ผิดปกติ'
+when p1.value1 = '9' then 'ไม่ตรวจ'
+else null end) as value1,
+p1.date2,
+(case when p1.value2 = '1' then 'Opthalmoscope ปกติ'
+when p1.value2 = '2' then 'Fundus camera ปกติ'
+when p1.value2 = '3' then 'Opthalmoscope ผิดปกติ'
+when p1.value2 = '4' then 'Fundus camera ผิดปกติ'
+when p1.value2 = '9' then 'ไม่ตรวจ'
+else null end) as value2,
+p1.date3,
+(case when p1.value3 = '1' then 'Opthalmoscope ปกติ'
+when p1.value3 = '2' then 'Fundus camera ปกติ'
+when p1.value3 = '3' then 'Opthalmoscope ผิดปกติ'
+when p1.value3 = '4' then 'Fundus camera ผิดปกติ'
+when p1.value3 = '9' then 'ไม่ตรวจ'
+else null end) as value3
+from
+((select nd.pcucodeperson,nd.pid,'การตรวจตา' as labcode,
+(select datefollow from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+ and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1) as date1,
+(select eyeopthalmoscope from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+ and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1) as value1,
+(select datefollow from ncdservice
+where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1 offset 1) as date2,
+(select eyeopthalmoscope from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+ and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1 offset 1) as value2,
+(select datefollow from ncdservice
+where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+ and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1 offset 2) as date3,
+(select eyeopthalmoscope from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+ and (eyeopthalmoscope not in ('9','X'))
+order by datefollow desc limit 1 offset 2) as value3
+from ncdservice nd
+where nd.pid = $P{pid}
+group by nd.pid))p1)
+union all
+(select B.labcode,'' as labname,B.date1,
+(case when B.value1 = '0' then 'ตรวจ-ผลปกติ'
+when B.value1 = '1' then 'Low-Risk'
+when B.value1 = '2' then 'Moderate-Risk'
+when B.value1 = '3' then 'High-Risk'
+when B.value1 = '4' then 'Foot-Ulcer'
+when B.value1 = '5' then 'Amputation'
+else null end) as value1, B.date2,
+(case when B.value2 = '0' then 'ตรวจ-ผลปกติ'
+when B.value2 = '1' then 'Low-Risk'
+when B.value2 = '2' then 'Moderate-Risk'
+when B.value2 = '3' then 'High-Risk'
+when B.value2 = '4' then 'Foot-Ulcer'
+when B.value2 = '5' then 'Amputation'
+else null end) as value2, B.date3,
+(case when B.value3 = '0' then 'ตรวจ-ผลปกติ'
+when B.value3 = '1' then 'Low-Risk'
+when B.value3 = '2' then 'Moderate-Risk'
+when B.value3 = '3' then 'High-Risk'
+when B.value3 = '4' then 'Foot-Ulcer'
+when B.value3 = '5' then 'Amputation'
+else null end) as value3
+from(
+(select nd.pcucodeperson,nd.pid,'การตรวจเท้า' as labcode,
+(select datefollow from ncdservice
+where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1) as date1,
+(select examfoot from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1) as value1,
+(select datefollow from ncdservice
+where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1 offset 1) as date2,
+(select examfoot from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1 offset 1) as value2,
+(select datefollow from ncdservice
+where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1 offset 2) as date3,
+(select examfoot from ncdservice where pcucodeperson = nd.pcucodeperson and pid = nd.pid
+order by datefollow desc limit 1 offset 2) as value3
+from ncdservice nd
+where nd.pid = $P{pid}
+group by nd.pid))B)
+)A
+group by A.labcode]]>
+		</queryString>
+		<field name="labcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="labname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="date1" class="java.sql.Date"/>
+		<field name="value1" class="java.lang.String"/>
+		<field name="date2" class="java.sql.Date"/>
+		<field name="value2" class="java.lang.String"/>
+		<field name="date3" class="java.sql.Date"/>
+		<field name="value3" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="pcucode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["77511"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pid" class="java.lang.String">
+		<defaultValueExpression><![CDATA["96"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select h.hosname,concat(t.titlename,' ',p.fname,' ',p.lname) as name1
+from visit v
+join chospital h on (v.pcucode = h.hoscode)
+join person p on (v.pid = p.pid and v.pcucodeperson = p.pcucodeperson)
+left join ctitle t on (p.prename = t.titlecode)
+where p.pid = $P{pid}
+and h.hoscode = $P{pcucode}
+limit 1]]>
+	</queryString>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="name1" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="61" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="802" height="21" uuid="ad273acb-e2ce-485c-84b8-0b1d37ad1328"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="10" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="21" width="802" height="40" uuid="279135e5-f976-475d-afd7-0407e56a0837"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="13" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["รายงานผล Lab สำคัญ 3 ครั้งล่าสุดของ "+$F{name1}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<summary>
+		<band height="168" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="802" height="168" uuid="35289c72-8475-4859-858a-1d8955d35aa1"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="New Dataset 1" uuid="ccc131d0-c73b-42e3-870f-963ae34e7d30">
+						<datasetParameter name="pcucode">
+							<datasetParameterExpression><![CDATA[$P{pcucode}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="pid">
+							<datasetParameterExpression><![CDATA[$P{pid}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="76" uuid="7f285e43-e31e-4fd8-8bc2-47fa586251be">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="76" height="30" uuid="5e998ff3-5bff-4652-808b-0776e4e33078"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[Labcode]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="76" height="20" uuid="fcfa3ee4-8abd-4a9a-8741-a410a0efb7c3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{labcode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="165" uuid="b38a5571-19f0-4384-a95f-b7a5b03594d4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="165" height="30" uuid="59315a98-b9fd-43d4-af7d-8fc8f0b585fd"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[LabName]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="2" y="0" width="163" height="20" uuid="754e22fe-df72-40f8-b978-fccf8a4e29d6"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{labname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="6b32f445-5db4-4131-afd2-e71f9ce32491">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="30" uuid="55de0954-ae3b-4112-a48a-77047d0180d4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ครั้งที่ 1 วันที่ ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="20" uuid="1f42b85a-1fbe-4fbc-93d9-ef855d3c8fd5"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{date1}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="75" uuid="52a9a6cb-c8e5-4bef-87c4-9ebe72b7c9d4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="75" height="30" uuid="deeff813-a63e-4054-9dd3-fe6a4c2f6bd3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ผล Lab ครั้งที่ 1]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="75" height="20" uuid="a0524c4f-8208-466a-be4a-f25b2cb51509"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{value1}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="5df209ca-0665-4fa2-88d3-9bb63c9e37c4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="30" uuid="47748b30-1305-4644-b9d1-bb5df9514e5c"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ครั้งที่ 2 วันที่ ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="20" uuid="a13c4c74-8bbe-4e40-b985-bf49a785b7c8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{date2}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="75" uuid="7d4d4dbf-afa6-47c8-9cb8-72885862bffd">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="75" height="30" uuid="84e1eb2b-7618-4724-8dc6-a785153daf9e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ผล Lab ครั้งที่ 2]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="75" height="20" uuid="35691ecc-6cf7-4209-851b-65bf08986700"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{value2}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="781f6b3c-71df-4164-aad9-a3de538e7f7c">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="30" uuid="e06adaea-52c3-409d-84b3-d2f0d0e7f80b"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ครั้งที่ 3 วันที่]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="20" uuid="239ec5b2-b6d9-4461-a599-9394a897ed0a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{date3}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="75" uuid="c760b136-5751-4c97-b422-88556199d278">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="75" height="30" uuid="734d5476-598c-4378-a1fa-3629789320f4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<text><![CDATA[ผล Lab ครั้งที่ 3]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="20" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="75" height="20" uuid="b91e04de-60f5-4096-b6b0-0ca512c4c6a8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{value3}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

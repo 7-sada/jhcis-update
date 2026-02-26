@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptscreenotherdisease_subreport0" pageWidth="40" pageHeight="40" columnWidth="40" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="80dd85d4-f1bb-4490-b51d-96fba92e30f0">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="villno" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="startdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2008-10-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="enddate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2008-12-31"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT village.villno, count(*) as mcpc
+FROM
+	visit AS v
+	LEFT JOIN visitdentalcheck AS vt ON v.visitno = vt.visitno AND v.pcucode = vt.pcucode
+	LEFT JOIN person AS p ON   p.pcucodeperson = v.pcucodeperson AND p.pid = v.pid
+	LEFT JOIN house ON p.hcode = house.hcode AND p.pcucodeperson = house.pcucode
+	LEFT JOIN village ON house.villcode = village.villcode AND p.pcucodeperson = village.pcucode
+WHERE	village.villno = $P{villno} AND
+	(vt.toothmilkcorrupt > 0 OR vt.toothpermanentcorrupt > 0) AND
+	v.visitdate BETWEEN '$P!{startdate}' AND '$P!{enddate}' AND
+	v.visitno IN
+		(select max(visit.visitno) as maxden from visit
+		where visit.pid = v.pid and visit.pcucodeperson = v.pcucodeperson
+		AND v.visitdate BETWEEN '$P!{startdate}' AND '$P!{enddate}'
+		GROUP BY visit.pid)
+
+GROUP BY village.villcode
+ORDER BY v.pcucode,village.villcode, p.pid]]>
+	</queryString>
+	<field name="villno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="mcpc" class="java.lang.Long"/>
+	<variable name="mc" class="java.lang.Integer">
+		<variableExpression><![CDATA[($F{mcpc} == null || $F{mcpc}.equals( "" )? new Integer(0) : $F{mcpc}.intValue() )]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<textField>
+				<reportElement uuid="c1820e06-f3a3-4ac4-a26f-982ef728edc8" x="0" y="0" width="31" height="18" forecolor="#000000"/>
+				<box rightPadding="2">
+					<pen lineWidth="0.0" lineColor="#666666"/>
+					<topPen lineWidth="0.0" lineColor="#666666"/>
+					<leftPen lineWidth="0.0" lineColor="#666666"/>
+					<bottomPen lineWidth="0.0" lineColor="#666666"/>
+					<rightPen lineWidth="0.0" lineColor="#666666"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{mc}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

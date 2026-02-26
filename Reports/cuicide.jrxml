@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report2" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="871d42a0-d6b3-4520-8f43-80916ad70856">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="SelectDate" class="java.sql.Timestamp">
+		<parameterDescription><![CDATA[วันเริ่มต้น]]></parameterDescription>
+		<defaultValueExpression><![CDATA[new Date()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["and person.pcucodeperson ='08868 '"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+ch.hoscode,
+ch.hosname,
+date_format(vs.visitdate,'%Y-%m-%d') visitdate,
+CONCAT(ct.titlename,person.fname,'  ',person.lname) AS pname,
+person.idcard,
+getAgeYearNum(person.birth,CURDATE()) AS age
+,IF(vd.coderesult IS NULL OR vd.coderesult<>'2','ปกติ','ผิดปกติ') AS result
+,(select count(CONCAT(pcucodeperson,vs.pid)) from visit vs1 where vs1.pcucode = vd.pcucode and vs1.visitno = vd.visitno and vd.codescreen ='c01') counttime,
+(vd.q91+vd.q92+vd.q93+vd.q94+vd.q95+vd.q96+vd.q97+vd.q98+vd.q99) as q9,
+IF(vd.riskgroup IS NULL,'',vd.riskgroup)AS riskgroup,
+CONCAT(if(vd.healthf='1','1,',''),if(vd.consultf='1','2,',''),if(vd.cbt='1','3,',''),if(vd.satir='1','4,',''),if(vd.healthbydrug='1','5,',''),if(vd.healthother='1','6','')) AS care,
+IF(vs.refer='00' OR vs.refer IS NULL,'0','1') AS ref,
+CONCAT(if(vd.screen='1','1,',''),if(vd.diag='1','2,',''),if(vd.treatmind='1','3,',''),if(vd.treatfollow='1','4,',''),if(vd.watchcareful='1','5,','')) AS activity
+,concat(date_format('$P!{SelectDate}','%Y-%m'),"-01") as startdate
+,date_format(last_day('$P!{SelectDate}'),'%Y-%m-%d') as enddate
+,curdate() as currentdate
+FROM
+visitscreenspecialdisease vd
+INNER JOIN visit vs ON vd.visitno = vs.visitno AND vd.pcucode = vs.pcucode
+INNER JOIN person  ON vs.pcucode = person.pcucodeperson AND vs.pid = person.pid
+LEFT  JOIN ctitle ct ON ct.titlecode = person.prename
+LEFT JOIN chospital ch ON ch.hoscode = vd.pcucode
+where vs.visitdate between concat(date_format('$P!{SelectDate}','%Y-%m'),"-01") and  last_day('$P!{SelectDate}')
+and vd.codescreen = 'c01'
+$P!{pcucode}
+ORDER BY vs.visitdate]]>
+	</queryString>
+	<field name="hoscode" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String"/>
+	<field name="visitdate" class="java.lang.String"/>
+	<field name="pname" class="java.lang.String"/>
+	<field name="idcard" class="java.lang.String"/>
+	<field name="age" class="java.lang.Integer"/>
+	<field name="result" class="java.lang.String"/>
+	<field name="counttime" class="java.lang.Long"/>
+	<field name="q9" class="java.lang.Double"/>
+	<field name="riskgroup" class="java.lang.String"/>
+	<field name="care" class="java.lang.String"/>
+	<field name="ref" class="java.lang.String"/>
+	<field name="activity" class="java.lang.String"/>
+	<field name="startdate" class="java.lang.String"/>
+	<field name="enddate" class="java.lang.String"/>
+	<field name="currentdate" class="java.sql.Date"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="48" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="2e49b94d-47a7-43d5-8c80-92bcfecb8f78" x="0" y="0" width="371" height="24"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[แบบบันทึกการดูแลเฝ้าระวังโรคซึมเศร้าในพื้นที่ระดับจังหวัด หน่วยบริการ รพ.สต.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="442b2b3f-5f93-4e6b-aef1-1374c36b92a7" x="0" y="24" width="396" height="24"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="7070d383-b63c-4a8d-ad5e-c909b846b8e5" x="396" y="24" width="50" height="24"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[รหัส]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="5992bfc5-dc3f-4e7d-a5a4-bb4243be17ef" x="446" y="24" width="102" height="24"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{hoscode}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="84dd5e89-ae35-4041-8e70-7422eaaf1fd1" x="627" y="0" width="76" height="24"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<text><![CDATA[ถึงวันที่]]></text>
+			</staticText>
+			<textField pattern="d MMMMM yyyy">
+				<reportElement uuid="336d49a1-33bf-488e-a432-3b66bcab58b4" x="486" y="0" width="108" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{currentdate}.valueOf( $F{startdate} )]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy">
+				<reportElement uuid="a834d9a2-fc74-46c5-ab4c-b3b41abb27a8" x="703" y="0" width="100" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{currentdate}.valueOf( $F{enddate} )]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="dba5f86c-9670-44b0-a08a-04d75287381c" x="391" y="0" width="95" height="24"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ข้อมูลจากวันที่]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="41" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="aba9c26a-5b5f-4951-ada0-3ef88da8b9be" x="27" y="0" width="67" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[วันที่ให้บริการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2a2ff488-1400-403a-994c-b360e8d57841" x="94" y="0" width="116" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ชื่อ - สกุล]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d4fdea16-c919-4040-9111-5f00b4333ec4" x="210" y="0" width="95" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[หมายเลขบัตร   ประชาชน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="981b5f59-a730-401e-8e7d-44d9e5b04fa9" x="305" y="0" width="29" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[อายุ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9f3399b3-6f96-4fc0-a5b8-56d8ee5d5322" x="371" y="0" width="42" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ผลการ คัดกรอง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ebd83402-73b2-4d3e-874d-c7644e1f0282" x="413" y="0" width="33" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[คะแนน 9Q]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="cb84a8c2-bf42-4474-afdb-01fa48d858a3" x="477" y="0" width="45" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[รหัสกลุ่ม เสี่ยง]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="66028f65-c5d9-4be7-97ff-f4fe4b3587e6" x="597" y="0" width="50" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[การดูแล  ช่วยเหลือ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a288a67f-d89e-4c5d-9a83-7ac3ebd0aa89" x="647" y="0" width="55" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ส่งพบแพทย์   /ส่งต่อ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="795e2096-a414-4b16-956f-f28309227838" x="702" y="0" width="47" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[กิจกรรม  ให้บริการ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d85a4744-e0d7-4ab2-9665-a5e412985498" x="0" y="0" width="27" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ลำดับ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7cef6620-8dde-4199-83d1-baf8ecea56a9" x="749" y="0" width="47" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[หมายเหตุ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9358c148-6842-4b9a-a7d4-49d62de8a9d0" x="522" y="0" width="75" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[รหัสโรคซึมเคร้า  (เฉพาะ รพช./รพท.)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c41b84ca-da14-46d0-952e-89b4b6b9c490" x="446" y="0" width="31" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[คะแนน 8Q]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c85332de-daa0-46f6-aade-572b42ad2c7b" x="334" y="0" width="37" height="41"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[ครั้งที่ มารับ บริการ]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<textField pattern="d MMM yyyy" isBlankWhenNull="true">
+				<reportElement uuid="01173f4d-6a6c-4134-90cb-893aa74ada42" x="27" y="0" width="67" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{currentdate}.valueOf( $F{visitdate} )]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="9fb6ae5a-c0c6-4128-aa5c-8af32225d10b" x="94" y="0" width="116" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{pname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="e0fbe073-35fa-44f0-9d76-1cdfdc7d2abe" x="210" y="0" width="95" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{idcard}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="dff5a3a3-a925-413f-8bc8-69b9452b5746" x="305" y="0" width="29" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="65624e16-8cd8-41ef-8ecb-000f13863ff2" x="371" y="0" width="42" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{result}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement uuid="3f278e1a-415f-43ea-ac9a-c389a9648347" x="413" y="0" width="33" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{q9}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement uuid="784b61d8-6b8b-4960-b725-ebb43876b2a9" x="477" y="0" width="45" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{riskgroup}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="a7e175b6-8ea1-4162-9d71-b385c042b7be" x="597" y="0" width="50" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{care}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="70f94959-1ddc-46ce-a755-c33c8c1e88da" x="647" y="0" width="55" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ref}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="4f91f07b-571c-48b3-ade7-dee0006a4325" x="702" y="0" width="47" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{activity}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8364e1a9-c78b-4ffd-af90-10a117181075" x="0" y="0" width="27" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b2b4a527-4bff-42b2-a2bb-5ae2a5f0d2f1" x="749" y="0" width="47" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="feb5efe7-b8c9-41a5-9a8e-5ab4e5cde712" x="522" y="0" width="75" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="6feca49c-bcbf-4515-9fe3-f67c27370b80" x="446" y="0" width="31" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+			</textField>
+			<textField>
+				<reportElement uuid="64cba5c6-40ca-4f5b-aae1-9371ebf90b0d" x="334" y="0" width="37" height="20"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{counttime}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<lastPageFooter>
+		<band/>
+	</lastPageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

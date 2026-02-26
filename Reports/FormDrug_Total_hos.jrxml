@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="FormDrug_Total_hos" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="36" bottomMargin="36" isSummaryWithPageHeaderAndFooter="true" uuid="7cdf6429-6055-4bed-98b2-072d2cea18e5">
+	<property name="ireport.zoom" value="1.6105100000000014"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="139"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data1" uuid="3edbe313-80ae-4423-a964-18af3b62cdb7">
+		<parameter name="visitno" class="java.lang.Integer"/>
+		<queryString>
+			<![CDATA[select vd.drugcode,d.drugname,vd.unit,vd.realprice,
+(vd.realprice*unit) as price1,noclaimprice,
+(1-ifnull(noclaimprice,0))*vd.unit*vd.realprice  as paid
+,(ifnull(noclaimprice,0))*vd.unit*vd.realprice  as noclaim
+from visitdrug vd
+join cdrug d on (vd.drugcode = d.drugcode)
+where vd.visitno = $P{visitno}
+and d.drugcode not like 'DF%'
+order by d.drugtype]]>
+		</queryString>
+		<field name="drugcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="drugname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="unit" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="realprice" class="java.math.BigDecimal">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="price1" class="java.math.BigDecimal"/>
+		<field name="noclaimprice" class="java.math.BigDecimal">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="paid" class="java.math.BigDecimal">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="noclaim" class="java.math.BigDecimal"/>
+		<variable name="sumtotal" class="java.lang.Double" calculation="Sum">
+			<variableExpression><![CDATA[$F{price1}]]></variableExpression>
+			<initialValueExpression><![CDATA[new Double(0.00)]]></initialValueExpression>
+		</variable>
+	</subDataset>
+	<parameter name="visitno" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[select v.pid,p.fname,p.lname,ct.titlename,ifnull(p.idcard,"ไม่ระบุเลขบัตรประชาชน") as idcard,v.visitno,vr.receiptno,
+IF(v.visitdate IS NULL,'',concat(convert(DAY(v.visitdate) using utf8),' ',
+   CASE WHEN MONTH(v.visitdate)=1 THEN 'ม.ค.'
+   WHEN MONTH(v.visitdate)=2 THEN 'ก.พ.' WHEN MONTH(v.visitdate)=3 THEN 'มี.ค'
+   WHEN MONTH(v.visitdate)=4 THEN 'เม.ย.' WHEN MONTH(v.visitdate)=5 THEN 'พ.ค.'
+   WHEN MONTH(v.visitdate)=6 THEN 'มิ.ย.' WHEN MONTH(v.visitdate)=7 THEN 'ก.ค.'
+   WHEN MONTH(v.visitdate)=8 THEN 'ส.ค.' WHEN MONTH(v.visitdate)=9 THEN 'ก.ย.'
+   WHEN MONTH(v.visitdate)=10 THEN 'ต.ค.' WHEN MONTH(v.visitdate)=11 THEN 'พ.ย.'
+   WHEN MONTH(v.visitdate)=12 THEN 'ธ.ค.' END,' ',YEAR(visitdate)+543) )
+   as visitdate,
+ch.hosname,o.tel,ifnull(bb.diagcode,"ไม่ระบุการวินิจฉัย") as diagcode,ifnull(cdi.diseasenamethai,"") diseasenamethai,ch.hosname,o.tel
+from visit v
+left join
+(
+select vi.pcucode,vi.visitno,vi.diagcode
+from visitdiag vi
+where vi.dxtype = '01' and vi.visitno = $P{visitno}
+group by vi.visitno ) as bb on (v.visitno = bb.visitno and v.pcucode = bb.pcucode)
+left join cdisease cdi on (bb.diagcode = cdi.diseasecode)
+join chospital ch on (v.pcucode = ch.hoscode)
+left join office o on (ch.hoscode = o.offid)
+left join visitreceiptno vr on (v.visitno = vr.visitno)
+join person p on (p.pid = v.pid and p.pcucodeperson = v.pcucodeperson)
+left join ctitle ct on (ct.titlecode = p.prename)
+where vr.visitno = $P{visitno} and vr.flag is null and vr.datetime_cancel is null]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="titlename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="receiptno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitdate" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tel" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="diagcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="diseasenamethai" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="189" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="23" width="555" height="33" uuid="395a9009-20be-4786-9519-ee73a98c1176"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="22" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="455" y="0" width="100" height="20" uuid="ab72a13e-1df3-4f2d-8a16-8a48d689b629"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้าที่ "+$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="56" width="555" height="28" uuid="d6f1c881-9b31-47ab-804a-5e8eedde086c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[แบบฟอร์มสรุปรายการยา (รวม)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="93" width="123" height="20" uuid="d5631c0d-8ced-42d9-95ae-0b0d9d15d9ce"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA["HN         "+$F{pid}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="123" y="93" width="287" height="20" uuid="4093eb6e-bddd-47f7-ad13-d3d522d42e8f"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อ         "+$F{titlename}+" "+$F{fname}+" "+$F{lname}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="410" y="93" width="145" height="20" uuid="bffbb7dd-1689-4b08-a544-c03463e48a50"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันที่    "+$F{visitdate}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="140" width="555" height="39" uuid="f93c1475-eda9-4f70-8b78-24c71e694cd5"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วินิจฉัยโรค  "+$F{diagcode}+" : "+$F{diseasenamethai}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="116" width="210" height="20" uuid="e66ac6ad-6eb0-47c9-8602-150eb51449e3"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขที่บัตรประชาชน : "+$F{idcard}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="410" y="116" width="145" height="20" uuid="17e47768-802a-4020-bf77-5b6dcc2a3387"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" pdfFontName="THSarabun.ttf" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขที่ใบเสร็จ : "+$F{receiptno}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="50"/>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="50">
+			<staticText>
+				<reportElement x="286" y="10" width="269" height="20" uuid="4920bd14-19af-4376-b968-9ac4109a15ad"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK"/>
+				</textElement>
+				<text><![CDATA[-------------------------------------------------------------------------]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="30" width="269" height="20" uuid="4e68c28f-92fc-4eae-907a-ade427e86793"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<text><![CDATA[เจ้าหน้าที่การเงิน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="30" width="250" height="20" uuid="71b4c12a-dfbf-4e56-9899-069b2bf85045"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="16"/>
+				</textElement>
+				<text><![CDATA[ผู้ป่วย/ผู้รับยาแทน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="10" width="250" height="20" uuid="dd65b3b9-f64d-4bf9-8d0f-307f03621481"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK"/>
+				</textElement>
+				<text><![CDATA[-------------------------------------------------------------------------]]></text>
+			</staticText>
+		</band>
+	</lastPageFooter>
+	<summary>
+		<band height="85" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table 1" style="table 1" x="0" y="13" width="555" height="72" uuid="d7a35e21-a5ec-4408-9079-71ca28399a6d"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data1" uuid="8ff2628b-c2a7-4a4d-8cd9-4bc50bcc80e6">
+						<datasetParameter name="visitno">
+							<datasetParameterExpression><![CDATA[$F{visitno}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:columnGroup width="448" uuid="ac71a121-0a2a-4f73-8075-e3a1b3aab3fa">
+						<jr:tableFooter height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="15" y="0" width="420" height="30" uuid="0e8d5f90-abe5-4ace-8a4a-887e331b44e9"/>
+								<box>
+									<topPen lineWidth="0.5"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[                                                                                                  รวม]]></text>
+							</staticText>
+						</jr:tableFooter>
+						<jr:column width="375" uuid="83f64c64-88e4-4c29-8881-b39438134b63">
+							<jr:columnHeader style="table 1_TD" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="15" y="0" width="360" height="30" uuid="48e1f35f-cc2c-4809-832f-0493b87cb5f1"/>
+									<box>
+										<bottomPen lineWidth="0.5"/>
+									</box>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="18"/>
+									</textElement>
+									<text><![CDATA[รายการ]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="29" rowSpan="1">
+								<box>
+									<topPen lineWidth="0.0"/>
+									<leftPen lineWidth="0.0"/>
+									<bottomPen lineWidth="0.0"/>
+									<rightPen lineWidth="0.0"/>
+								</box>
+								<textField isBlankWhenNull="true">
+									<reportElement x="15" y="0" width="360" height="29" uuid="061632a5-844b-4ca7-9db5-854a6423fdd1"/>
+									<box>
+										<topPen lineWidth="0.5"/>
+									</box>
+									<textElement verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{drugname}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="73" uuid="8e80b139-1821-4b64-a434-d9d74e7eda06">
+							<jr:columnHeader style="table 1_TD" height="30" rowSpan="1">
+								<staticText>
+									<reportElement x="0" y="0" width="60" height="30" uuid="97a6028f-a4df-4f10-8ab9-7f1ac40b1d4c"/>
+									<textElement textAlignment="Right" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="18"/>
+									</textElement>
+									<text><![CDATA[จำนวน]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="table 1_TD" height="29" rowSpan="1">
+								<textField>
+									<reportElement x="0" y="0" width="60" height="29" uuid="0fc2bb62-e7b1-4afd-ba84-a12ee0e8f124"/>
+									<textElement textAlignment="Right" verticalAlignment="Middle">
+										<font fontName="TH SarabunPSK" size="16"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{unit}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:columnGroup>
+					<jr:column width="95" uuid="ad5808fb-f05f-4367-848f-f47681bf2421">
+						<jr:tableFooter height="30" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="87" height="30" uuid="2dfe4c3e-6d5b-46e0-b6f0-1187df1f9821"/>
+								<box>
+									<leftPen lineWidth="0.5"/>
+								</box>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{sumtotal}]]></textFieldExpression>
+							</textField>
+						</jr:tableFooter>
+						<jr:columnHeader style="table 1_TD" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="87" height="30" uuid="2ac42ec7-14cd-4bfe-8902-79bbc6dbfa44"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="18"/>
+								</textElement>
+								<text><![CDATA[จำนวนเงิน]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:columnFooter style="table 1_TD" height="0" rowSpan="1"/>
+						<jr:detailCell style="table 1_TD" height="29" rowSpan="1">
+							<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="87" height="29" uuid="98700b94-d792-4e63-838d-37c5c0166c29"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{price1}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MedicalCertify_Strong" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ec837142-8cdf-4090-a8f1-5f46d6535204">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="49"/>
+	<parameter name="VN" class="java.lang.String">
+		<parameterDescription><![CDATA[$P{VN}]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HCC" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oid" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="_cup" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Program Files\\jhcis-client\\Reports"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+CONCAT('สถานที่ตรวจ ',cp.hosname,' ')as hos,cp.hosname,
+concat('ข้าพเจ้า ',ifnull(tt1.`titlenamelong`,'...'),ifnull(`user`.`fname`,`user`.`fullName`),'   ',ifnull(`user`.`lname`,'...')) as fullName,
+concat(ifnull(tt2.titlename,ifnull(`person`.`prename`,'..')),ifnull(`person`.`fname`,''),'   ',ifnull(`person`.`lname`,''),' HN: ',convert(visit.pid using utf8)) as fpt,
+concat(ifnull(tt2.titlename,ifnull(`person`.`prename`,'..')),ifnull(`person`.`fname`,''),'   ',ifnull(`person`.`lname`,'')) as name,
+getAgeYearNum(person.birth,visit.visitdate) as age,
+concat(tt1.`titlename`,`user`.`fname`,'  ',`user`.`lname`) as doctorName,
+concat(ifnull(`user`.`noofoccupation`,'ไม่ระบุเลขที่ใบประกอบวิชาชีพ')) as noofoccupation,
+concat('สถานที่ประกอบวิชาชีพเวชกรรม ',ifnull(`user`.`workoffice`,'...')) as workoffice,
+concat('ข้าพเจ้า  ',ifnull(tt2.titlenamelong,ifnull(`person`.`prename`,'..')),ifnull(`person`.`fname`,''),'   ',ifnull(`person`.`lname`,''),' HN: ',convert(visit.pid using utf8),' อายุ ' ,getageymd(person.birth,visit.visitdate)) as pfl,
+concat('สถานที่อยู่ (ที่สามารถติดต่อได้)  ',ifnull(pc.`hno`,'-'),' ม.',ifnull(convert(pc.`mu` using utf8),'-'),' ต.',ifnull(csd.`subdistname`,'-'),
+                            ' อ.',ifnull(cd.`distname`,'-'),              ' จ.',ifnull(cw.`provname`,'-')) AS addr,
+`person`.`idcard` as idcard,
+ visit.visitno,
+concat('วันที่  ',day(visit.visitdate),'  เดือน  ',convert(case MONTH(visit.visitdate) WHEN 1 THEN 'มกราคม'
+WHEN 2 THEN 'กุมภาพันธ์' WHEN 3 THEN 'มีนาคม' WHEN 4 THEN 'เมษายน'
+WHEN 5 THEN 'พฤษภาคม' WHEN 6 THEN 'มิถุนายน' WHEN 7 THEN 'กรกฎาคม' WHEN 8 THEN 'สิงหาคม' WHEN 9 THEN 'กันยายน'  WHEN 10 THEN 'ตุลาคม'
+WHEN 11 THEN 'พฤศจิกายน' WHEN 12 THEN 'ธันวาคม' ELSE 'xx' END USING utf8),'  พ.ศ. ',IF(visit.visitdate IS null OR TRIM(visit.visitdate)='','',YEAR(visit.visitdate)+543)) vd,
+visit.weight,visit.height,visit.pressure,visit.pulse,
+`visit`.`rightno`
+FROM
+`visit`
+Left Outer Join `user` ON `user`.`username` = `visit`.`username`
+Left Outer Join `person` ON `person`.`pid` = `visit`.`pid`
+LEFT Outer JOIN chospital cp ON cp.hoscode=visit.pcucode
+left outer join personaddresscontact pc on person.pcucodeperson = pc.pcucodeperson and person.pid = pc.pid
+left outer JOIN `csubdistrict` csd ON csd.subdistcode = pc.subdistcode and csd.distcode = pc.distcode and csd.provcode = pc.provcode
+left outer JOIN `cdistrict` cd ON cd.distcode = pc.distcode and cd.provcode = pc.provcode
+left outer JOIN `cprovince` cw ON cw.provcode = pc.provcode
+left outer join `ctitle` tt1 on `user`.`prename` = `tt1`.`titlecode`
+left outer join `ctitle` tt2 on `person`.`prename` = `tt2`.`titlecode`
+WHERE visit.visitno = $P{VN}]]>
+	</queryString>
+	<field name="hos" class="java.lang.String"/>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fullName" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fpt" class="java.lang.String"/>
+	<field name="name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="age" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="doctorName" class="java.lang.String"/>
+	<field name="noofoccupation" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="workoffice" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pfl" class="java.lang.String"/>
+	<field name="addr" class="java.lang.String">
+		<fieldDescription><![CDATA[บ้านเลขที่]]></fieldDescription>
+	</field>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="visitno" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vd" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="weight" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="height" class="java.math.BigDecimal">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pressure" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pulse" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rightno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="95" splitType="Stretch">
+			<image>
+				<reportElement x="1" y="2" width="555" height="93" uuid="34500980-7ba4-4c37-88df-cca4b121adcf"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR}+"\\logo.jpg"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="77" splitType="Stretch">
+			<staticText>
+				<reportElement x="106" y="0" width="346" height="39" uuid="25f798d6-8f62-4df1-b12c-8e4efcc73401"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ใบรับรองแพทย์]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="94" height="21" uuid="18910803-b38d-40bb-b0e9-3cd34e96b707"/>
+				<textElement textAlignment="Left">
+					<font fontName="Tahoma" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[เล่มที่]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="273" y="44" width="282" height="25" uuid="f3e8aa7a-c706-4a21-91ed-9820f74dc3a7"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{vd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="455" y="1" width="100" height="38" uuid="95a83640-6d50-4cf8-9a67-1cf88a0e2feb"/>
+				<textElement>
+					<font fontName="Tahoma" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เลขที่ "+$F{visitno}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="595" splitType="Stretch">
+			<textField>
+				<reportElement x="29" y="0" width="526" height="31" uuid="f49c74e5-3f05-47fa-89cd-ff358e3d7a60"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fullName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="31" width="555" height="27" uuid="f5594731-91cf-48d0-94a1-1f4ff64d075c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ก)     แพทย์ปริญญาใบอนุญาตประกอบวิชาชีพเวชกรรมเลขที่   "+$F{noofoccupation}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="29" y="58" width="526" height="27" uuid="bb252c7e-fd10-4762-be0c-6d8c4b93081c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ได้ทำการตรวจร่างกายของ     "+$F{fpt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="30" y="84" width="526" height="27" uuid="9b607b10-1a00-4ce0-b356-30973ca0aaf9"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อายุ     "+$F{age}+"   ปี  เลขที่บัตร  "+$F{idcard}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="116" width="94" height="27" uuid="abc8d134-6b54-4c8a-8e9e-8fbab7a03907"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ข)     ปรากฎว่า   "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="94" y="116" width="344" height="27" uuid="9db20759-fe52-4ca1-b286-e88da3ebca0b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="438" y="116" width="117" height="27" uuid="454bc4b4-d987-4847-b521-b8ca2111f9d3"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ไม่เป็นผู้ทุพพลภาพ"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="30" y="143" width="525" height="27" uuid="af07c717-3194-41a5-83c1-bf24c7c4217a"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[หรือไร้ความสามารถ สติฟั่นเฟือนไม่สมประกอบและปราศจากโรคเหล่านี้คือ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="94" y="170" width="462" height="27" uuid="4c46b363-1b2e-4063-be34-807d7ba9128d"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[โรคเรื้อนในระยะติดต่อหรือในระยะที่ปรากฎอาการเป็นที่รังเกียจแก่สังคม]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="94" y="197" width="462" height="27" uuid="34f8a660-5bf7-4822-9de3-bfc2eeb1ad15"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[วัณโรคในระยะอันตราย]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="94" y="224" width="462" height="27" uuid="f9a0eb6e-10fe-43d4-bdcf-e0175152a77d"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[โรคเท้าช้างในระยะที่ปรากฎอาการที่รังเกียจแก่สังคม]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="94" y="251" width="462" height="27" uuid="17809400-7e8e-4390-8aa9-32bcc54cb10e"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[โรคติดยาเสพติดให้โทษ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="94" y="278" width="462" height="27" uuid="2d1e7e52-3931-4998-b961-b090f5029f53"/>
+				<textElement>
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[โรคพิษสุราเรื้อรัง]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="309" width="555" height="27" uuid="fa39d26b-0863-4f50-8a16-b955c9029fb8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ค)     เห็นว่า........................................................................................................................................................"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="336" width="554" height="27" uuid="79f14893-fe1e-461b-9967-f4a77b147895"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["...................................................................................................................................................................................."]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="363" width="554" height="27" uuid="d80a3bf5-81e1-4f71-9ed0-98ff6b09c99f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["...................................................................................................................................................................................."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="30" y="424" width="227" height="29" uuid="3538e376-3c2e-413d-9469-42b003f53702"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[ลงชื่อ..........................................................]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="305" y="424" width="227" height="29" uuid="22e2b7fd-cb50-4103-ae82-3bb015b2eb03"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[ลงชื่อ..........................................................]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="305" y="453" width="229" height="29" uuid="cec7229b-68d2-4633-8f16-03b013e9cd5e"/>
+				<textElement textAlignment="Center">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{doctorName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="305" y="482" width="227" height="21" uuid="1c7e348b-bd31-4b7c-8665-f5800f6c12bf"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[แพทย์ผู้ตรวจ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="482" width="227" height="21" uuid="3933913a-9fb7-484e-bbab-7941429a6497"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[ผู้รับการตรวจ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="512" width="555" height="83" uuid="1ee91494-31ce-4f96-a417-4238982ec406"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="12"/>
+				</textElement>
+				<text><![CDATA[*หมายเหตุ
+	ก) ให้แสดงความเป็นแพทย์ซึ่งได้ขึ้นทะเบียนรับใบอนุญาตประกอบวิชาชีพเวชกรรม
+	ข) ให้แสดงว่าเป็นผู้มีร่างกายสมบูรณ์เพียงใดหรือหายจากโรคที่เป็นเหตุให้ต้องออกจากราชการ
+	ค) ให้แสดงว่าเป็นผู้มีร่างกายเหมาะสมกับตำแหน่งหน้าที่ราชการที่ต้องปฏิบัติ]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

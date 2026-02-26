@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Pyrsmid_20190329" pageWidth="595" pageHeight="842" columnWidth="553" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c1f9d247-c458-4b24-9362-92201c69b36f">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT
+case
+  when year(now()) - year(birth) > 79 then  '80+'
+  when year(now()) - year(birth) between  75 and 79 then '75-79'
+  when year(now()) - year(birth) between  70 and 74 then '70-74'
+  when year(now()) - year(birth) between  65 and 69 then '65-69'
+  when year(now()) - year(birth) between  60 and 64 then '60-64'
+  when year(now()) - year(birth) between  55 and 59 then '55-59'
+  when year(now()) - year(birth) between  50 and 54 then '50-54'
+  when year(now()) - year(birth) between  45 and 49 then '45-49'
+  when year(now()) - year(birth) between  40 and 44 then '40-44'
+  when year(now()) - year(birth) between  35 and 39 then '35-39'
+  when year(now()) - year(birth) between  30 and 34 then '30-34'
+  when year(now()) - year(birth) between  25 and 29 then '25-29'
+  when year(now()) - year(birth) between  20 and 24 then '20-24'
+  when year(now()) - year(birth) between  15 and 19 then '15-19'
+  when year(now()) - year(birth) between  10 and 14 then '10-14'
+  when year(now()) - year(birth) between   5 and  9 then '05-09'
+  when year(now()) - year(birth) between   0 and  4 then '00-04'
+  else '00' end as age_rang,
+count(IF(sex ='1',1,null))* -1 AS M ,count(IF(sex  ='2',1,null)) AS F,
+count(year(now()) - year(birth))  total , (SELECT COUNT(pid) from person where right(villcode,2) <> '00' and typelive in ('1','3') and dischargetype = '9'
+) as totalperson , count(IF(sex ='1',1,null)) * 100 / (SELECT COUNT(pid) from person where right(villcode,2) <> '00' and typelive in ('1','3') and dischargetype = '9'
+)*-1 as percentM , count(IF(sex ='2',1,null)) * 100 / (SELECT COUNT(pid) from person where right(villcode,2) <> '00' and typelive in ('1','3') and dischargetype = '9'
+) as percentF
+ FROM   person
+join house on person.pcucodeperson = house.pcucode  and  person.hcode = house.hcode
+where right(villcode,2) <> '00'   and   concat(person.pid , person.pcucodeperson)
+not in (select concat(persondeath.pid ,persondeath.pcucodeperson) from persondeath )
+and typelive in ('1','3') and dischargetype = '9'
+group by age_rang order by
+case
+  when year(now()) - year(birth) > 79 then  '80+'
+  when year(now()) - year(birth) between  75 and 79 then '75-79'
+  when year(now()) - year(birth) between  70 and 74 then '70-74'
+  when year(now()) - year(birth) between  65 and 69 then '65-69'
+  when year(now()) - year(birth) between  60 and 64 then '60-64'
+  when year(now()) - year(birth) between  55 and 59 then '55-59'
+  when year(now()) - year(birth) between  50 and 54 then '50-54'
+  when year(now()) - year(birth) between  45 and 49 then '45-49'
+  when year(now()) - year(birth) between  40 and 44 then '40-44'
+  when year(now()) - year(birth) between  35 and 39 then '35-39'
+  when year(now()) - year(birth) between  30 and 34 then '30-34'
+  when year(now()) - year(birth) between  25 and 29 then '25-29'
+  when year(now()) - year(birth) between  20 and 24 then '20-24'
+  when year(now()) - year(birth) between  15 and 19 then '15-19'
+  when year(now()) - year(birth) between  10 and 14 then '10-14'
+  when year(now()) - year(birth) between   5 and  9 then '05-09'
+  when year(now()) - year(birth) between   0 and  4 then '00-04'
+  else '00' end desc]]>
+	</queryString>
+	<field name="age_rang" class="java.lang.String"/>
+	<field name="M" class="java.lang.Long"/>
+	<field name="F" class="java.lang.Long"/>
+	<field name="total" class="java.lang.Long"/>
+	<field name="totalperson" class="java.lang.Long"/>
+	<field name="percentM" class="java.math.BigDecimal"/>
+	<field name="percentF" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="27" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="228" splitType="Stretch">
+			<stackedBarChart>
+				<chart>
+					<reportElement x="0" y="0" width="555" height="228" uuid="3ecf14bd-57d7-4e52-a1cd-63c83b3c073d"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["m"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{age_rang}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{M}]]></valueExpression>
+					</categorySeries>
+					<categorySeries>
+						<seriesExpression><![CDATA["f"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{age_rang}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{F}]]></valueExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot>
+					<plot orientation="Horizontal"/>
+					<itemLabel/>
+					<categoryAxisFormat>
+						<axisFormat/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</barPlot>
+			</stackedBarChart>
+		</band>
+	</summary>
+</jasperReport>

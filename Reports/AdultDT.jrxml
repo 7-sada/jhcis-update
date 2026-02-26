@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="AdultDT" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="47950c75-a856-4789-b100-6d2d6c14c2c0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="DataAdult" uuid="56b84a1c-dc0f-4e5c-b8c7-8a8a378ea556">
+		<parameter name="edate" class="java.lang.String"/>
+		<parameter name="sdate" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select aa.pid,aa.dt,aa.tt,aa.dateepi,
+concat(ifnull(titlename,ifnull(p1.prename,'...')) ," ", fname," ", lname) as fullname,
+getAgeYearNum(p1.birth,now()) as Age,p1.mumoi,h.villcode,
+(case when right(h.villcode,2) = '00' then p4.villname
+else concat("หมู่ที่่ ", p1.mumoi ," ", p4.villname)
+end ) as fullvill,p4.villname
+from person p1
+join
+(select B.pid,Group_concat(B.dt) as dt,group_concat(B.tt) as tt ,max(B.dateepi) as dateepi,B.pcucodeperson
+from
+(select A.*
+from
+(select p.pid,v.vaccinecode as dt,null as tt ,v.dateepi,p.pcucodeperson
+from person p
+join visitepi v on (p.pid = v.pid and p.pcucodeperson = v.pcucodeperson)
+where v.dateepi between $P!{sdate} and $P!{edate}
+and v.vaccinecode like '%dt%'
+and getAgeYearNum(p.birth,v.dateepi) > 15
+union all
+select p.pid,null as dt,v.vaccinecode as tt ,v.dateepi,p.pcucodeperson
+from person p
+join visitepi v on p.pid = v.pid
+where v.dateepi between $P!{sdate} and $P!{edate}
+and v.vaccinecode like '%TT%'
+and getAgeYearNum(p.birth,v.dateepi) > 15)A
+group by A.dt,A.dateepi,A.pid
+order by A.pid)B
+group by B.pid)aa on (p1.pid = aa.pid and p1.pcucodeperson = aa.pcucodeperson)
+join ctitle p2 on p1.prename = p2.titlecode
+left join house h on (p1.hcode = h.hcode and p1.pcucodeperson = h.pcucode)
+left join village p4 on (h.villcode = p4.villcode and h.pcucode = p4.pcucode)
+order by h.villcode,pid]]>
+		</queryString>
+		<field name="pid" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dt" class="java.lang.String"/>
+		<field name="tt" class="java.lang.String"/>
+		<field name="dateepi" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fullname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="Age" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="mumoi" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="villcode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fullvill" class="java.lang.String"/>
+		<field name="villname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<group name="mumoi">
+			<groupExpression><![CDATA[$F{villcode}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="header_1" class="java.lang.String"/>
+	<parameter name="header_2" class="java.lang.String"/>
+	<parameter name="sdate" class="java.lang.String"/>
+	<parameter name="edate" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select 1 as dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Long"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="78" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="27" forecolor="#000000" uuid="177b9c15-d5ac-4dd9-8436-e18584b58178"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Angsana New" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ทะเบียนผู้มารับบริการวัคซีน dt หรือ TT ในผู้ใหญ่]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="27" width="555" height="21" forecolor="#000000" uuid="0e094684-f73a-43a3-9ba5-4cd9d2c1e898"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_1}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" x="348" y="48" width="115" height="25" uuid="f04d97d7-758c-4a14-9810-fce7c9116c80"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[วันที่ประมวลผลรายงาน: ]]></text>
+			</staticText>
+			<textField pattern="dd-MMM-yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="461" y="48" width="94" height="25" uuid="95f4408c-da9e-4724-b134-0748673506c7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="48" width="348" height="25" forecolor="#000000" uuid="ace0b99b-e3a9-4d49-b2bf-2f01d4b3ec64"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{header_2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="70">
+			<staticText>
+				<reportElement x="0" y="0" width="461" height="59" uuid="af0dd23f-622e-4b54-bc65-2fdc8bd1b02e"/>
+				<textElement>
+					<font fontName="Angsana New" size="14"/>
+				</textElement>
+				<text><![CDATA[-- วัคซีน dt หมายถึง วัคซืน DT,DT1,DT2,DT3,DT4,DTANC1,DTANC2,DTANC3,DTANC4,DTANC5,dtC,DTP1,DTP2,DTP3,DTP4,DTP5,DTS1,DTS2,DTS4
+-- วัคซีน TT หมายถึง วัคซีน TT,TT1,TT3,TT4
+]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="50">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="555" height="50" uuid="4eb2c4d3-d268-4b3b-9a6f-0439880186df"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="DataAdult" uuid="40a51353-13bf-45bd-a32f-076d0e49e0c6">
+						<datasetParameter name="edate">
+							<datasetParameterExpression><![CDATA[$P{edate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="sdate">
+							<datasetParameterExpression><![CDATA[$P{sdate}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="60" uuid="765ea6c7-b87a-4778-b007-d505642ef44a">
+						<jr:groupHeader groupName="mumoi">
+							<jr:cell style="table_TH" height="30" rowSpan="1"/>
+						</jr:groupHeader>
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="60" height="30" uuid="67681668-16bf-4d28-bdda-987ae9b015e1"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ลำดับที่]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="60" height="20" uuid="8ba2ad21-7168-4d2c-be21-585a79f64504"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{mumoi_COUNT}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="200" uuid="633cbbb7-a565-4abc-9be1-8e8f7fe2cf94">
+						<jr:groupHeader groupName="mumoi">
+							<jr:cell style="table_TH" height="30" rowSpan="1">
+								<textField>
+									<reportElement x="0" y="0" width="200" height="30" uuid="4408bd0a-aa01-4ace-9fe8-9eb286d7d143"/>
+									<textElement verticalAlignment="Middle">
+										<font fontName="Angsana New" size="16" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{fullvill}]]></textFieldExpression>
+								</textField>
+							</jr:cell>
+						</jr:groupHeader>
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="200" height="30" uuid="05961e42-0ec2-404f-a664-85ce761093c1"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อ-สกุล]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="200" height="20" uuid="6a9773e9-cfc3-44dd-9bc9-8b367613bb0e"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{fullname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="79" uuid="09f53bec-b912-469c-b982-d484b7967f6b">
+						<jr:groupHeader groupName="mumoi">
+							<jr:cell style="table_TH" height="30" rowSpan="1"/>
+						</jr:groupHeader>
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="79" height="30" uuid="22c3cdbe-7984-4950-a4d6-2db6fd2bf3f7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[อายุ(ปี)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="79" height="21" uuid="98545db3-554a-4a55-8f53-19256927c140"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Age}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="102" uuid="44c3e105-ceb0-4021-b3aa-6af8bc966469">
+						<jr:groupHeader groupName="mumoi">
+							<jr:cell style="table_TH" height="30" rowSpan="1"/>
+						</jr:groupHeader>
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="102" height="30" uuid="70fafb30-ecac-4f33-b46d-671d4d98e0b6"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[การได้รับวัคซีน dt]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="102" height="21" uuid="d37847e1-3908-4942-8335-616425c9c855"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{dt}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="2c6908fb-e28e-47ed-b33a-138c3a8c2cff">
+						<jr:groupHeader groupName="mumoi">
+							<jr:cell style="table_TH" height="30" rowSpan="1"/>
+						</jr:groupHeader>
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="860f956e-94d1-487b-860d-5ec331d10744"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16" isBold="true"/>
+								</textElement>
+								<text><![CDATA[การได้รับวัคซีน TT]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="21" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="21" uuid="9364fbe4-3072-415c-9166-2f496060dd04"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Angsana New" size="16"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{tt}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

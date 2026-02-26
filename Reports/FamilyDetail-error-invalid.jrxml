@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FamilyDetail"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="hcode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[new String("22")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="reportdate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[new String("2009-02-28")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["01856"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucodeperson" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["01856"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT P.pcucodeperson,P.hcode,P.familyno,P.idcard,P.birth,P.allergic,P.privatedoc,  
+  P.income,P.datein,P.rightcode,P.officework,
+  CAST(CONCAT(P.bloodgroup,'',P.bloodrh) AS CHAR) AS bloodgroup, 
+  CAST((CASE P.sex WHEN '1' THEN 'ชาย' WHEN '2' THEN 'หญิง' ELSE 'ไม่ระบุ' END) AS char) AS sex,
+  IF(P.fname IS NULL AND P.lname IS NULL, '', CAST(CONCAT(P.prename,P.fname,'  ',P.lname) AS char)) AS fullname, 
+  CAST( CONCAT( getAgeYearNum(P.birth, $P{reportdate}),'-',getAgeMonthNum(P.birth, $P{reportdate}),'-',getAgeDayNum(P.birth, $P{reportdate}) ) AS char) AS ageymd,    
+  (SELECT CAST(CONCAT(REF_P.prename,REF_P.fname,'  ',REF_P.lname) AS char) FROM person REF_P WHERE REF_P.pcucodeperson=$P{pcucodeperson} AND REF_P.hcode=$P{hcode} AND REF_P.familyposition='1') AS familyleader,
+  (SELECT IF(cfamilyposition.famposname IS NOT NULL,cfamilyposition.famposname,'ไม่ระบุ') AS famposname FROM cfamilyposition WHERE cfamilyposition.famposcode=P.familyposition) AS familyposition,
+  (SELECT IF(cstatus.statusname IS NOT NULL,cstatus.statusname,'ไม่ระบุ') AS statusname FROM cstatus WHERE cstatus.statuscode=P.marystatus) AS marystatus,
+  (SELECT IF(ceducation.educationname IS NOT NULL,ceducation.educationname,'ไม่ระบุ') AS educationname FROM ceducation WHERE ceducation.educationcode=P.educate) AS educate, 
+  (SELECT IF(coccupa.occupaname IS NOT NULL,coccupa.occupaname,'ไม่ระบุ') AS occupaname FROM coccupa WHERE coccupa.occupacode=P.occupa) AS occupa, 
+  (SELECT IF(creligion.religionname IS NOT NULL,creligion.religionname,'ไม่ระบุ') AS religionname FROM creligion WHERE creligion.religioncode=P.religion) AS religion,  
+
+  /*  อสม  */
+  (SELECT IF(ref_p.fname='' OR ref_p.fname IS NULL, 'ไม่ระบุ', CAST(CONCAT(ref_p.prename,ref_p.fname,'  ',ref_p.lname) AS char)) 
+  FROM house ref_h 
+    INNER JOIN person ref_p ON (ref_h.pcucodepersonvola=ref_p.pcucodeperson AND ref_h.pidvola=ref_p.pid)  
+  WHERE ref_h.pcucode=$P{pcucodeperson} AND ref_h.hcode=$P{hcode}) AS villagehealthvolunteer, 
+
+  /*  กสค */
+  (SELECT IF(ref_p.fname='' OR ref_p.fname IS NULL, 'ไม่ระบุ', CAST(CONCAT(ref_p.prename,ref_p.fname,'  ',ref_p.lname) AS char)) 
+  FROM house ref_h 
+    INNER JOIN person ref_p ON (ref_h.pcucodepersonvola=ref_p.pcucodeperson AND ref_h.pidvola=ref_p.pid)  
+  WHERE ref_h.pcucode=$P{pcucodeperson} AND ref_h.hcode=$P{hcode}) AS familyhealthleader,  
+  
+  /*  ตำแหน่งในชุมชน */
+  (SELECT ref_cpt.persontypename    
+  FROM persontype ref_pt 
+    INNER JOIN cpersontype ref_cpt ON (ref_pt.typecode=ref_cpt.persontypecode)  
+  WHERE ref_pt.pcucodeperson=P.pcucodeperson AND ref_pt.pid=P.pid) AS communityposition,  
+
+  (CASE PB.ciga WHEN '0' THEN 'ไม่สูบ' WHEN '1' THEN 'สูบนานๆครั้ง' WHEN '2' THEN 'สูบประจำ' ELSE 'ไม่ระบุ' END) AS cigar,  
+  (CASE PB.wisky WHEN '0' THEN 'ไม่ดื่ม' WHEN '1' THEN 'ดื่มนานๆครั้ง' WHEN '2' THEN 'ดื่ม1-2 ครั้ง/เดือน' ELSE 'ไม่ระบุ' END) AS whisky,  
+  (CASE PB.exercise WHEN '0' THEN 'ไม่ทำ' WHEN '1' THEN '< 3 วัน/สัปดาห์' WHEN '2' THEN '3-5 วัน/สัปดาห์' ELSE 'ไม่ระบุ' END) AS exercise, 
+
+  IF(P.mumoi IS NOT NULL,P.mumoi,'-') AS mumoi, 
+  IF(P.roadmoi IS NOT NULL,P.roadmoi,'-') AS roadmoi, 
+  (SELECT IF(village.villname IS NOT NULL,SUBSTRING(village.villname,7,2),'-') AS villname FROM village WHERE village.villcode=CAST( CONCAT(P.provcodemoi,P.distcodemoi,P.subdistcodemoi,P.mumoi) AS CHAR) ) AS village,
+  (SELECT IF(csubdistrict.subdistname IS NOT NULL,csubdistrict.subdistname,'-') AS subdistname FROM csubdistrict WHERE csubdistrict.provcode=P.provcodemoi AND csubdistrict.distcode=P.distcodemoi AND csubdistrict.subdistcode=P.subdistcodemoi) AS subdistrict,
+  (SELECT IF(cdistrict.distname IS NOT NULL,cdistrict.distname,'-') AS distname FROM cdistrict WHERE cdistrict.provcode=P.provcodemoi AND cdistrict.distcode=P.distcodemoi) AS district,
+  (SELECT IF(cprovince.provname IS NOT NULL,cprovince.provname,'-') AS provname FROM cprovince WHERE cprovince.provcode=P.provcodemoi) AS province,    
+  hhh.pcucode,hhh.hno 	
+FROM person P 
+  left join house hhh on (p.pcucodeperson = hhh.pcucode and p.hcode = hhh.hcode) 
+  LEFT OUTER JOIN personbehavior PB ON (PB.pcucodeperson=P.pcucodeperson AND PB.pid=P.pid)     
+
+WHERE P.pcucodeperson=$hhh{pcucode} AND P.hcode=$hhh{hcode}
+/*  WHERE hhh.pcucode=$hhh{pcucode} AND hhh.hcode=$hhh{hcode}*/
+ORDER BY P.pcucodeperson ASC,  P.hcode ASC, P.familyno ASC, P.familyposition ASC]]></queryString>
+
+	<field name="pcucodeperson" class="java.lang.String"/>
+	<field name="hcode" class="java.lang.Integer"/>
+	<field name="familyno" class="java.lang.Integer"/>
+	<field name="idcard" class="java.lang.String"/>
+	<field name="birth" class="java.sql.Date"/>
+	<field name="allergic" class="java.lang.String"/>
+	<field name="privatedoc" class="java.lang.String"/>
+	<field name="income" class="java.lang.Double"/>
+	<field name="datein" class="java.sql.Date"/>
+	<field name="rightcode" class="java.lang.String"/>
+	<field name="officework" class="java.lang.String"/>
+	<field name="bloodgroup" class="java.lang.String"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="fullname" class="java.lang.String"/>
+	<field name="ageymd" class="java.lang.String"/>
+	<field name="familyleader" class="java.lang.String"/>
+	<field name="familyposition" class="java.lang.String"/>
+	<field name="marystatus" class="java.lang.String"/>
+	<field name="educate" class="java.lang.String"/>
+	<field name="occupa" class="java.lang.String"/>
+	<field name="religion" class="java.lang.String"/>
+	<field name="villagehealthvolunteer" class="java.lang.String"/>
+	<field name="familyhealthleader" class="java.lang.String"/>
+	<field name="communityposition" class="java.lang.String"/>
+	<field name="cigar" class="java.lang.String"/>
+	<field name="whisky" class="java.lang.String"/>
+	<field name="exercise" class="java.lang.String"/>
+	<field name="mumoi" class="java.lang.String"/>
+	<field name="roadmoi" class="java.lang.String"/>
+	<field name="village" class="java.lang.String"/>
+	<field name="subdistrict" class="java.lang.String"/>
+	<field name="district" class="java.lang.String"/>
+	<field name="province" class="java.lang.String"/>
+	<field name="hno" class="java.lang.String"/>
+
+
+		<group  name="Familyno2Break" isStartNewPage="true" isReprintHeaderOnEachPage="true" >
+			<groupExpression><![CDATA[$F{familyno}]]></groupExpression>
+			<groupHeader>
+			<band height="98"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="60"
+						width="781"
+						height="0"
+						forecolor="#808080"
+						key="line_topHeader"
+						stretchType="RelativeToTallestObject"
+						positionType="FixRelativeToBottom"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="0"
+						y="60"
+						width="27"
+						height="38"
+						forecolor="#000000"
+						key="lblNumber"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[ลำดับ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="121"
+						y="60"
+						width="21"
+						height="38"
+						forecolor="#000000"
+						key="staticText"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[เพศ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="239"
+						y="60"
+						width="39"
+						height="38"
+						forecolor="#000000"
+						key="lblBirth"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[ว.ด.ป.
+เกิด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="278"
+						y="60"
+						width="35"
+						height="38"
+						forecolor="#000000"
+						key="lblAge"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[อายุ
+(ป-ด-ว)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="313"
+						y="60"
+						width="27"
+						height="38"
+						forecolor="#000000"
+						key="lblReligion"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[ศาสนา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="60"
+						width="40"
+						height="38"
+						forecolor="#000000"
+						key="lblMaryStatus"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[สถานะ
+สมรส]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="380"
+						y="60"
+						width="44"
+						height="38"
+						forecolor="#000000"
+						key="lblEducate"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[การศึกษา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="424"
+						y="60"
+						width="44"
+						height="38"
+						forecolor="#000000"
+						key="lblOccupa"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[อาชีพ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="468"
+						y="60"
+						width="30"
+						height="38"
+						forecolor="#000000"
+						key="lblIncome"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[รายได้เฉลี่ย
+ต่อปี]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="498"
+						y="60"
+						width="24"
+						height="38"
+						forecolor="#000000"
+						key="lblBloodGroup"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[หมู่เลือด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="522"
+						y="60"
+						width="48"
+						height="38"
+						forecolor="#000000"
+						key="lblAllergic"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[การแพ้ยา/
+อาหาร]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="570"
+						y="60"
+						width="22"
+						height="38"
+						forecolor="#000000"
+						key="lblRightCode"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[สิทธิ์]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="592"
+						y="60"
+						width="41"
+						height="38"
+						forecolor="#000000"
+						key="lblCommunityPosition"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[ตำแหน่ง
+ในชุมชน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="633"
+						y="60"
+						width="39"
+						height="38"
+						forecolor="#000000"
+						key="lblDateIn"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[วันที่
+ย้ายเข้า]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="672"
+						y="60"
+						width="37"
+						height="38"
+						forecolor="#000000"
+						key="lblCigar"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[การ
+สูบบุหรี่]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="709"
+						y="60"
+						width="32"
+						height="38"
+						forecolor="#000000"
+						key="lblWhisky"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[การ
+ดื่มสุรา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="741"
+						y="60"
+						width="41"
+						height="38"
+						forecolor="#000000"
+						key="lblExercise"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[การออก
+กำลังกาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="27"
+						y="78"
+						width="94"
+						height="20"
+						key="lblFullName"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[คำนำหน้า-ชื่อ-นามสกุล]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="27"
+						y="60"
+						width="94"
+						height="18"
+						key="lblIdCard"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[เลขที่บัตรประชาชน 13 หลัก]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="142"
+						y="60"
+						width="97"
+						height="18"
+						key="lblFamilyPosition"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[ตำแหน่ง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="142"
+						y="78"
+						width="97"
+						height="20"
+						key="lblPrivateDoc"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<text><![CDATA[หมอประจำตัว]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="18"
+						width="781"
+						height="42"
+						key="txtPageheader-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["บ้านเลขที่ "+$F{hno}+"      หมู่ที่ "+$F{mumoi}+"      ถนน "+$F{roadmoi}+"      ตำบล "+$F{subdistrict}+"      อำเภอ "+$F{district}+"      จังหวัด "+$F{province}+"\n"+
+"ครอบครัวที่  "+$F{familyno}+"    หัวหน้าครอบครัว                                                        ละแวก อสม.ชื่อ                                                    กสค.ชื่อ \n"+
+"วันที่พิมพ์แฟ้มฯ  "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="578"
+						y="25"
+						width="142"
+						height="19"
+						forecolor="#000000"
+						key="txtFamilyHealthLeader-1"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{familyhealthleader}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="382"
+						y="25"
+						width="143"
+						height="19"
+						forecolor="#000000"
+						key="txtVillageHealthVolunteer-1"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{villagehealthvolunteer}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="147"
+						y="25"
+						width="131"
+						height="19"
+						forecolor="#000000"
+						key="txtFamilyHeader-1"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{familyleader}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="220"
+						y="0"
+						width="333"
+						height="18"
+						key="headTitle"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["แฟ้มครอบครัว  บ้านเลขที่ "+$F{hno}+"  หมู่ที่ "+$F{mumoi}+"  ครอบครัวที่ "+$F{familyno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="684"
+						y="1"
+						width="58"
+						height="18"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-16"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Tahoma" size="10" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="746"
+						y="1"
+						width="36"
+						height="18"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="tfTotalPage-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="10" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="80"
+						y="42"
+						width="142"
+						height="19"
+						key="headerReportDate"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="40"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="20"
+						width="142"
+						height="19"
+						key="footerReportDate"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="10" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="220"
+						y="22"
+						width="333"
+						height="18"
+						key="textField-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["แฟ้มครอบครัว  บ้านเลขที่ "+$F{hcode}+"  หมู่ที่ "+$F{mumoi}+"  ครอบครัวที่ "+$F{familyno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="684"
+						y="21"
+						width="58"
+						height="19"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="Tahoma" size="10" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="746"
+						y="21"
+						width="36"
+						height="19"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="tfTotalPage"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Tahoma" size="10" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="40"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="39"
+						width="782"
+						height="0"
+						forecolor="#000000"
+						key="line_detail-end"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="27"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{COLUMN_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="27"
+						y="20"
+						width="94"
+						height="20"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000" bottomPadding="3"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{fullname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="27"
+						y="0"
+						width="94"
+						height="20"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{idcard}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="239"
+						y="0"
+						width="39"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{birth}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="380"
+						y="0"
+						width="44"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{educate}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="278"
+						y="0"
+						width="35"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ageymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="313"
+						y="0"
+						width="27"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{religion}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="340"
+						y="0"
+						width="40"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{marystatus}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="121"
+						y="0"
+						width="21"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{sex}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="424"
+						y="0"
+						width="44"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{occupa}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="468"
+						y="0"
+						width="30"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{income}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="498"
+						y="0"
+						width="24"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{bloodgroup}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="522"
+						y="0"
+						width="48"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{allergic}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="570"
+						y="0"
+						width="22"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{rightcode}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="592"
+						y="0"
+						width="41"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{communityposition}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="633"
+						y="0"
+						width="39"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{datein}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="672"
+						y="0"
+						width="37"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{cigar}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="709"
+						y="0"
+						width="32"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{whisky}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="741"
+						y="0"
+						width="41"
+						height="40"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{exercise}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="142"
+						y="0"
+						width="97"
+						height="20"
+						forecolor="#000000"
+						key="textField-13"/>
+					<box topBorder="None" topBorderColor="#000000" topPadding="4" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{familyposition}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="142"
+						y="20"
+						width="97"
+						height="20"
+						forecolor="#000000"
+						key="textField-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000" bottomPadding="4"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Tahoma" size="8" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{privatedoc}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

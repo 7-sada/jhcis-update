@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Certificate_Covid19" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="bf946de3-2a1c-4f80-80f3-fa55ceb37c38">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="data" uuid="f660bd12-5496-475b-804d-a52305eb756e">
+		<parameter name="_pid" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select ve.pid,ct.titlename,p.fname,p.lname,p.idcard,ifnull(p.prenameeng,"") as prenameeng,
+ifnull(p.fnameeng,"") as fnameeng,ifnull(p.lnameeng,"") as lnameeng,
+p.sex,if(p.sex = '1','Male','Female' ) as psexEng,if(p.sex = '1','ชาย','หญิง' ) as psexTha
+,p.birth,date_format(p.birth,'%d/%m/%Y') as birtheng,
+date_format(date_add(p.birth,interval 543 year),'%d/%m/%Y') as birthdatetha,ve.dateepi,ve.lotno,
+ifnull(p.passpotnumber,"") as passpotnumber,ifnull(pa.hno,p.hnomoi) as houseNo,
+ifnull(ifnull(pa.road,p.roadmoi),"-") as road
+,ifnull(pa.mu,p.mumoi) as moo,ifnull(cs1.subdistname,cs2.subdistname) as tumbon,
+ifnull(cd1.distname,cd2.distname) as ampur,
+ifnull(cp1.provname,cp2.provname) as provname
+,if(ve.vaccinecode='COVID19-1',"เข็มที่ 1 (1st dose)","เข็มที่ 2 (2nd dose)") as vaccinecode
+,ve.hosservice,h.hosname,d.drugname
+,date_format(date_add(ve.dateepi, interval 543 year),'%d/%m/%Y') as dateepith,cm.manufac_name,
+ifnull(cm.trade_name,'ไม่ระบุ') as tradeName
+from visitepi ve
+left join person p on (ve.pid = p.pid and ve.pcucodeperson = ve.pcucodeperson)
+left join personaddresscontact pa on (p.pid = pa.pid and p.pcucodeperson = pa.pcucodeperson)
+left join ctitle ct on (p.prename = ct.titlecode)
+left join cdrug d on (ve.vaccinecode = d.drugcode)
+left join csubdistrict cs1 on (pa.subdistcode = cs1.subdistcode and pa.distcode = cs1.distcode
+and pa.provcode = cs1.provcode)
+left join csubdistrict cs2 on (p.subdistcodemoi = cs2.subdistcode and p.distcodemoi = cs2.distcode
+and p.provcodemoi = cs2.provcode)
+left join cprovince cp1 on (pa.provcode = cp1.provcode)
+left join cprovince cp2 on (p.provcodemoi = cp2.provcode)
+left join cdistrict cd1 on (pa.distcode = cd1.distcode and pa.provcode = cd1.provcode)
+left join cdistrict cd2 on (p.distcodemoi = cd2.distcode and p.provcodemoi = cd2.provcode)
+left join chospital h on (ve.hosservice = h.hoscode)
+left join ccovid19_vaccinemanufac cm on (ve.manufacturer = cm.manufac_vcodeprefix)
+where ucase(ve.vaccinecode) in ('COVID19-1','COVID19-2')
+and ve.pid = $P{_pid}
+order by ve.dateepi]]>
+		</queryString>
+		<field name="pid" class="java.lang.Integer">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="titlename" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="idcard" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="prenameeng" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="fnameeng" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lnameeng" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="sex" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="psexEng" class="java.lang.String"/>
+		<field name="psexTha" class="java.lang.String"/>
+		<field name="birth" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="birtheng" class="java.lang.String"/>
+		<field name="birthdatetha" class="java.lang.String"/>
+		<field name="dateepi" class="java.sql.Date">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="lotno" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="passpotnumber" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="houseNo" class="java.lang.String"/>
+		<field name="road" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="moo" class="java.lang.String">
+			<fieldDescription><![CDATA[หมู่บ้าน(..น่าจะตามทะเบียนบ้านของเจ้าของสิทธิ)]]></fieldDescription>
+		</field>
+		<field name="tumbon" class="java.lang.String"/>
+		<field name="ampur" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="provname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="vaccinecode" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="hosservice" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="hosname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="drugname" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<field name="dateepith" class="java.lang.String"/>
+		<field name="manufac_name" class="java.lang.String">
+			<fieldDescription><![CDATA[ชื่อบริษัทผู้ผลิต]]></fieldDescription>
+		</field>
+		<field name="tradeName" class="java.lang.String">
+			<fieldDescription><![CDATA[]]></fieldDescription>
+		</field>
+		<variable name="oddRow" class="java.lang.Integer" calculation="Count">
+			<variableExpression><![CDATA[$F{hosservice}]]></variableExpression>
+		</variable>
+	</subDataset>
+	<parameter name="CID_Hash" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["https://co19cert.moph.go.th/cert?id={04474553-7F6A-4DAB-8316-7C9CF340D503}"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="userCert" class="java.lang.String"/>
+	<parameter name="_pid" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select ve.pid,ct.titlename,p.fname,p.lname,p.idcard,
+if (length(p.idcard) <> 13,'เลขบัตรประชาชนผิด',concat(substring(p.idcard,1,1),'-',substring(p.idcard,2,4),'-',substring(p.idcard,5,5),'-',
+substring(p.idcard,11,2),'-',substring(p.idcard,13,1))) as id_Card,
+ifnull(p.prenameeng,"") as prenameeng,
+ifnull(p.fnameeng,"") as fnameeng,ifnull(p.lnameeng,"") as lnameeng,
+p.sex,if(p.sex = '1','Male','Female' ) as psexEng,if(p.sex = '1','ชาย','หญิง' ) as psexTha
+,p.birth,date_format(p.birth,'%d/%m/%Y') as birtheng,
+date_format(date_add(p.birth,interval 543 year),'%d/%m/%Y') as birthdatetha,ve.dateepi,ve.lotno,
+ifnull(p.passpotnumber,"...-...") as passpotnumber,ifnull(pa.hno,p.hnomoi) as houseNo,
+ifnull(ifnull(pa.road,p.roadmoi),"-") as road
+,ifnull(pa.mu,p.mumoi) as moo,ifnull(cs1.subdistname,cs2.subdistname) as tumbon,
+ifnull(cd1.distname,cd2.distname) as ampur,
+ifnull(cp1.provname,cp2.provname) as provname,
+ifnull(p.addressenglish,"....-....") as AddressEng
+,if(ve.vaccinecode='COVID19-1',"เข็มที่ 1 (1st dose)","เข็มที่ 2 (2nd dose)") as vaccinecode
+,ve.hosservice,h.hosname,d.drugname
+,date_format(date_add(ve.dateepi, interval 543 year),'%d/%m/%Y') as dateepith,ve.manufacturer
+,vm.manufac_name
+from visitepi ve
+left join person p on (ve.pid = p.pid and ve.pcucodeperson = ve.pcucodeperson)
+left join personaddresscontact pa on (p.pid = pa.pid and p.pcucodeperson = pa.pcucodeperson)
+left join ctitle ct on (p.prename = ct.titlecode)
+left join cdrug d on (ve.vaccinecode = d.drugcode)
+left join csubdistrict cs1 on (pa.subdistcode = cs1.subdistcode and pa.distcode = cs1.distcode
+and pa.provcode = cs1.provcode)
+left join csubdistrict cs2 on (p.subdistcodemoi = cs2.subdistcode and p.distcodemoi = cs2.distcode
+and p.provcodemoi = cs2.provcode)
+left join cprovince cp1 on (pa.provcode = cp1.provcode)
+left join cprovince cp2 on (p.provcodemoi = cp2.provcode)
+left join cdistrict cd1 on (pa.distcode = cd1.distcode and pa.provcode = cd1.provcode)
+left join cdistrict cd2 on (p.distcodemoi = cd2.distcode and p.provcodemoi = cd2.provcode)
+left join chospital h on (ve.hosservice = h.hoscode)
+left join _tmp_vacc_cov19_manufac vm on (ve.manufacturer = vm.manufac_id)
+where ucase(ve.vaccinecode) in ('COVID19-1','COVID19-2')
+and ve.pid = $P{_pid}
+order by ve.dateepi]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="titlename" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="idcard" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="id_Card" class="java.lang.String"/>
+	<field name="prenameeng" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="fnameeng" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lnameeng" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sex" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="psexEng" class="java.lang.String"/>
+	<field name="psexTha" class="java.lang.String"/>
+	<field name="birth" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="birtheng" class="java.lang.String"/>
+	<field name="birthdatetha" class="java.lang.String"/>
+	<field name="dateepi" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="lotno" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="passpotnumber" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="houseNo" class="java.lang.String"/>
+	<field name="road" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="moo" class="java.lang.String">
+		<fieldDescription><![CDATA[หมู่บ้าน(..น่าจะตามทะเบียนบ้านของเจ้าของสิทธิ)]]></fieldDescription>
+	</field>
+	<field name="tumbon" class="java.lang.String"/>
+	<field name="ampur" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="provname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="AddressEng" class="java.lang.String"/>
+	<field name="vaccinecode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosservice" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="hosname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dateepith" class="java.lang.String"/>
+	<field name="manufacturer" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="manufac_name" class="java.lang.String">
+		<fieldDescription><![CDATA[ชื่อบริษัทผู้ผลิต จาก lookup จาก moph ic]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="94" splitType="Stretch">
+			<image>
+				<reportElement x="0" y="0" width="119" height="94" uuid="152f9801-bda1-4f53-bc0f-cf0aa2a99480"/>
+				<imageExpression><![CDATA["./Photoes/Logo-Moph-0002.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="119" y="0" width="552" height="94" uuid="6ed4c59f-da24-4c7e-a150-06d99a42d7bf"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+					<font fontName="TH SarabunPSK" size="26" isBold="true"/>
+				</textElement>
+				<text><![CDATA[เอกสารรับรองการได้รับวัคซีนป้องกันโรคโควิด 19 ของประเทศไทย<br>
+(THAILAND NATIONAL CERTIFICATE OF COVID-19 VACCINATION)
+]]></text>
+			</staticText>
+			<image>
+				<reportElement x="671" y="0" width="131" height="94" uuid="e602b71d-4dcf-4348-8fb8-ae47428a7991"/>
+				<imageExpression><![CDATA[com.google.zxing.client.j2se.MatrixToImageWriter.toBufferedImage(
+new com.google.zxing.qrcode.QRCodeWriter().encode(
+$P{CID_Hash},
+com.google.zxing.BarcodeFormat.QR_CODE, 300, 300))]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="288">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="802" height="37" uuid="cd1c4b46-19eb-4e32-af24-68906cb38d93"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อ นามสกุล...................... "+$F{titlename}+$F{fname}+" "+$F{lname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="37" width="802" height="37" uuid="6f4f42f6-8e78-4d10-902f-7e96e276176e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Name LastName...................... "+$F{prenameeng}+$F{fnameeng}+" "+$F{lnameeng}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="74" width="802" height="37" uuid="27a29aeb-4c87-441c-8951-15ad23589d07"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["เพศ........."+$F{psexTha}+".......วัน/เดือน/ปีเกิด......"+$F{birthdatetha}+
+"............หมายเลขบัตรประชาชน......"+$F{id_Card}+"......เลขที่หนังสือเดินทาง........"+$F{passpotnumber}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="111" width="802" height="37" uuid="83ff060b-2e4d-4e87-ad0d-6493a21552ff"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Sex........."+$F{psexEng}+".......Date of Birth......"+$F{birtheng}+
+"............ID Card Number......"+$F{id_Card}+"......Passport Number........"+$F{passpotnumber}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="148" width="802" height="37" uuid="eb52d86a-37ab-44e7-b5f6-24f0a006851a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ที่อยู่........."+$F{houseNo}+".....ถนน"+$F{road}+"....ตำบล..."+$F{tumbon}
++"........อำเภอ........."+$F{ampur}+".......จังหวัด........."+$F{provname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="185" width="802" height="37" uuid="483c662f-d7f1-41f9-8d6c-f010e7981262"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Address....."+$F{AddressEng}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="222" width="802" height="66" uuid="dc457461-6b03-4860-8648-dcc1259f161a"/>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;โปรดเก็บเอกสารรับรองการได้รับวัคซีนป้องกันโรคโควิด 19 ของประเทศไทย เพื่อใช้แสดงว่าท่านได้รับการฉีดวัคซีนป้องกันโรคโควิด 19 ครบตามเกณฑ์แล้ว โดยเอกสารรับรองนี้จะต้องมีชื่อของเจ้าหน้าที่ผู้ออกใบรับรอง และระบุสถานที่ให้บริการวัคซีน <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please keep this card, which includes madical information about the vaccines you have recieved. Whose name follows. Has on the date indicated been vaccinated againts COVID-19]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<pageFooter>
+		<band height="41">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="802" height="20" forecolor="#FFFFFF" uuid="8f0f8c06-745c-4fb7-9948-723d182665cd"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อเจ้าหน้าที่ผู้ออกใบรับรอง (Name of Certificate Authority)........."+$P{userCert}+" ชื่อผู้พิมพ์ใบรับรงอ....."+$P{userCert}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="802" height="20" uuid="c044f6a5-5ad6-4c80-8a4b-9588b18c5c0e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ QR CODE เพื่อใช้ตรวจสอบข้อมูลจากระบบ MOPH Immunization Center]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="66" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="0" y="0" width="802" height="64" isPrintWhenDetailOverflows="true" uuid="e00fb260-5566-4114-b531-dbedaf9af938"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="data" uuid="e78e4496-2f3d-41a8-b77c-c233b35b42fe">
+						<datasetParameter name="_pid">
+							<datasetParameterExpression><![CDATA[$P{_pid}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="90" uuid="faa1ca9f-6e7e-4826-b8c6-b519f1f550a8">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<box>
+								<bottomPen lineWidth="0.0"/>
+							</box>
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="53" isPrintWhenDetailOverflows="true" uuid="c72d5092-8f75-4125-8c66-481f0f3569b8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ข้อมูลการได้รับวัคซีน]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_CH" height="37" rowSpan="1">
+							<box>
+								<topPen lineWidth="0.0"/>
+							</box>
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="37" uuid="a1fdf650-6b62-41be-8900-0b282b1f39ec">
+									<printWhenExpression><![CDATA[$V{oddRow}.equals(1)?new Boolean(true):new Boolean(false)]]></printWhenExpression>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA["(Vaccination History)"]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="80abe600-ae2d-4f40-a804-41186d62c951">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="53" uuid="9afb5983-f5fd-449c-b58e-ee0003fad332"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[เข็มที่<br>(Dose)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField isStretchWithOverflow="true">
+								<reportElement x="0" y="0" width="90" height="37" uuid="26b2ef34-be22-4f7f-ad19-e660c6aa61fa"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{vaccinecode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="115" uuid="5c16630f-172f-4bd7-af0a-5bd2877d9fe3">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="115" height="53" uuid="b68d4b9d-0080-48db-b76b-416aeb4a2979"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[วันที่ได้รับวัคซีน<br>(วัน/เดือน/ปี)<br>(Date of Vaccination)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="115" height="37" uuid="dfaeaa50-93b1-461a-9933-62095c78be02"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{dateepith}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="76cd53fa-e7a3-40ff-a1fc-cfa38e6b215d">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="53" uuid="d9c687ac-d836-41bf-b0c4-f619bfa930e0"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อการค้าวัคซีน<br>(Name of Vaccine)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="37" uuid="f57c793b-589e-4580-b541-e2330653cb29"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{tradeName}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="220aa4f4-5fe0-4ed7-8721-5031988b8e6b">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="53" uuid="f5d4ad2d-9336-4db9-8e6d-6060d534fd9b"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[ชื่อบริษัทผู้ผลืตวัคซีน<br>(Manufacturer)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="37" uuid="8606e79d-b076-4d80-ab0f-7916621a385b"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{manufac_name}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="b044a61e-68a3-474f-8734-a12a6f7a15e5">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="53" uuid="8373eeaf-8ef8-46c9-b5ed-5f97a034f105"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[รุ่นการผลิต<br>(Lot Number)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="37" uuid="0a7639b9-2e6a-469e-8f82-eeae604f7a8c"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{lotno}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="153" uuid="59886b38-cd30-4087-b9e4-4964338c4cab">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="153" height="53" uuid="5edb551d-e1af-4cd8-811d-2ca8353fc61f"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[หน่วยบริการที่ฉีด<br>(Place of Service)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="153" height="37" uuid="72d8d1f2-fff1-4509-8e43-10b491a45ca5"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{hosname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="205ce7c0-cc64-49ad-b6dc-2a842de51aa8">
+						<jr:columnHeader style="table_CH" height="53" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="53" uuid="622435a8-5267-42e7-bd01-83870218b08b"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+									<font fontName="TH SarabunPSK" size="14" isBold="true"/>
+								</textElement>
+								<text><![CDATA[หมายเหตุ<br>(Note)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="37" rowSpan="1"/>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</summary>
+</jasperReport>

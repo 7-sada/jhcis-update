@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DrugOrder_sub_Lab_Past" pageWidth="280" pageHeight="762" columnWidth="280" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="77b8f4dd-db52-4ee3-adde-770783b5594e">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pcucodeperson" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["05880"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pid" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["66"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="visitdate" class="java.sql.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA["2009-02-20"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select DATE_FORMAT(p1.datecheck,'%Y-%m-%d')as datecheck
+,ifnull(p2.labname,'...') lna
+,if(trim(labresultdigit)='' OR labresultdigit IS NULL,'',labresultdigit) lg
+from visitlabchcyhembmsse p1
+JOIN (SELECT pcucodeperson,pid,datecheck FROM visitlabchcyhembmsse
+      WHERE pcucodeperson = $P{pcucodeperson} and pid = $P{pid}
+        and datecheck<$P{visitdate}
+      GROUP BY pcucodeperson,pid,datecheck ORDER BY datecheck DESC LIMIT 1) x
+ON p1.pcucodeperson=x.pcucodeperson and p1.pid=x.pid and p1.datecheck=x.datecheck
+join clabchcyhembmsse p2 on p1.labcode=p2.labcode]]>
+	</queryString>
+	<field name="datecheck" class="java.lang.String"/>
+	<field name="lna" class="java.lang.String"/>
+	<field name="lg" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="18" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="181" height="16" uuid="71f070dd-f60d-4a67-99ec-3eaf0a6437c9"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12" isBold="false" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[การตรวจทางห้องปฎิบัติการฯครั้งก่อนหน้าเมื่อ:]]></text>
+			</staticText>
+			<textField pattern="dd MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement x="181" y="2" width="99" height="16" uuid="c1ad74d7-1ba3-45be-b352-795a1af9c1d1"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[SetupNu.getDateFromText($F{datecheck})]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="2" splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement isPrintRepeatedValues="false" x="230" y="0" width="50" height="16" forecolor="#CC0000" uuid="c93377c0-9ee7-4d8a-85e7-660a96941c13"/>
+				<textElement textAlignment="Left">
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{lg}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="227" height="16" uuid="3a6fff22-0a74-4260-bcd7-958b3dc3ea0c"/>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{lna}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

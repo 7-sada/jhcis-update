@@ -1,0 +1,1984 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rstudentnutrition_ah_count" printOrder="Horizontal" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="779c0547-729e-4f4e-a9ff-82cf09d264db">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="offAddress" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="team" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND villageschool.pcucode='01856' "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="dateservice" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND studenthealthnutrition.dateservice Between '2008-11-01' And '2009-04-30' "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="persondeath" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[" AND CONCAT(person.pid,person.pcucodeperson) not in (SELECT CONCAT(persondeath.pid,persondeath.pcucodeperson) FROM persondeath)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="dTerm" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[(
+SELECT  personstudent.pid,cschoolclass.classcode,
+if(villageschool.schoolname is null,'ไม่ระบุฯ',villageschool.schoolname) as schoolname,
+if(cschoolclass.classname is null,'ไม่ระบุฯ',cschoolclass.classname) as classname
+,person.sex
+,if(v.vd is not null,getagemonth(person.birth,v.vd),null) as agemonth
+,v.tall as hight
+FROM
+personstudent
+Left
+JOIN(
+	SELECT n.pcucodeperson ,n.pid ,MAX(n.mvd) as vd ,n.tall
+	FROM(
+  SELECT v.pcucodeperson,v.pid,v.visitdate mvd,n.visitno,n.tall
+  from visit v join visitnutrition n
+  on v.pcucode = n.pcucode and v.visitno = n.visitno
+  WHERE 1=1 $P!{dateservice}
+  ORDER BY v.pid ,v.visitdate DESC
+  ) AS n 	GROUP BY n.pid
+) AS v ON personstudent.pcucodeperson=v.pcucodeperson AND personstudent.pid=v.pid
+Left Join villageschool ON personstudent.pcucode = villageschool.pcucode AND personstudent.villcode = villageschool.villcode AND personstudent.schoolno = villageschool.schoolno
+Left  Join cschoolclass ON personstudent.classeducate = cschoolclass.classcode
+Left Join person ON personstudent.pcucodeperson = person.pcucodeperson AND personstudent.pid = person.pid
+WHERE classeducate <13 ##AND v.tall IS NOT NULL ##AND v.vd Between $P!{dateservice}
+$P!{pcucode}
+$P!{persondeath}
+)
+UNION
+(
+SELECT  personstudent.pid,cschoolclass.classcode,
+if(villageschool.schoolname is null,'ไม่ระบุฯ',villageschool.schoolname) as schoolname,
+if(cschoolclass.classname is null,'ไม่ระบุฯ',cschoolclass.classname) as classname,
+person.sex,
+null agemonth,
+null hight
+FROM
+personstudent
+Left Join villageschool ON personstudent.pcucode = villageschool.pcucode AND personstudent.villcode = villageschool.villcode AND personstudent.schoolno = villageschool.schoolno
+Left Join cschoolclass ON personstudent.classeducate = cschoolclass.classcode
+Left Join person ON personstudent.pcucodeperson = person.pcucodeperson AND personstudent.pid = person.pid
+WHERE CONCAT(personstudent.pcucodeperson,personstudent.pid) not in (SELECT CONCAT(studenthealthnutrition.pcucodeperson,studenthealthnutrition.pid) FROM studenthealthnutrition WHERE studenthealthnutrition.hight IS NOT NULL
+#$P!{dateservice}
+)
+and  classeducate <13
+ $P!{pcucode}
+ $P!{persondeath}
+)
+ORDER BY schoolname,classcode]]>
+	</queryString>
+	<field name="pid" class="java.lang.Integer"/>
+	<field name="classcode" class="java.lang.Integer"/>
+	<field name="schoolname" class="java.lang.String"/>
+	<field name="classname" class="java.lang.String"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="agemonth" class="java.lang.Long"/>
+	<field name="hight" class="java.lang.Double"/>
+	<variable name="nutri" class="java.lang.String">
+		<variableExpression><![CDATA[SetupNu.UpdateNutritionStateAgeLessThen18AgeHeight($F{agemonth}.intValue(),$F{hight}.doubleValue(),$F{sex})]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="nt" class="java.lang.Integer">
+		<variableExpression><![CDATA[($F{agemonth}== null && $F{hight}==null)?new Integer(9):($F{agemonth}== null)?new Integer(0):SetupNu.nutAH()]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-lowest" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-low" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-normal" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-over" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-overest" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-lowest-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-low-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-normal-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-over-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-overest-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-lowest-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-low-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-normal-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-over-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-overest-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="student-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="student-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[( $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="student" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Count">
+		<variableExpression><![CDATA[$F{pid}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="hight-w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="shight" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null ? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-lowest-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-low-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-normal-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-over-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-overest-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5) && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-lowest-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-low-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-normal-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-over-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-overest-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5) && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-lowest" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(1)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-low" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(2)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-normal" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(3)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-over" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(4)? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-overest" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $V{nt}.equals(5) ? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null && $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-hight-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null && $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-shight" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($F{hight} != null ? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-student-m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $F{sex}.equals("1")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-student-w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[( $F{sex}.equals("2")? new Integer(1) : new Integer(0) )]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum-student" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Count">
+		<variableExpression><![CDATA[$F{pid}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="unnormal_m" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0 && $F{sex}.equals("1"))? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="unnormal_w" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0 && $F{sex}.equals("2"))? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="unnormal" class="java.lang.Integer" resetType="Group" resetGroup="classname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0)? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum_unnormal_m" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0 && $F{sex}.equals("1"))? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum_unnormal_w" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0 && $F{sex}.equals("2"))? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum_unnormal" class="java.lang.Integer" resetType="Group" resetGroup="schoolname" calculation="Sum">
+		<variableExpression><![CDATA[($V{nt}.compareTo(new Integer("0"))==0)? new Integer(1): new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<group name="schoolname" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{schoolname}]]></groupExpression>
+		<groupHeader>
+			<band height="91" splitType="Stretch">
+				<staticText>
+					<reportElement uuid="6951f295-b0e0-4d75-ac84-491a91bfe39c" key="staticText-4" x="0" y="26" width="59" height="63"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชั้นเรียน]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="7c178764-add0-4671-a062-8a4e59d1cb98" key="staticText-5" x="59" y="26" width="78" height="43"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[นักเรียนทั้งหมด]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="86f60e24-e47a-4b06-add7-ecbc15166765" key="staticText-6" x="59" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="7ff11b33-6841-4488-944b-854df0dbf4f8" key="staticText-7" x="85" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="c6a2aa26-16bf-4bc2-a290-f358d0db86a4" key="staticText-8" x="111" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="e4aabdce-c359-4b0f-9614-749e5ba5df38" key="staticText-9" x="138" y="27" width="84" height="43"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[นักเรียนที่วัดส่วนสูง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="01fed509-dd6f-46de-9e50-9f71fd2ac600" key="staticText-10" x="137" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="6dabd594-36a4-4b7d-9572-0ac052bbaca0" key="staticText-11" x="165" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="976a2b74-e22d-4878-9c33-33b8abc8bdf7" key="staticText-12" x="193" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="a9538b90-ae6d-413d-a204-278252c82a9b" key="staticText-13" x="221" y="26" width="87" height="43"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[จำนวนโภชนาการ
+ไม่ปกติ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="8e8e2360-639a-4886-a5db-66c39473bc9f" key="staticText-14" x="221" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="42cb9204-201f-4bf5-8513-9757b74a0231" key="staticText-15" x="249" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="03ca74fb-512d-4418-944e-af5bed0f8f16" key="staticText-16" x="278" y="69" width="28" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="41c6aecd-8190-4bde-84ab-8059de9fe28f" key="staticText-17" x="385" y="46" width="78" height="23"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[เตี้ย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="45f31c4f-da1d-4416-ada6-25c123203884" key="staticText-18" x="385" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="89792179-c160-421c-a8c9-27a6ad56ed0d" key="staticText-19" x="411" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="b8bda653-34d5-4bae-b6ce-ea6f7eca2d4a" key="staticText-20" x="437" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="83f812ab-2be1-4afd-b256-509b66d4d0c1" key="staticText-21" x="463" y="46" width="78" height="23"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ค่อนข้างเตี้ย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="b6e6b104-0c35-402e-b02c-a6669bf4adfe" key="staticText-22" x="463" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="52f54646-126a-41f8-9316-395103f4fc5f" key="staticText-23" x="489" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="a9f346eb-5d15-43fa-b676-0099c23477e2" key="staticText-24" x="515" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="2c3dadf8-cc1a-4082-9865-9e46ab756802" key="staticText-25" x="542" y="46" width="76" height="23"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[สูงตามเกณฑ์]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f9e54579-55bc-497e-8fdf-7e841bdb24be" key="staticText-26" x="540" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="b9922ea7-49f3-42a9-aeaa-32e1d4018699" key="staticText-27" x="566" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="10e49f5d-a91b-4eaf-98ce-2a0bf950b655" key="staticText-28" x="592" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="a855da74-15d0-4d80-aa58-810f3f2ecb28" key="staticText-29" x="617" y="46" width="78" height="23"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ค่อนข้างสูง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="adf6e32e-bbfe-43c8-8b57-be9e370a5bad" key="staticText-30" x="617" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f4b5b883-ac71-464f-93f4-2fc65fc7d251" key="staticText-31" x="643" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f90a2bb0-8a2f-4713-8eae-c62fc597a83b" key="staticText-32" x="669" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="9c3c7d76-398a-4884-ac35-cbf76ecf9310" key="staticText-33" x="694" y="46" width="88" height="23"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[สูง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f8e7da7e-c313-456b-9b75-7906b0de1966" key="staticText-34" x="694" y="69" width="30" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="44ee2f92-91b8-4d98-835e-d86cc82dc89c" key="staticText-35" x="723" y="69" width="30" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="963d882d-5d70-4ad1-9159-4e9287d713c7" key="staticText-36" x="752" y="69" width="30" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="f39475d5-48fd-474a-9b38-99fca23ec925" key="staticText-37" x="385" y="26" width="397" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ภาวะโภชนาการของเด็กนักเรียน ที่รับการวัดส่วนสูง]]></text>
+				</staticText>
+				<line>
+					<reportElement uuid="fcf45bd6-c731-43d2-8850-cc9da2632ab7" key="line-1" x="0" y="26" width="782" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="19156c8d-02be-4a3e-85a7-26c4f33c440a" key="line-2" x="0" y="88" width="782" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="0cc10969-94cf-4bb6-ba31-dad2fd8c51f2" key="line-3" x="59" y="69" width="721" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="7b64c006-5af3-4e5c-ae82-401af01de2dd" key="line-4" x="385" y="46" width="397" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="d6abf90a-e5b7-4821-a22a-51f57c92b258" key="line-5" x="0" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="cde5229d-1a4e-4048-b411-9c33a7754b02" key="line-6" x="59" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="85ff00ef-7ba6-47e3-a282-4fbdd23e2650" key="line-7" x="137" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="877bf69a-e07a-41cb-8a22-0c9a65539c7d" key="line-8" x="221" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="16ed665b-0f28-485c-9fcf-7cc49cb967c5" key="line-9" x="307" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="d6036c5b-e011-4459-b97e-4281ca6adab7" key="line-10" x="782" y="26" width="1" height="65"/>
+				</line>
+				<line>
+					<reportElement uuid="40f3c082-9f51-4ed9-84bb-c119073d8261" key="line-11" x="463" y="46" width="1" height="45"/>
+				</line>
+				<line>
+					<reportElement uuid="fa3c6f7a-2e5c-4f7a-9926-d9708b3d80b0" key="line-12" x="541" y="46" width="1" height="45"/>
+				</line>
+				<line>
+					<reportElement uuid="5311034e-ce37-4e10-8f3d-33267bde67cc" key="line-13" x="617" y="46" width="1" height="45"/>
+				</line>
+				<line>
+					<reportElement uuid="564ae53b-7c24-4fb3-b1ef-28f886d8dfb7" key="line-14" x="695" y="46" width="1" height="45"/>
+				</line>
+				<line>
+					<reportElement uuid="51967972-76da-45c9-acc0-f6a326ba546c" key="line-15" x="85" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="5f701b57-9064-4c7b-a80e-2138fb26e1ad" key="line-16" x="111" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="a48e8842-1823-446b-bbbb-a9ce4245a49b" key="line-17" x="165" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="f8da1a42-7686-4b0f-8bf6-d6a810e1bcaf" key="line-18" x="193" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="8ae55d17-4965-4c50-9da8-39269e2088e0" key="line-19" x="249" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="787fef33-0b17-4eb8-bd7c-66743e92f042" key="line-20" x="278" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="9c022a4a-c6a7-4c49-b7ae-edee88fe2c6b" key="line-21" x="411" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="3e70fa8c-7a80-4a01-b670-bfbd0c4bd083" key="line-22" x="437" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="873bc3ff-9e88-4b9d-8209-c064a6fd6011" key="line-23" x="489" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="5a71a37b-115c-426a-8eb7-aa606be8d18f" key="line-24" x="515" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="f5758efc-f5e4-4fc8-ab5a-6d6f91e66cfb" key="line-25" x="566" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="858a48ae-d32c-4f06-9080-d4688d2d7de0" key="line-26" x="592" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="1eadf3d4-c175-466e-b6b6-83b0dd9a4ced" key="line-27" x="643" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="c3e50518-19e8-40a7-b3a1-7a4c0e1335ff" key="line-28" x="669" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="6c46677b-800f-4150-a915-6fc8f7fc2244" key="line-29" x="724" y="69" width="1" height="22"/>
+				</line>
+				<line>
+					<reportElement uuid="7da650a2-b431-45e6-b499-61c0a99bd433" key="line-30" x="753" y="69" width="1" height="22"/>
+				</line>
+				<textField isBlankWhenNull="true">
+					<reportElement uuid="3bc5cbb0-8a44-4a02-815d-5b46b3ae6251" key="textField" x="2" y="0" width="780" height="26"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{schoolname}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="9933ce70-8df7-4fe5-b52e-b1e0253a3ef7" key="line-8" x="385" y="26" width="1" height="65"/>
+				</line>
+				<staticText>
+					<reportElement uuid="ef675cd9-45f1-4f72-bc3a-0fdc13e875f3" x="307" y="27" width="79" height="42"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[แปรผลไม่ได้
+(ไม่มี วดป เกิด)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="4d6935f8-c9c2-49c2-9a53-0641b44ebb05" key="staticText-18" x="307" y="68" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[ชาย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="9ab082e0-8553-4118-937b-672a4d386b41" key="staticText-19" x="333" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[หญิง]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="52ea1090-93e6-4ea1-98bd-f71a5705dca4" key="staticText-20" x="359" y="69" width="26" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวม]]></text>
+				</staticText>
+				<line>
+					<reportElement uuid="9dbb927c-a463-4866-81b5-c96d01a3ac16" key="line-20" x="333" y="70" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b08287ce-d769-4a8d-a9ee-a598756e710d" key="line-20" x="358" y="70" width="1" height="20"/>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="20" splitType="Stretch">
+				<line>
+					<reportElement uuid="20fdba79-3fc8-4a6b-adc7-f53abc768bdf" key="line-31" x="0" y="19" width="782" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="a3bcc948-d0f4-42ce-bf5c-b2e7d2ef1379" key="line-32" x="59" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="4ad1b714-7491-4999-9b44-5e57f8ec3a4a" key="line-33" x="0" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="064556f6-8263-4d61-b763-a8f78e35dc0a" key="line-34" x="165" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="2036abd2-d646-4a97-b7c1-46e70e28fd90" key="line-35" x="193" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="eb18284e-9114-4900-8314-119a391a1cae" key="line-36" x="221" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="83773b42-e1ca-4bbe-aa99-d45177cac9f2" key="line-37" x="249" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="cbc0a684-8705-485e-9e67-a36f6862fe06" key="line-38" x="278" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="d21b3a34-5fd9-4fcf-a2c7-65890c0d54cf" key="line-39" x="307" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="d7f65d62-48ae-4bc9-963b-e0eb6a65ee4b" key="line-40" x="411" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="82a6bab6-7ef2-456e-9482-73285b35810e" key="line-41" x="437" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="9b9f8eec-cae6-4382-9ffd-dbff2112598b" key="line-42" x="463" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="fdb93de4-ca63-4772-80c7-8c36c725bf8b" key="line-43" x="489" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="1f6c3dbb-edee-40c9-add1-17db9a5040b0" key="line-44" x="515" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="14bd811f-5091-446e-b97c-a38ee85833c3" key="line-45" x="541" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="8c1d6341-32eb-4366-824b-65335f328005" key="line-46" x="566" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="592a6a4d-f450-4f25-a6a4-c7eade028c0c" key="line-47" x="592" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="ed96c5be-eba0-4968-b73d-69bdbeeaeabf" key="line-48" x="617" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="a528ac34-7c21-4134-9744-62834d2a1033" key="line-49" x="643" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="08f45576-9efc-4eff-aadd-06252d4e2cb9" key="line-50" x="669" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="8c6ffbc2-4868-45bd-ba9f-b4c71ace09c3" key="line-51" x="695" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b258a9d3-6f3d-4e72-8048-50f8614415b4" key="line-52" x="724" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="9a4331f2-306d-444e-872b-eb5b1137d8af" key="line-53" x="753" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="d27334fa-466f-468c-954c-2246f24cfac6" key="line-54" x="782" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b9c481cd-a510-4a14-b1e4-0acb9269195e" key="line-55" x="85" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="9052de24-b474-44f7-bb08-7b1030751b05" key="line-56" x="111" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="1de351c4-3bc1-4ecf-b644-7cff5896ef52" key="line-57" x="137" y="0" width="1" height="20"/>
+				</line>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement uuid="53794f52-0393-4749-b3fa-645907f681d1" key="textField-6" x="60" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-student-m}.compareTo( new Integer("0"))==0?null:$V{sum-student-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement uuid="020ace7a-438c-40a5-9f24-01f2cd2a6e05" key="textField-7" x="85" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-student-w}.compareTo( new Integer("0"))==0?null:$V{sum-student-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement uuid="9a01934d-7581-4414-a9cc-ff1bbc905a3a" key="textField-8" x="111" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-student}.compareTo( new Integer("0"))==0?null:$V{sum-student}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="769f675b-4bbd-439e-b8e8-04ef7553bc84" key="textField-9" x="137" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="1c2248ec-fdae-4823-93a9-7dfd75e7da99" key="textField-10" x="165" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="752342c8-ac4c-4e20-99b9-457665dc9dfa" key="textField-11" x="193" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-shight}.compareTo( new Integer("0"))==0?null:$V{sum-shight}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="5185de8d-302d-43a5-b148-7da86c6446a3" key="textField-12" x="221" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-m}.compareTo( new Integer("0"))==0?null:new Integer($V{sum-hight-m}.intValue()-$V{sum-hight-normal-m}.intValue())]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="568e3181-cdbb-49a8-8656-067c9447755d" key="textField-13" x="249" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-w}.compareTo( new Integer("0"))==0?null:new Integer($V{sum-hight-w}.intValue()-$V{sum-hight-normal-w}.intValue())]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="660471c6-f5d8-4868-b757-ac3672540c76" key="textField-14" x="278" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-shight}.compareTo( new Integer("0"))==0?null:new Integer($V{sum-shight}.intValue()-$V{sum-hight-normal}.intValue())]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="448d0802-3356-424b-a34a-5f860a5aaacb" key="textField-15" x="385" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-lowest-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-lowest-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="9704e1b3-9586-4ec6-bf00-91e3249fb505" key="textField-16" x="411" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-lowest-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-lowest-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="2d29dd85-1df2-43da-9584-c55289c84896" key="textField-17" x="437" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-lowest}.compareTo( new Integer("0"))==0?null:$V{sum-hight-lowest}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="2ecf66ac-f458-42fe-9c33-5ee3d2c89eb7" key="textField-18" x="463" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-low-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-low-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="b86ded14-2f9e-475b-aec7-25794ecb2bd4" key="textField-19" x="489" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-low-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-low-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="1581e897-46f4-4866-9f67-ac362508db6a" key="textField-20" x="515" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-low}.compareTo( new Integer("0"))==0?null:$V{sum-hight-low}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="023f2358-80f6-4f0b-8420-74bb5d38ad63" key="textField-21" x="540" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-normal-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-normal-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="09ca701f-9c00-42f4-9825-1d03150cb336" key="textField-22" x="566" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-normal-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-normal-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="4d6e2108-0c0e-404a-ae21-ca3bca7f1143" key="textField-23" x="592" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-normal}.compareTo( new Integer("0"))==0?null:$V{sum-hight-normal}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="36dc026a-8156-4fc4-a32a-9d9b8cc3392f" key="textField-24" x="617" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-over-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-over-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="e7f3d4b4-1bdf-467e-8a8c-a31974457882" key="textField-25" x="643" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-over-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-over-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="7c8e4af9-fca0-4c2c-b614-78288478f7f4" key="textField-26" x="669" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-over}.compareTo( new Integer("0"))==0?null:$V{sum-hight-over}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="0920ffc6-991e-4990-8ff6-4f56d5431645" key="textField-27" x="697" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-overest-m}.compareTo( new Integer("0"))==0?null:$V{sum-hight-overest-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="09648eed-86d9-4d12-a0c1-91c15fad30fb" key="textField-28" x="726" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-overest-w}.compareTo( new Integer("0"))==0?null:$V{sum-hight-overest-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="4296d9be-5af7-4f9d-bf5c-2b614856c301" key="textField-29" x="754" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum-hight-overest}.compareTo( new Integer("0"))==0?null:$V{sum-hight-overest}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement uuid="579a7a9d-e7ec-4b74-ba41-0e01576db1db" key="staticText-40" x="1" y="0" width="58" height="20"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[รวมทั้งหมด]]></text>
+				</staticText>
+				<line>
+					<reportElement uuid="1051e3e0-e958-4758-a32f-860653334e05" key="line-39" x="333" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="34f55ef5-56ef-472f-b3b2-5c8bf7d2d6cc" key="line-39" x="358" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="6db0cd11-f81e-47b4-915f-7838b893aff1" key="line-39" x="385" y="0" width="1" height="20"/>
+				</line>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="c222b192-c528-440c-9320-cf9dc402a306" x="307" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum_unnormal_m}.compareTo(new Integer(0))==0?null:$V{sum_unnormal_m}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="c5778b95-b11d-49c0-8ee4-a40c7f9c5aa9" x="333" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum_unnormal_w}.compareTo(new Integer(0))==0?null:$V{sum_unnormal_w}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="schoolname" isBlankWhenNull="true">
+					<reportElement uuid="033c531f-0f38-4c59-b637-ee9278c63ed3" x="359" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum_unnormal}.compareTo(new Integer(0))==0?null:$V{sum_unnormal}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="classname">
+		<groupExpression><![CDATA[$F{classname}]]></groupExpression>
+		<groupHeader>
+			<band height="20" splitType="Stretch">
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="61672c2a-4bc6-4680-9a85-8d20b24a7fa5" key="textField-30" x="515" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-low}.compareTo( new Integer("0"))==0?null:$V{hight-low}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="a59f07ca-91df-45d0-8548-c67dacd790ce" key="textField-31" x="669" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-over}.compareTo( new Integer("0"))==0?null:$V{hight-over}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="c1a54d24-3a6d-49ed-8b83-daac8ea7ac0e" key="textField-32" x="592" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-normal}.compareTo( new Integer("0"))==0?null:$V{hight-normal}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="811d48dc-b0be-4c22-aa0d-5c7409bfc6d6" key="textField-33" x="437" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-lowest}.compareTo( new Integer("0"))==0?null:$V{hight-lowest}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="22452359-38ab-47f0-a478-9056bec1e553" key="textField-34" x="754" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-overest}.compareTo( new Integer("0"))==0?null:$V{hight-overest}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement uuid="a2ce553a-7376-43c5-802d-2868adf653b8" key="textField-35" x="0" y="0" width="59" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["  "+$F{classname}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="9f51c16e-494b-4574-be49-9ad2b8b5c442" key="textField-36" x="463" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-low-m}.compareTo( new Integer("0"))==0?null:$V{hight-low-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="ee69e969-8607-4019-908f-711028382903" key="textField-37" x="617" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-over-m}.compareTo( new Integer("0"))==0?null:$V{hight-over-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="3e75ed5d-029d-42a5-a466-dddb2d3124f0" key="textField-38" x="540" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-normal-m}.compareTo( new Integer("0"))==0?null:$V{hight-normal-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="4e93f4ec-b2a3-42b9-901b-7899a9f13e09" key="textField-39" x="385" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-lowest-m}.compareTo( new Integer("0"))==0?null:$V{hight-lowest-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="9feeed27-793d-4eb1-9f2b-c6eff418dbaf" key="textField-40" x="697" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-overest-m}.compareTo( new Integer("0"))==0?null:$V{hight-overest-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="11b5e06e-ffa5-44df-afe4-8e4af2382c4f" key="textField-41" x="726" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-overest-w}.compareTo( new Integer("0"))==0?null:$V{hight-overest-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="2778fc7a-9ced-4449-bc3f-44726fd03330" key="textField-42" x="411" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-lowest-w}.compareTo( new Integer("0"))==0?null:$V{hight-lowest-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="d20aa563-812f-4eca-98f3-497961fb7175" key="textField-43" x="566" y="0" width="27" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-normal-w}.compareTo( new Integer("0"))==0?null:$V{hight-normal-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="6ec8b37f-1466-4f9f-a362-8a0b3da49473" key="textField-44" x="643" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-over-w}.compareTo( new Integer("0"))==0?null:$V{hight-over-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="b161067c-f8ab-44aa-87e4-d2966575fdbb" key="textField-45" x="489" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-low-w}.compareTo( new Integer("0"))==0?null:$V{hight-low-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="c5b2b56b-d1eb-4489-b1e0-d6a2020f3fa6" key="textField-47" x="85" y="0" width="26" height="15"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{student-w}.compareTo( new Integer("0"))==0?null:$V{student-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement uuid="2d88a192-e9bc-4a0c-bf29-70f41eda4277" key="textField-48" x="111" y="0" width="26" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{student}.compareTo( new Integer("0"))==0?null:$V{student}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="c013ee52-8fcc-4159-9ceb-a7c25fae609f" key="textField-49" x="137" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-m}.compareTo( new Integer("0"))==0?null:$V{hight-m}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="0e0f09a1-0c68-47b9-b722-b7b7f5eb492f" key="textField-50" x="165" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-w}.compareTo( new Integer("0"))==0 ?null:$V{hight-w}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="41f0d9b7-226e-4d59-a28a-e10d7ed06bec" key="textField-51" x="193" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{shight}.compareTo( new Integer("0"))==0?null:$V{shight}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="38367d51-feec-422e-a26c-43b54d7dfc8b" key="textField-52" x="221" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-m}.compareTo( new Integer("0"))==0?null:new Integer($V{hight-m}.intValue()-$V{hight-normal-m}.intValue())]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="92bb58b7-d083-4ab1-b49a-e12645cde713" key="textField-53" x="249" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{hight-w}.compareTo( new Integer("0"))==0?null:new Integer($V{hight-w}.intValue()-$V{hight-normal-w}.intValue())]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="ec4a66ae-c049-47e6-83ac-45ca03e69195" key="textField-54" x="278" y="0" width="28" height="18"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{shight}.compareTo( new Integer("0"))==0?null:new Integer($V{shight}.intValue()-$V{hight-normal}.intValue())]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="545f8ffb-2f90-4fec-a5c2-cb1e3be38d71" key="line-58" x="111" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="baa58a4f-06c6-4e80-a332-98740f3f5956" key="line-60" x="137" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="684c58bd-eb33-4529-a4b6-ae3e3aee4c4c" key="line-61" x="59" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b198e577-8fd7-4d9a-859d-991abe29cb1c" key="line-62" x="0" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="6501760e-ea3a-4109-bba9-c0e90996191f" key="line-63" x="165" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="c01d9056-79d1-49b4-87c3-57035a3e52a9" key="line-64" x="193" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="c29f8435-6e29-48d7-8d0f-d87bc7d8deef" key="line-65" x="221" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="93b8c7d4-4e3e-4990-88af-417831b87c50" key="line-66" x="249" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="a157f0fd-12b8-4415-99ce-01f1abd6a90d" key="line-67" x="278" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="a10aceba-8637-4efc-a779-898b1edaa4b0" key="line-68" x="307" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="e2c630f8-a2e9-4e89-86eb-7a2bbe264f51" key="line-69" x="411" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="ad1826c8-36e8-46f7-b2d6-38ac3380d7c1" key="line-70" x="437" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="ac5e2ed2-3a64-4788-b9a2-94984e2b869f" key="line-71" x="463" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b19dfceb-c1b9-46b8-a864-ce4b003c1af1" key="line-72" x="489" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="a17abeda-2fb4-4d3d-b21f-83f476e4238e" key="line-73" x="515" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="92e5900f-bf0d-4b21-a89d-80aa1e5961b9" key="line-74" x="541" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="50a26305-424c-48cc-947d-4004622b36eb" key="line-75" x="0" y="15" width="782" height="1"/>
+				</line>
+				<line>
+					<reportElement uuid="81547e1c-ba45-46e0-9198-b37dde7004b3" key="line-76" x="566" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="5bc5031f-5fc1-4336-b4c4-a6eff448eefa" key="line-77" x="592" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="9d2eb281-927f-43fb-8126-3f3868cfc814" key="line-78" x="617" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="b2ea86ad-3397-4e0b-84b4-46dad7a133c8" key="line-79" x="643" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="f8328fda-9520-4310-ad78-bc2f93835dc2" key="line-80" x="669" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="0a353811-b687-43ad-aa26-cafb4470b387" key="line-81" x="695" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="811cb7d6-9393-47bd-88a5-23d5c575e4c1" key="line-82" x="724" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="1365bba3-8136-4848-b63c-4d6a073628d2" key="line-83" x="753" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="2d4e26fe-524d-4dec-9126-d407681f7d20" key="line-84" x="782" y="0" width="1" height="20"/>
+				</line>
+				<textField evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="1cbf09f6-9bd2-492b-a3cb-34fbe47b4a0a" key="textField" x="59" y="0" width="26" height="15"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{student-m}.compareTo( new Integer("0"))==0?null:$V{student-m}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="abe5cfbe-3d2a-4ad6-87e8-401f16349be0" key="line-59" x="85" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="4d1e2275-eca8-4304-a7ad-41a2b3072a36" key="line-67" x="358" y="0" width="1" height="20"/>
+				</line>
+				<line>
+					<reportElement uuid="ab0dda75-ffb6-4f73-a228-285f5ebc21ef" key="line-67" x="385" y="0" width="1" height="20"/>
+				</line>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="db63f690-d8b8-4610-a58f-d4e7fe64ef42" x="307" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{unnormal_m}.compareTo(new Integer("0"))==0?null:$V{unnormal_m}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement uuid="70320872-05e8-4d24-a0de-7573abfa4902" key="line-67" x="333" y="0" width="1" height="20"/>
+				</line>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="ba528aba-5cb5-406b-902f-ed02c117be8b" x="333" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{unnormal_w}.compareTo(new Integer(0))==0?null:$V{unnormal_w}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="classname" isBlankWhenNull="true">
+					<reportElement uuid="399c609a-fb85-4375-87d5-ef100bc026da" x="359" y="0" width="26" height="18"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{unnormal}.compareTo(new Integer(0))==0?null:$V{unnormal}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band splitType="Stretch"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="103" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="f70a90df-68eb-49f4-9d03-f494e09b4f26" key="staticText-1" x="0" y="2" width="338" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[รายงานการติดตามภาวะโภชนาการเด็กนักเรียน : อายุ(เดือน) / ส่วนสูง(ซม.) -->]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="07f4ec66-6faf-4069-98fb-feb23653c254" key="staticText-2" x="0" y="42" width="782" height="14"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ :  1.โปรแกรมคำนวณภาวะโภชนาการโดยคิดจากการชั่ง นน.(หรือวัดส่วนสูง) ครั้งล่าสุดของแต่ละเทอมฯ (เทอม 1->พค.-ตค. ของปีการศึกษา / เทอม 2 พย.ของปีการศึกษานั้น - เมย. ของปีถัดไป) ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="dda1f04f-df99-4a4b-8841-54939f762788" key="staticText-3" x="0" y="56" width="782" height="14"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ :  2.หากยอดรวมของจำนวนโภชนาการไม่ปกติ + ตามเกณฑ์ ไม่เท่ากับจำนวนนักเรียนที่วัดส่วนสูง แสดงว่ามีนักเรียนบางคนที่ไม่ระบุวันเกิด(จึงแปรผลโภชนาการไม่ได้ ?)]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="961a6bea-db4a-4b52-b99a-35f893778782" key="textField" x="0" y="22" width="782" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["สถานพยาบาล (สถานีอนามัย) "+$P{offAddress}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="e652f46c-bdab-4395-ad5a-4ed15cec7111" key="textField" x="338" y="2" width="441" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$P{team}+": "+$P{dTerm}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="defbac1c-4965-4c25-acd0-715fbd582e59" key="staticText-3" x="2" y="70" width="782" height="16" forecolor="#FF0000"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[หมายเหตุ :  1. แสดงการคำนวณโภชนาการเฉพาะนักเรียนชั้น อนุบาล 1 - ม. 3 (เพื่อให้สอดคล้องกับรายงานจำนวนนักเรียน(ที่แสดงจำนวนฯ ถึงชั้น ม. 3))]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="4c416698-7d0e-401d-83f3-9c1e6ecaf024" x="49" y="86" width="730" height="16"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["2. "+$P{dTerm}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="38" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="ecb86ac3-9984-4969-b859-4958ca3ff6ee" key="staticText-39" x="0" y="0" width="320" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[รายงานการติดตามภาวะโภชนาการเด็กนักเรียน : อายุ(เดือน) / ส่วนสูง(ซม.)]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="eda865d5-e0bc-4c06-8f7b-6fdc4488170f" key="textField-3" x="0" y="18" width="708" height="20"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["สถานบริการ(สอ./PCU) "+$P{offAddress}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="9782eb60-f6fd-45e5-b54c-deac93fe9f7b" key="textField-4" x="758" y="0" width="24" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="169f66c8-87be-48bf-a79a-7f70caecf5ab" key="textField-5" x="629" y="0" width="130" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="829662f9-8cfb-4a98-a2f2-6e9a36b678ac" key="staticText-41" x="0" y="17" width="535" height="13" forecolor="#CCCCCC"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<text><![CDATA[rstudentnutrition_ah_count.jasper : 12 May 10]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1ff2632d-ed91-4f16-8952-460fff788a65" key="staticText-42" x="0" y="0" width="320" height="18"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[รายงานการติดตามภาวะโภชนาการเด็กนักเรียน : อายุ(เดือน) / ส่วนสูง(ซม.)]]></text>
+			</staticText>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="c0383129-d586-4a32-83ef-e0a67af3bfda" key="textField-55" x="758" y="0" width="24" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement uuid="74be2965-bfca-44fa-86bc-5ed407a91933" key="textField-56" x="629" y="0" width="130" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + " /"]]></textFieldExpression>
+			</textField>
+		</band>
+	</lastPageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

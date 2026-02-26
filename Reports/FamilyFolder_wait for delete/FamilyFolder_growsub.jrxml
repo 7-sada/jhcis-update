@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FamilyFolder_growsub"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="p_pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["06096"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_pid" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["4525"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT
+     DATE_FORMAT(datesurvey,"%Y-%m-%d")AS datesurvey,
+     CONVERT(CONCAT(DATE_FORMAT(datesurvey,"%Y")-DATE_FORMAT(birth,"%Y")-(DATE_FORMAT(datesurvey,"00-%m-%d")<DATE_FORMAT(birth,"00-%m-%d"))," - ",CASE SIGN(DATE_FORMAT(datesurvey,"%m")-DATE_FORMAT(birth,"%m"))WHEN 0 THEN(11-DATE_FORMAT(birth,"%m")+DATE_FORMAT(datesurvey,"%m")-(DATE_FORMAT(birth,"00-00-%d")<DATE_FORMAT(birth,"00-00-%d")))WHEN -1 THEN(12-DATE_FORMAT(birth,"%m")+DATE_FORMAT(datesurvey,"%m")-(DATE_FORMAT(datesurvey,"00-00-%d")<DATE_FORMAT(birth,"00-00-%d")))WHEN 1 THEN(DATE_FORMAT(datesurvey,"%m")-DATE_FORMAT(birth,"%m")-(DATE_FORMAT(datesurvey,"00-00-%d")<DATE_FORMAT(birth,"00-00-%d")))END," - ",CASE SIGN(DATE_FORMAT(datesurvey,"%d")-DATE_FORMAT(birth,"%d"))WHEN 0 THEN(DATE_FORMAT(birth,"%d")-DATE_FORMAT(datesurvey,"%d"))WHEN -1 THEN(DATE_FORMAT(LAST_DAY(birth),"%d")+DATE_FORMAT(datesurvey,"%d")-DATE_FORMAT(birth,"%d"))WHEN 1 THEN(DATE_FORMAT(datesurvey,"%d")-DATE_FORMAT(birth,"%d")-(DATE_FORMAT(datesurvey,"%d")<DATE_FORMAT(birth,"%d")))END)USING utf8)AS age_ymd,
+     persongrow.`growcode` AS persongrow_growcode,
+     persongrow.`agemonthcan` AS persongrow_agemonthcan,
+     persongrow.`datesurvey` AS persongrow_datesurvey,
+     persongrow.`abnormal` AS persongrow_abnormal,
+     cgrow.`growname` AS cgrow_growname,
+     cgrow.`growstd` AS cgrow_growstd,
+     CASE WHEN growstd=persongrow.`agemonthcan`  THEN  'พํฒนาการปกติ'
+	  WHEN cgrow.`growstd`>persongrow.`agemonthcan`  THEN  'พํฒนาเร็วกว่าปกติ'
+          WHEN cgrow.`growstd`<persongrow.`agemonthcan`  THEN  'พํฒนาช้ากว่าปกติ'
+     END AS result
+FROM
+     `person` person INNER JOIN `persongrow` persongrow ON person.`pcucodeperson` = persongrow.`pcucodeperson`
+     AND person.`pid` = persongrow.`pid`
+     INNER JOIN `cgrow` cgrow ON persongrow.`growcode` = cgrow.`growcode`
+WHERE
+     persongrow.pcucodeperson = '$P!{p_pcucode}'
+ AND persongrow.pid = '$P!{p_pid}'
+ORDER BY
+     persongrow.datesurvey ASC]]></queryString>
+
+	<field name="datesurvey" class="java.util.Date"/>
+	<field name="age_ymd" class="java.lang.String"/>
+	<field name="persongrow_growcode" class="java.lang.String"/>
+	<field name="persongrow_agemonthcan" class="java.lang.Double"/>
+	<field name="persongrow_datesurvey" class="java.sql.Date"/>
+	<field name="persongrow_abnormal" class="java.lang.String"/>
+	<field name="cgrow_growname" class="java.lang.String"/>
+	<field name="cgrow_growstd" class="java.math.BigDecimal"/>
+	<field name="result" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="39"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="136"
+						y="11"
+						width="188"
+						height="18"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[การเจริญเติบโตตามวัย]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="13"
+						y="11"
+						width="49"
+						height="18"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[วันที่ตรวจ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="6"
+						y="34"
+						width="589"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="64"
+						y="2"
+						width="72"
+						height="18"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[อายุ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="5"
+						y="2"
+						width="589"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="364"
+						y="11"
+						width="46"
+						height="18"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[เกณฑ์ปกติ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="409"
+						y="11"
+						width="57"
+						height="18"
+						key="staticText-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ทำได้เมื่อ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="64"
+						y="18"
+						width="72"
+						height="18"
+						key="staticText-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[(ปี-เดือน-วัน)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="462"
+						y="11"
+						width="112"
+						height="18"
+						key="staticText-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<text><![CDATA[ผลการตรวจ]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="d MMM yy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="0"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{datesurvey}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="62"
+						y="0"
+						width="79"
+						height="18"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{age_ymd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="141"
+						y="0"
+						width="223"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{cgrow_growname}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="370"
+						y="0"
+						width="31"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{cgrow_growstd}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="420"
+						y="0"
+						width="29"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{persongrow_agemonthcan}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="466"
+						y="0"
+						width="122"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Top">
+						<font fontName="Angsana New" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{result}
++($F{persongrow_abnormal}==null?"":$F{persongrow_abnormal})]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="4"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

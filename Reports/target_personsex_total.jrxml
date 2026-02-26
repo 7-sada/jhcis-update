@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="target_personsex_total"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="555"
+		 pageHeight="782"
+		 columnWidth="555"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="pdate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2009-01-01"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="age" isForPrompting="false" class="java.lang.Integer">
+		<defaultValueExpression ><![CDATA[new Integer(35)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["2008-11-30"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pcucode" isForPrompting="false" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="villcode" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT count(CONCAT(p.pid,p.pcucodeperson)) as tp,
+     sum(case when p.sex='1' then 1 else 0 end)as pm,
+     sum(case when p.sex='2' then 1 else 0 end)as pfm
+FROM  `person` p left JOIN `house` house ON p.`hcode` = house.`hcode`
+     AND p.`pcucodeperson` = house.`pcucode`
+     LEFT JOIN  persondeath ON p.`pid` = persondeath.`pid`
+     AND p.`pcucodeperson` = persondeath.`pcucodeperson`
+WHERE  DATEDIFF(concat(YEAR($P{pdate}),'-','12','-','31'),p.birth)/365 >= $P{age} 
+     and (p.typelive = '1'  or p.typelive = '3'  or p.typelive IS null  or p.typelive = '0')
+     and (persondeath.deaddate IS null  or persondeath.deaddate > $P{edate})
+     and right(house.villcode,2)<>'00'   
+     and house.pcucode = $P{pcucode}]]></queryString>
+
+	<field name="tp" class="java.lang.Long"/>
+	<field name="pm" class="java.math.BigDecimal"/>
+	<field name="pfm" class="java.math.BigDecimal"/>
+
+	<variable name="SUM_tp_1" class="java.lang.Long" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{tp}]]></variableExpression>
+	</variable>
+	<variable name="SUM_pm_1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{pm}]]></variableExpression>
+	</variable>
+	<variable name="SUM_pfm_1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{pfm}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="25"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="#,##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="40"
+						height="25"
+						forecolor="#000000"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#0000FF" leftBorder="None" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#0000CC" bottomBorder="Thin" bottomBorderColor="#0000CC"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="8" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="true" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.Long"><![CDATA[$F{tp}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="0"
+						width="40"
+						height="25"
+						key="textField"/>
+					<box topBorder="Thin" topBorderColor="#0000FF" leftBorder="None" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#0000CC" bottomBorder="Thin" bottomBorderColor="#0000CC"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{pm}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="80"
+						y="0"
+						width="40"
+						height="25"
+						key="textField-1"/>
+					<box topBorder="Thin" topBorderColor="#0000FF" leftBorder="None" leftBorderColor="#000000" rightBorder="Thin" rightBorderColor="#0000CC" bottomBorder="Thin" bottomBorderColor="#0000CC"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="tahoma.ttf" size="8" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{pfm}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

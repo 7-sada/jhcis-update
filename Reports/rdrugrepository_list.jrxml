@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rdrugrepository_list" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="591af52b-e93b-4233-81d8-23be13ea0f2c">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="offAddress" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="where" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT cdrug.tmtcode,
+CASE
+ WHEN cdrug.drugtype =  '01'  THEN 'ยาฯ'
+ WHEN cdrug.drugtype =  '02'   THEN 'หัตถการ'
+ WHEN cdrug.drugtype =  '03'   THEN 'วัสดุการแพทย์'
+ WHEN cdrug.drugtype =  '04'  THEN 'เวชภัณฑ์คุมกำเนิด'
+ WHEN cdrug.drugtype =  '05'   THEN 'วัคซีน'
+ WHEN cdrug.drugtype =  '06'   THEN 'ค่าบริการฯ'
+ WHEN cdrug.drugtype =  '07'   THEN 'ค่าตรวจทางห้องปฏิบัติการฯ'
+ WHEN cdrug.drugtype =  '08'  THEN 'ทันตกรรม'
+ WHEN cdrug.drugtype =  '10'  THEN 'ยาสมุนไพร'
+ WHEN cdrug.drugtype =  '11'  THEN 'เวชภัณฑ์ที่ไม่ใช่ยา'
+ ELSE 'ไม่ระบุประเภทฯ'
+END AS drugtype,
+CASE
+ WHEN cdrug.drugcode IN ('DT','DT1','DT2','DTS1','DTS2','DTS3','DTS4','DTANC1','DTANC2','DTANC3','DTANC4','DTANC5') OR cdrug.drugcode =  'V120' THEN 'DT'
+ WHEN cdrug.drugcode IN ('DTP','DTP1','DTP2','DTP3','DTP4','DTP5') OR cdrug.drugcode =  'V121' THEN 'DTP'
+ WHEN cdrug.drugcode IN ('HBV','HBV1','HBV2','HBV3') OR cdrug.drugcode =  'V122' THEN 'HB'
+ WHEN cdrug.drugcode IN ('JE','JE1','JE2','JE3') OR cdrug.drugcode =  'V123' THEN 'JE'
+ WHEN cdrug.drugcode IN ('MMR','MMR2') OR cdrug.drugcode =  'V124' THEN 'MMR'
+ WHEN cdrug.drugcode IN ('OPV','OPV1','OPV2','OPV3','OPV4','OPV5','OPVs1','OPVs2','OPVs3','OPVC') OR cdrug.drugcode =  'V125' THEN 'OPV'
+ WHEN cdrug.drugcode IN ('TT','TT1','TT2','TT3','TT4','TT5') OR cdrug.drugcode =  'V126' THEN 'TT'
+ WHEN cdrug.drugcode IN ('DHB','DHB1','DHB2','DHB3') OR cdrug.drugcode =  'V127' THEN 'DTP+HB'
+ WHEN cdrug.drugcode IN ('MEAS') OR cdrug.drugcode =  'V128' THEN 'MEAS'
+ WHEN cdrug.drugcode IN ('RB','RB1','RB2','RB3','RB4','RB5','RB12','RB22','RB32','RB42','RB52') THEN 'RB'
+ ELSE cdrug.drugcode END AS drugcode,
+CASE
+ WHEN cdrug.drugcode IN ('DT','DT1','DT2','DTS1','DTS2','DTS3','DTS4','DTANC1','DTANC2','DTANC3','DTANC4','DTANC5') OR cdrug.drugcode =  'V120' THEN 'DT'
+ WHEN cdrug.drugcode IN ('DTP','DTP1','DTP2','DTP3','DTP4','DTP5') OR cdrug.drugcode =  'V121' THEN 'DTP'
+ WHEN cdrug.drugcode IN ('HBV','HBV1','HBV2','HBV3') OR cdrug.drugcode =  'V122' THEN 'HB'
+ WHEN cdrug.drugcode IN ('JE','JE1','JE2','JE3') OR cdrug.drugcode =  'V123' THEN 'JE'
+ WHEN cdrug.drugcode IN ('MMR','MMR2') OR cdrug.drugcode =  'V124' THEN 'MMR'
+ WHEN cdrug.drugcode IN ('OPV','OPV1','OPV2','OPV3','OPV4','OPV5','OPVs1','OPVs2','OPVs3','OPVC') OR cdrug.drugcode =  'V125' THEN 'OPV'
+ WHEN cdrug.drugcode IN ('TT','TT1','TT2','TT3','TT4','TT5') OR cdrug.drugcode =  'V126' THEN 'TT'
+ WHEN cdrug.drugcode IN ('DHB','DHB1','DHB2','DHB3') OR cdrug.drugcode =  'V127' THEN 'DTP+HB'
+ WHEN cdrug.drugcode IN ('MEAS') OR cdrug.drugcode =  'V128' THEN 'MEAS'
+ WHEN cdrug.drugcode IN ('RB','RB1','RB2','RB3','RB4','RB5','RB12','RB22','RB32','RB42','RB52') THEN 'RB'
+ ELSE cdrug.drugname END AS drugname,
+if((SELECT Sum(drugrepositoryoutdetail.lotamount) FROM drugrepositoryoutdetail WHERE  drugrepositoryoutdetail.drugcode=cdrug.drugcode and drugrepositoryoutdetail.packamount=t.packamount GROUP BY drugcode,packamount) is null,(SELECT Sum(drugrepositorytakendetail.lotamount) FROM drugrepositorytakendetail WHERE drugrepositorytakendetail.drugcode = cdrug.drugcode and drugrepositorytakendetail.packamount=t.packamount GROUP BY drugcode,packamount),(SELECT Sum(drugrepositorytakendetail.lotamount) FROM drugrepositorytakendetail WHERE drugrepositorytakendetail.drugcode = cdrug.drugcode and drugrepositorytakendetail.packamount=t.packamount GROUP BY drugcode,packamount) -(SELECT Sum(drugrepositoryoutdetail.lotamount) FROM drugrepositoryoutdetail WHERE  drugrepositoryoutdetail.drugcode=cdrug.drugcode and drugrepositoryoutdetail.packamount=t.packamount GROUP BY drugcode,packamount)) AS drem,
+if((SELECT Sum(drugrepositoryoutdetail.lotamount*drugrepositoryoutdetail.lotprice) FROM drugrepositoryoutdetail WHERE  drugrepositoryoutdetail.drugcode=cdrug.drugcode and drugrepositoryoutdetail.packamount=t.packamount GROUP BY drugcode,packamount) is null,(SELECT Sum(drugrepositorytakendetail.lotamount*drugrepositorytakendetail.lotprice) FROM drugrepositorytakendetail WHERE drugrepositorytakendetail.drugcode = cdrug.drugcode and drugrepositorytakendetail.packamount=t.packamount GROUP BY drugcode,packamount),(SELECT Sum(drugrepositorytakendetail.lotamount*drugrepositorytakendetail.lotprice) FROM drugrepositorytakendetail WHERE drugrepositorytakendetail.drugcode = cdrug.drugcode and drugrepositorytakendetail.packamount=t.packamount GROUP BY drugcode,packamount) -(SELECT Sum(drugrepositoryoutdetail.lotamount*drugrepositoryoutdetail.lotprice) FROM drugrepositoryoutdetail WHERE  drugrepositoryoutdetail.drugcode=cdrug.drugcode and drugrepositoryoutdetail.packamount=t.packamount GROUP BY drugcode,packamount)) AS dprice
+,t.lotprice,t.packamount,DATE_FORMAT(t.dateexpire,'%Y-%m-%d') AS dateexpire
+FROM
+drugrepositorytakendetail t Inner Join
+cdrug on t.drugcode = cdrug.drugcode
+$P!{where}
+
+GROUP BY cdrug.drugtype,t.drugcode,t.packamount]]>
+	</queryString>
+	<field name="tmtcode" class="java.lang.String">
+		<fieldDescription><![CDATA[...รหัสยาฯ สำหรับส่งออกให้งานสิทธิประกันสังคม]]></fieldDescription>
+	</field>
+	<field name="drugtype" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drugcode" class="java.lang.String">
+		<fieldDescription><![CDATA[รหัสยา cdrug.drugcode]]></fieldDescription>
+	</field>
+	<field name="drugname" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="drem" class="java.math.BigDecimal"/>
+	<field name="dprice" class="java.lang.Double"/>
+	<field name="lotprice" class="java.lang.Double">
+		<fieldDescription><![CDATA[ราคาต่อ 1 หน่วยบรรจุ]]></fieldDescription>
+	</field>
+	<field name="packamount" class="java.lang.Integer">
+		<fieldDescription><![CDATA[จำนวนต่อ 1 หน่วยบรรจุ (หน่วยนับ)]]></fieldDescription>
+	</field>
+	<field name="dateexpire" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="sum_dprice" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{dprice}]]></variableExpression>
+	</variable>
+	<variable name="sum_dprice_dtype" class="java.lang.Double" resetType="Group" resetGroup="drugtype" calculation="Sum">
+		<variableExpression><![CDATA[$F{dprice}]]></variableExpression>
+	</variable>
+	<group name="drugtype" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{drugtype}]]></groupExpression>
+		<groupHeader>
+			<band height="23" splitType="Stretch">
+				<textField isBlankWhenNull="false">
+					<reportElement key="textField" x="0" y="1" width="535" height="22" isRemoveLineWhenBlank="true" uuid="71ed9e14-2b11-42b4-a0ef-598804f5205e"/>
+					<box leftPadding="3">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{drugtype}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="21" splitType="Stretch">
+				<textField pattern="#,##0.00" isBlankWhenNull="false">
+					<reportElement key="textField" x="414" y="1" width="66" height="20" uuid="dff9ebe1-a0ad-42c5-94f6-8360e5f46064"/>
+					<box rightPadding="3">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{sum_dprice_dtype}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement key="textField-3" x="0" y="0" width="414" height="21" isRemoveLineWhenBlank="true" uuid="adee6dff-cfc4-4061-a41a-86e5d5f7fb67"/>
+					<box rightPadding="3">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA["รวมมูลค่า "+$F{drugtype}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement key="staticText-11" x="480" y="1" width="55" height="20" uuid="39c8190f-68e2-4022-a58a-2ca460312a82"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+					</textElement>
+					<text><![CDATA[บาท]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="drug">
+		<groupExpression><![CDATA[$F{drugcode}]]></groupExpression>
+		<groupHeader>
+			<band splitType="Stretch"/>
+		</groupHeader>
+		<groupFooter>
+			<band height="1" splitType="Stretch">
+				<line direction="BottomUp">
+					<reportElement key="line-1" x="0" y="0" width="535" height="1" printWhenGroupChanges="drug" uuid="78c364e7-63cb-495a-8e15-4c3794f8a46a"/>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="39" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement key="textField-1" stretchType="RelativeToTallestObject" x="0" y="19" width="535" height="20" uuid="d11d426b-9fbb-4c19-8a18-1c57cce05844"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{offAddress}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-8" x="0" y="0" width="535" height="19" uuid="3d276906-0110-4570-90a3-a2090a89b962"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[ปริมาณและมูลค่ายา-เวชภัณฑ์คงคลัง]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="19" splitType="Stretch">
+			<textField pattern="d MMMMM yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-2" x="69" y="0" width="466" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="1d9126bf-f693-44c8-a3f1-b000da468aa7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-9" x="0" y="0" width="69" height="19" uuid="c3ec77d0-1fb2-4c0c-93c0-66244483aa65"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ข้อมูล ณ วันที่]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-2" x="0" y="0" width="42" height="20" uuid="4f10b696-dec6-4f8d-8670-fcb74d681b6f"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[รหัส]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" x="97" y="0" width="168" height="20" uuid="0917d9d6-3232-4af5-b8ce-5f3de78d9e85"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ยา-เวชภัณฑ์]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" x="265" y="0" width="82" height="20" uuid="2d1ccc8c-41e2-4b0d-a592-337074ef4316"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[จำนวน]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-5" x="347" y="0" width="67" height="20" uuid="2b5005e6-2fce-4dfd-9343-8828a1b5c3aa"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[ราคา]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-6" x="414" y="0" width="66" height="20" uuid="39cea1f9-6034-498b-a738-71a406adf364"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[มูลค่า]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-7" x="480" y="0" width="55" height="20" uuid="ebba44d3-033d-4dab-8ad0-36ab6810fec2"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[วันหมดอายุ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-2" x="42" y="0" width="55" height="20" uuid="89fcb2bc-527a-4341-99a1-062626038747"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[TMT Code]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="0" y="0" width="42" height="20" uuid="3f9859d6-c65d-4dac-8e47-ede9f240332d"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drugcode}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="97" y="0" width="168" height="20" uuid="a20971f5-b78b-4ed5-96d0-4ce0f92b510e"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drugname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement key="textField" x="265" y="0" width="30" height="20" uuid="d7b19d41-d8b1-4290-b8f5-8fdc0a3ac86d"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{drem}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement key="textField" x="305" y="0" width="42" height="20" uuid="8d973ef9-81b6-420e-a0f5-bae9dcfa1865"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{packamount}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="414" y="0" width="66" height="20" uuid="4e7183f8-275b-40e5-8e63-eb77d2e2df7b"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dprice}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="d MMM yy" isBlankWhenNull="true">
+				<reportElement key="textField" x="480" y="0" width="55" height="20" uuid="6b983285-a244-4c21-b889-81c598d745c1"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateexpire}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="347" y="0" width="67" height="20" uuid="5bee1185-0206-471c-935e-847ac42d2bb7"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{lotprice}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" x="295" y="0" width="10" height="20" uuid="e114f402-e585-45d6-a004-5050e31ad97d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[X]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="42" y="0" width="55" height="20" uuid="c8f5647b-5032-4ab3-8a4d-03b72cd439f2"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tmtcode}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-4" x="470" y="0" width="38" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="c9f0d63b-8200-4770-99f1-56c28187de0a"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + "/ "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-5" x="508" y="0" width="27" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="df2a780a-776a-40b2-86e1-b31d1e73881c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="50" splitType="Stretch">
+			<textField evaluationTime="Report" pattern="#,##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="414" y="0" width="66" height="20" uuid="e908eb5e-8764-44f6-82f0-850da02ee6a7"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sum_dprice}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-10" x="0" y="0" width="414" height="19" uuid="ee17f5d6-68ae-4105-aa4e-9cf53cceba0e"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[มูลค่ารวม ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-12" x="480" y="0" width="55" height="20" uuid="8f12f582-e5df-41e5-a62c-289f485d6c4c"/>
+				<box rightPadding="3">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[บาท]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-6" x="470" y="31" width="38" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="14e4f519-4a8a-4562-9c01-b82857a4eade"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER} + "/ "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-7" x="508" y="31" width="27" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="e231a225-47ff-4de9-b0f7-a63d9b28acb8"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-13" x="1" y="31" width="440" height="13" forecolor="#CCCCCC" uuid="ccdb4bed-fafc-4f85-ace7-10c997a75d68"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8" pdfFontName="tahoma.ttf" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+				</textElement>
+				<text><![CDATA[rdrugrepository_list.jasper : 2 Sep 2011]]></text>
+			</staticText>
+		</band>
+	</lastPageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

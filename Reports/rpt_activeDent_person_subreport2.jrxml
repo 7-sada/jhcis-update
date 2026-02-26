@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rpt_activeDent_person_subreport2" language="groovy" pageWidth="802" pageHeight="555" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pcucode" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="sdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="edate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="visitdate" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select
+ sum(case when (cright.rightgroup ='3' ) then 1 else 0 end) as rightgr3
+,sum(case when (cright.rightgroup ='4' ) then 1 else 0 end) as rightgr4
+,sum(case when ( (cright.rightgroup in('3','4' ) ) and ( visit.incup ='2' ) and (visit.refer='5') )  then 1 else 0 end) as rightgr34outcup
+,sum(case when (cright.rightgroup ='1' ) then 1 else 0 end) as rightgr1
+,sum(case when (cright.rightgroup ='2' ) then 1 else 0 end) as rightgr2
+,sum(case when ( (cright.rightgroup ='1') and ( visit.incup ='2' ))  then 1 else 0 end) as rightgr1outcup
+,sum(case when  (cright.rightgroup in('5','x','6' ) )    then 1 else 0 end) as rightgr5x
+
+from visit join cright on visit.rightcode  = cright.rightcode
+  where visitdate between  $P{sdate} and $P{edate}
+ $P!{pcucode}   and date_format(visit.visitdate,'%Y-%m') = $P{visitdate}
+
+  and concat(visit.pcucode,visit.visitno)
+        in(select (concat(visitdrugdental.pcucode,visitdrugdental.visitno))
+          from visitdrugdental where visit.pcucode = visitdrugdental.pcucode and visit.visitno = visitdrugdental.visitno)]]>
+	</queryString>
+	<field name="rightgr3" class="java.math.BigDecimal"/>
+	<field name="rightgr4" class="java.math.BigDecimal"/>
+	<field name="rightgr34outcup" class="java.math.BigDecimal"/>
+	<field name="rightgr1" class="java.math.BigDecimal"/>
+	<field name="rightgr2" class="java.math.BigDecimal"/>
+	<field name="rightgr1outcup" class="java.math.BigDecimal"/>
+	<field name="rightgr5x" class="java.math.BigDecimal"/>
+	<variable name="Sum_rightgr3" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{rightgr3}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="25" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="55" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr3}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="55" y="0" width="55" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr4}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="110" y="0" width="55" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr34outcup}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="165" y="0" width="55" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr1}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="261" y="0" width="41" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr1outcup}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="302" y="0" width="41" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr5x}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="220" y="0" width="41" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Tahoma" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rightgr2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="1" splitType="Stretch"/>
+	</summary>
+</jasperReport>
